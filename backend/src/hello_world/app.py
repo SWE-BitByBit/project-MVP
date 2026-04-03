@@ -28,7 +28,3 @@ def lambda_handler(event, context):
 
     if event.get("routeKey") ==  "GET /contacts/{contact_id}":
         return get_contact(table, event)
-    
-
-def prova():
-    print("hello_world")
