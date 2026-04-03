@@ -1,0 +1,67 @@
+name: Tests & Coverage
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: ['*']
+
+jobs:
+  sonarcloud-backend:
+    name: SonarCloud - Backend (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+ 
+      - name: Install dependencies
+        working-directory: backend
+        run: make install
+ 
+      - name: Run tests and generate coverage
+        working-directory: backend
+        run: make coverage
+        continue-on-error: true
+ 
+      - name: SonarCloud Scan - Backend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
+        with:
+          projectBaseDir: backend
+
+  sonarcloud-frontend:
+    name: SonarCloud - Frontend (Flutter)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+            fetch-depth: 0  # necessario per SonarCloud
+        
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+            flutter-version: "3.x"
+            channel: "stable"
+    
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+    
+      - name: Run tests and generate coverage
+        working-directory: frontend
+        run: flutter test --coverage test/
+        continue-on-error: true
+    
+      - name: SonarCloud Scan - Frontend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+        with:
+          projectBaseDir: frontend
