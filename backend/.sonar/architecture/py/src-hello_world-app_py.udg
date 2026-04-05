@@ -1,68 +1,0 @@
-
-1.0PythonFrontend"1775381042053*py2.B¢
-
-imports1
-
-extends2
-
-returns3
-
-	has param4
-
-module5
-
-
-class6
-
-function7
-
-src/hello_world/app.py9
-
-hello_world.app11
-
-
-json12
-
-boto314
-
-os16
-!
-hello_world.app.get_contact18
-
-hello_world.app.response20
-$
-hello_world.app.lambda_handler22J
-
-8
-89 j¦
- 
-10
-10115 *
-8 (
-
-13
-13125
-
-15
-15145
-
-17
-17165
-
-19
-19187 210
-
-21
-21207 210
-
-23
-23227 210rN
-
-10131*
-8 (
-
-10151*
-8 (
-
-10171*
-8 (
