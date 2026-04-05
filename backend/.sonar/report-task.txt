@@ -1,0 +1,7 @@
+organization=swe-bitbybit
+projectKey=swe-bitbybit_project_MVP-backend
+serverUrl=https://sonarcloud.io
+serverVersion=8.0.0.84764
+dashboardUrl=https://sonarcloud.io/dashboard?id=swe-bitbybit_project_MVP-backend
+ceTaskId=AZ1c9OU7wWJZkmgeCkuF
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ1c9OU7wWJZkmgeCkuF
