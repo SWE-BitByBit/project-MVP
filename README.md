@@ -2,6 +2,8 @@
 
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=swe-bitbybit-project_MVP-frontend)
 
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=swe-bitbybit_project_MVP-backend)
+
 # MVP - L’app che Protegge e Trasforma
 
 Minimum Viable Product per il capitolato C4 - L’ app che Protegge e Trasforma - del corso di Ingegneria del Software 2025/2026.
