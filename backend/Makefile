@@ -64,7 +64,7 @@ define HELP_MESSAGE
 	coverage        Run tests + genera coverage.xml e pytest.xml (usati dalla CI)
 	coverage-html   Apre il report HTML nel browser
 	sonar           Esegue coverage + analisi su SonarCloud
-	clean           Cleans up local build artifacts and environment
+	clean           Pulizia dell'ambiente di sviluppo e degli artefatti
 endef
 
 help:
