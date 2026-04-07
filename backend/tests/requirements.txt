@@ -1,3 +1,7 @@
 pytest
 boto3
+moto
 requests
+coverage
+pytest-cov
+pysonar
