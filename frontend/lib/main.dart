@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/presentation/home/home_page.dart';
+import '/presentation/chat/chat_screen.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///
@@ -25,7 +25,7 @@ class MainApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const ChatScreen(),
     );
   }
 }
