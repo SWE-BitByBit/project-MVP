@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/chatbot/chat.dart';
-import '../../domain/models/chatbot/chat_enums.dart';
-import '../../domain/models/chatbot/chat_message.dart';
-import '../../domain/models/chatbot/chat_preview.dart';
-import '../../data/repositories/chatbot_repository.dart';
+import '../../../domain/models/chatbot/chat.dart';
+import '../../../domain/models/chatbot/chat_enums.dart';
+import '../../../domain/models/chatbot/chat_message.dart';
+import '../../../domain/models/chatbot/chat_preview.dart';
+import '../../../data/repositories/chatbot_repository.dart';
 
 /// Gestisce lo stato della UI e la logica di business per l'intera funzionalità Chatbot.
 class ChatbotViewModel extends ChangeNotifier {

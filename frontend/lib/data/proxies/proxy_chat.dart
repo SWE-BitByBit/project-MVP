@@ -1,4 +1,5 @@
 import '../../domain/models/chatbot/chat.dart';
+import '../../domain/models/chatbot/local_chat.dart';
 import '../../domain/models/chatbot/chat_message.dart';
 import '../repositories/chatbot_repository.dart';
 

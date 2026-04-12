@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 // Sostituisci i percorsi in base al tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/presentation/chat/widgets/chatbot_mode_toggle_widget.dart'; // Nome del file
-import 'package:mvp_app_protegge_e_trasforma/presentation/chat/chatbot_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_mode_toggle_widget.dart'; // Nome del file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
 // Importiamo la nostra controfigura
-import '../../../../testing_utilities/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatbotModeToggleWidget Widget Test', () {

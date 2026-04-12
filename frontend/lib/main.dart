@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/presentation/chat/chat_screen.dart';
+import '/ui/chat/widget/chat_screen.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///

@@ -1,3 +1,4 @@
+import '../../domain/models/chatbot/local_chat.dart';
 import '../../domain/models/chatbot/chat.dart';
 import '../../domain/models/chatbot/chat_message.dart';
 import '../../domain/models/chatbot/chat_enums.dart';

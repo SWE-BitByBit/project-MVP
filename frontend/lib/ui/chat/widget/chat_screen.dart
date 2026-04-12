@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/services/chatbot_service.dart';
-import '../../data/repositories/chatbot_repository.dart';
-import 'chatbot_view_model.dart';
-import 'widgets/chat_widget.dart';
-import 'widgets/chat_history_widget.dart';
-import 'widgets/chatbot_mode_toggle_widget.dart';
-import 'widgets/chatbot_send_message_widget.dart';
-import 'widgets/chatbot_create_chat_widget.dart';
+import '../../../data/services/chatbot_service.dart';
+import '../../../data/repositories/chatbot_repository.dart';
+import '../view_model/chatbot_view_model.dart';
+import 'chat_widget.dart';
+import 'chat_history_widget.dart';
+import 'chatbot_mode_toggle_widget.dart';
+import 'chatbot_send_message_widget.dart';
+import 'chatbot_create_chat_widget.dart';
 
 /// 1. IL WRAPPER: Si occupa SOLO di creare le dipendenze vere per l'app in produzione.
 class ChatScreen extends StatelessWidget {

@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 
 // Sostituisci con i tuoi percorsi
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_chat.dart'; // Metti il percorso corretto
 
 // Il nostro Mock
-import '../../../testing_utilities/mocks/mock_chatbot_repository.dart';
+import '../../../testing/mocks/mock_chatbot_repository.dart';
 
 void main() {
   group('ProxyChat - Virtual Proxy Pattern', () {

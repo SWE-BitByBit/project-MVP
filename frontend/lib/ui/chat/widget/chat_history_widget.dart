@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../chatbot_view_model.dart';
+import '../view_model/chatbot_view_model.dart';
 
 /// Corrisponde a ChatHistoryWidget nell'UML.
 /// Gestisce la visualizzazione della cronologia delle conversazioni.

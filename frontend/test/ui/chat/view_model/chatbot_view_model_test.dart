@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 
 // Sostituisci questi import se i percorsi sono diversi
-import 'package:mvp_app_protegge_e_trasforma/presentation/chat/chatbot_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
-import '../../../testing_utilities/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/mock_chatbot_repository.dart';
 
 void main() {
   late ChatbotViewModel viewModel;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/models/chatbot/chat_enums.dart';
-import '../chatbot_view_model.dart';
+import '../view_model/chatbot_view_model.dart';
 
 /// Corrisponde a ChatbotModeToggleWidget nell'UML.
 /// Permette lo switch tra modalità MIRROR e DETECTIVE.

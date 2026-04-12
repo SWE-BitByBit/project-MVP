@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/chatbot_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
 
-import '../../../testing_utilities/mocks/mock_chatbot_service.dart';
+import '../../../testing/mocks/mock_chatbot_service.dart';
 
 void main() {
   group('ChatbotRepository', () {

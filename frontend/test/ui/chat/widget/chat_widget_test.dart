@@ -3,14 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 // Sostituisci i percorsi con quelli del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/presentation/chat/widgets/chat_widget.dart'; // Nome del tuo file
-import 'package:mvp_app_protegge_e_trasforma/presentation/chat/chatbot_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart'; // Nome del tuo file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 
 // Importiamo la nostra controfigura
-import '../../../../testing_utilities/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatWidget Widget Test', () {

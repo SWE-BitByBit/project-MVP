@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 
 // Sostituisci questi import in base ai percorsi del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/dtos/chat_dto.dart';
