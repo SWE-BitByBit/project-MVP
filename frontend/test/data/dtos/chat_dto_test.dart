@@ -17,7 +17,7 @@ void main() {
     test('fromJson legge correttamente i dati da un file JSON esterno', () {
 
 
-      final file = File('testing_utilities/fixtures/chat_response.json');
+      final file = File('testing/fixtures/chat_response.json');
       final jsonString = file.readAsStringSync();
       final Map<String, dynamic> jsonDalBackend = jsonDecode(jsonString);
 
