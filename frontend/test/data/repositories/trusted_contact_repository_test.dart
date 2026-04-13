@@ -68,6 +68,23 @@ void main() {
       expect(saved.getName(), 'Giulia Verdi');
     });
 
+    test('updateContact invia i dati modificati e mappa la risposta', () async {
+      // Arrange
+      mockService.mockedUpdatedContactJson = {
+        'id': 'c-1',
+        'name': 'Nome Modificato',
+        'email': 'mod@email.com',
+        'phoneNumber': '111',
+      };
+      final updateData = TrustedContact(id: 'c-1', name: 'Nome Modificato', email: 'mod@email.com', phoneNumber: '111');
+
+      // Act
+      final updated = await repository.updateContact(updateData);
+
+      // Assert
+      expect(updated.getName(), 'Nome Modificato');
+    });
+
     test('deleteContact completa senza eccezioni in caso di successo', () async {
       await expectLater(
         repository.deleteContact('c-1'),

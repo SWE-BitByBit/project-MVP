@@ -45,6 +45,13 @@ class TrustedContactService {
     };
   }
 
+  /// Invia al backend la richiesta di aggiornamento di un contatto esistente.
+  Future<Map<String, dynamic>> updateContact(Map<String, dynamic> contactData) async {
+    // TODO: Implementare chiamata API reale (PUT /trusted-contacts/{id})
+    await Future.delayed(const Duration(milliseconds: 500));
+    return contactData; // Restituisce i dati aggiornati
+  }
+
   /// Invia al backend la richiesta di eliminazione del contatto identificato da [contactId].
   Future<void> deleteContact(String contactId) async {
     // TODO: Implementare chiamata API reale (DELETE /trusted-contacts/{contactId})

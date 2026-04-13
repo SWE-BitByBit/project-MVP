@@ -164,5 +164,22 @@ void main() {
       expect(find.text('Elimina Contatto'), findsNothing);
       expect(viewModel.contacts, isEmpty);
     });
+    testWidgets('Il click su un contatto apre il modulo di modifica', (WidgetTester tester) async {
+      // Arrange
+      mockRepo.mockedContactsToReturn = [
+        TrustedContact(id: 'c-1', name: 'Mario Rossi', email: 'mario@email.com', phoneNumber: '123'),
+      ];
+      await viewModel.loadContacts();
+      await pumpListWidget(tester);
+      await tester.pumpAndSettle();
+
+      // Act: tap sulla riga del contatto
+      await tester.tap(find.text('Mario Rossi'));
+      await tester.pumpAndSettle();
+
+      // Assert: il form di modifica è apparso
+      expect(find.text('Modifica Contatto'), findsOneWidget);
+      expect(find.text('Aggiorna contatto'), findsOneWidget);
+    });
   });
 }

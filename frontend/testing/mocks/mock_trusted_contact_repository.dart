@@ -48,6 +48,15 @@ class MockTrustedContactRepository implements TrustedContactRepository {
     );
   }
 
+  TrustedContact? mockedUpdatedContact;
+
+  @override
+  Future<TrustedContact> updateContact(TrustedContact contact) async {
+    if (shouldThrowError) throw Exception('Repository Update Error');
+    await Future.delayed(simulatedDelay);
+    return mockedUpdatedContact ?? contact;
+  }
+
   @override
   Future<void> deleteContact(String contactId) async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);

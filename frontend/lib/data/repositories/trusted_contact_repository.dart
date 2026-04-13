@@ -34,6 +34,14 @@ class TrustedContactRepository {
     return TrustedContactDTO.fromJson(rawResponse);
   }
 
+  /// Aggiorna i dati di un contatto fidato esistente nel backend.
+  Future<TrustedContact> updateContact(TrustedContact contact) async {
+    final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
+    final Map<String, dynamic> rawResponse =
+        await _trustedContactService.updateContact(contactData);
+    return TrustedContactDTO.fromJson(rawResponse);
+  }
+
   /// Elimina il contatto fidato identificato da [contactId] nel backend.
   Future<void> deleteContact(String contactId) async {
     await _trustedContactService.deleteContact(contactId);

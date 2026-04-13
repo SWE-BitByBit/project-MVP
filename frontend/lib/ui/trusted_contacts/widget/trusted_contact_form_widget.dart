@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/trusted_contact_view_model.dart';
+import '../../../domain/trusted_contact.dart';
 
-/// Gestisce i campi di input per l'inserimento di un nuovo contatto fidato.
+/// Gestisce i campi di input per l'inserimento o la modifica di un contatto fidato.
 ///
 /// In quanto Consumer di [TrustedContactViewModel], si aggiorna in base allo
-/// stato del ViewModel, ad esempio per ripristinare il form dopo la creazione
-/// o per visualizzare un errore di validazione.
+/// stato del ViewModel. Può essere inizializzato con un [initialContact]
+/// per operare in modalità modifica.
 class TrustedContactFormWidget extends StatefulWidget {
   /// Callback invocata quando il form viene chiuso (annullato o salvato).
   final VoidCallback onDismiss;
 
-  const TrustedContactFormWidget({super.key, required this.onDismiss});
+  /// Contatto opzionale da modificare. Se null, il form opera in modalità creazione.
+  final TrustedContact? initialContact;
+
+  const TrustedContactFormWidget({
+    super.key,
+    required this.onDismiss,
+    this.initialContact,
+  });
 
   @override
   State<TrustedContactFormWidget> createState() =>
@@ -20,9 +28,18 @@ class TrustedContactFormWidget extends StatefulWidget {
 
 class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inizializza i controller con i dati del contatto esistente o vuoti
+    _nameController = TextEditingController(text: widget.initialContact?.getName());
+    _emailController = TextEditingController(text: widget.initialContact?.getEmail());
+    _phoneController = TextEditingController(text: widget.initialContact?.getPhone());
+  }
 
   @override
   void dispose() {
@@ -32,16 +49,25 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
     super.dispose();
   }
 
-  /// Valida i campi e, in caso di successo, invoca [TrustedContactViewModel.createContact].
-  ///
-  /// Al termine dell'operazione chiude il form tramite [widget.onDismiss].
+  /// Valida i campi e invoca l'operazione corretta sul ViewModel (creazione o modifica).
   Future<void> _submitForm(TrustedContactViewModel viewModel) async {
     if (_formKey.currentState!.validate()) {
-      await viewModel.createContact(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-      );
+      if (widget.initialContact != null) {
+        // Modalità MODIFICA
+        await viewModel.updateContact(
+          id: widget.initialContact!.getId(),
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+        );
+      } else {
+        // Modalità NUOVO
+        await viewModel.createContact(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+        );
+      }
       widget.onDismiss();
     }
   }
@@ -49,6 +75,7 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<TrustedContactViewModel>();
+    final isEditing = widget.initialContact != null;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -65,12 +92,15 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
           children: [
             Row(
               children: [
-                Icon(Icons.person_add_alt_1,
-                    color: Colors.teal.shade400, size: 28),
+                Icon(
+                  isEditing ? Icons.edit_note : Icons.person_add_alt_1,
+                  color: Colors.teal.shade400,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Nuovo Contatto Fidato',
-                  style: TextStyle(
+                Text(
+                  isEditing ? 'Modifica Contatto' : 'Nuovo Contatto Fidato',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -132,9 +162,9 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text(
-                      'Salva contatto',
-                      style: TextStyle(
+                  : Text(
+                      isEditing ? 'Aggiorna contatto' : 'Salva contatto',
+                      style: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
                           fontWeight: FontWeight.bold),

@@ -98,6 +98,28 @@ void main() {
       expect(dismissCalled, isTrue, reason: 'onDismiss deve essere chiamata dopo il salvataggio');
     });
 
+    testWidgets('In modalità modifica mostra titoli corretti e dati pre-popolati', (WidgetTester tester) async {
+      final existingContact = TrustedContact(id: 'c-1', name: 'Mario Rossi', email: 'mario@email.com', phoneNumber: '123');
+      
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChangeNotifierProvider<TrustedContactViewModel>.value(
+              value: viewModel,
+              child: TrustedContactFormWidget(
+                onDismiss: () {},
+                initialContact: existingContact,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Modifica Contatto'), findsOneWidget);
+      expect(find.text('Mario Rossi'), findsOneWidget);
+      expect(find.text('Aggiorna contatto'), findsOneWidget);
+    });
+
     testWidgets('Deve mostrare il CircularProgressIndicator al posto del bottone durante il caricamento',
         (WidgetTester tester) async {
       // Simuliamo un'operazione lenta

@@ -22,6 +22,30 @@ void main() {
   });
 
   group('TrustedContactViewModel - Caricamento Contatti', () {
+    test('updateContact deve invocare il repository e ricaricare la lista', () async {
+      // Arrange
+      final contactModificato = TrustedContact(
+        id: 'c-1',
+        name: 'Mario Rossi Aggiornato',
+        email: 'mario.agg@email.com',
+        phoneNumber: '000',
+      );
+      mockRepository.mockedUpdatedContact = contactModificato;
+      mockRepository.mockedContactsToReturn = [contactModificato];
+
+      // Act
+      await viewModel.updateContact(
+        id: 'c-1',
+        name: 'Mario Rossi Aggiornato',
+        email: 'mario.agg@email.com',
+        phoneNumber: '000',
+      );
+
+      // Assert
+      expect(viewModel.contacts.first.getName(), 'Mario Rossi Aggiornato');
+      expect(viewModel.isLoading, isFalse);
+    });
+
     test('loadContacts carica correttamente la lista dei contatti', () async {
       // Arrange
       mockRepository.mockedContactsToReturn = [

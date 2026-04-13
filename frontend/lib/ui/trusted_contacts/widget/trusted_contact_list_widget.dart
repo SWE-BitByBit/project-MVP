@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/trusted_contact_view_model.dart';
+import '../../../domain/trusted_contact.dart';
+import 'trusted_contact_form_widget.dart';
 
 /// Visualizza l'elenco dei contatti fidati salvati.
 ///
@@ -51,6 +53,7 @@ class TrustedContactListWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         final contact = viewModel.contacts[index];
         return ListTile(
+          onTap: () => _openEditForm(context, viewModel, contact),
           leading: CircleAvatar(
             backgroundColor: Colors.teal.shade100,
             child: Text(
@@ -86,10 +89,32 @@ class TrustedContactListWidget extends StatelessWidget {
     );
   }
 
+  /// Apre il modulo di modifica per un contatto esistente.
+  void _openEditForm(
+    BuildContext context,
+    TrustedContactViewModel viewModel,
+    TrustedContact contact,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return ChangeNotifierProvider.value(
+          value: viewModel,
+          child: TrustedContactFormWidget(
+            initialContact: contact,
+            onDismiss: () => Navigator.pop(sheetContext),
+          ),
+        );
+      },
+    );
+  }
+
   /// Mostra un dialogo di conferma prima di eliminare il contatto.
-  ///
-  /// Visualizza un [AlertDialog] con il nome del contatto da rimuovere.
-  /// Alla conferma, invoca [TrustedContactViewModel.deleteContact] con l'[contactId] specificato.
   void _showDeleteConfirmation(
     BuildContext context,
     TrustedContactViewModel viewModel,

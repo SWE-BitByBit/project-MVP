@@ -72,6 +72,29 @@ class TrustedContactViewModel extends ChangeNotifier {
     }
   }
 
+  /// Aggiorna un contatto esistente con i nuovi dati forniti.
+  Future<void> updateContact({
+    required String id,
+    required String name,
+    required String email,
+    required String phoneNumber,
+  }) async {
+    _setLoading(true);
+    try {
+      final updatedContact = TrustedContact(
+        id: id,
+        name: name,
+        email: email,
+        phoneNumber: phoneNumber,
+      );
+      await _repository.updateContact(updatedContact);
+      await loadContacts();
+    } catch (e) {
+      _error = 'Impossibile aggiornare il contatto: $e';
+      _setLoading(false);
+    }
+  }
+
   /// Elimina il contatto identificato da [contactId] e aggiorna la lista.
   Future<void> deleteContact(String contactId) async {
     _setLoading(true);
