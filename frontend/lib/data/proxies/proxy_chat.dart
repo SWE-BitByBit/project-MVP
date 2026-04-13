@@ -79,7 +79,7 @@ class ProxyChat implements Chat {
 
   @override
   void setTitle(String title) {
-    this._title = title;
+    _title = title;
     _localChat?.setTitle(title);
     _lastModified = DateTime.now();
   }
