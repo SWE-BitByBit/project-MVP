@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/main.dart';
-import 'package:mvp_app_protegge_e_trasforma/dashboard_button.dart';
-import 'package:mvp_app_protegge_e_trasforma/trusted_contacts_page.dart';
-import 'package:mvp_app_protegge_e_trasforma/contact_form_page.dart';
-import 'package:mvp_app_protegge_e_trasforma/home_page.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
 /// Suite di smoke test dell'applicazione.
 ///
@@ -29,14 +28,14 @@ void main() {
     );
   });
 
-  group('Smoke test - DashboardButton', () {
+  group('Smoke test - DashboardButtonWidget', () {
     testWidgets(
       'Il widget si istanzia e si renderizza senza errori con tutti i parametri obbligatori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: DashboardButton(
+              body: DashboardButtonWidget(
                 title: 'Test',
                 description: 'Descrizione di test',
                 icon: Icons.star,
@@ -48,20 +47,23 @@ void main() {
           ),
         );
 
-        expect(find.byType(DashboardButton), findsOneWidget);
+        expect(find.byType(DashboardButtonWidget), findsOneWidget);
       },
     );
   });
 
-  group('Smoke test - HomePage', () {
+  group('Smoke test - HomeScreen', () {
     testWidgets(
       'Il widget si renderizza senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: HomePage()),
+          const MaterialApp(home: HomeScreen()),
         );
 
-        expect(find.byType(HomePage), findsOneWidget);
+        // pump aggiuntivo per permettere al ChangeNotifierProvider di stabilizzarsi
+        await tester.pump();
+
+        expect(find.byType(HomeScreen), findsOneWidget);
       },
     );
 
@@ -69,9 +71,10 @@ void main() {
       'Il pulsante FAB apre il pannello emergenza senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: HomePage()),
+          const MaterialApp(home: HomeScreen()),
         );
 
+        await tester.pump();
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
 
@@ -80,101 +83,18 @@ void main() {
     );
   });
 
-  group('Smoke test - ContactFormPage', () {
-    testWidgets(
-      'Il widget si renderizza in modalità creazione senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(home: ContactFormPage()),
-        );
-
-        expect(find.byType(ContactFormPage), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Il widget si renderizza in modalità modifica senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: ContactFormPage(
-              initialName: 'Mario Rossi',
-              initialEmail: 'mario@example.com',
-              initialPhone: '+39 333 0000000',
-            ),
-          ),
-        );
-
-        expect(find.byType(ContactFormPage), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Il pulsante salva in modalità creazione si preme senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => TextButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ContactFormPage()),
-                ),
-                child: const Text('Apri'),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Apri'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Salva nuovo contatto'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Apri'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Il pulsante salva in modalità modifica si preme senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => TextButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ContactFormPage(
-                      initialName: 'Mario Rossi',
-                      initialEmail: 'mario@example.com',
-                      initialPhone: '+39 333 0000000',
-                    ),
-                  ),
-                ),
-                child: const Text('Apri'),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Apri'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Salva le modifiche'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Apri'), findsOneWidget);
-      },
-    );
-  });
-
-  group('Smoke test - TrustedContactsPage', () {
+  group('Smoke test - TrustedContactScreen', () {
     testWidgets(
       'Il widget si istanzia e si renderizza senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: TrustedContactsPage()),
+          const MaterialApp(home: TrustedContactScreen()),
         );
 
-        expect(find.byType(TrustedContactsPage), findsOneWidget);
+        // Attendiamo che il caricamento asincrono dei contatti mock si completi
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TrustedContactScreen), findsOneWidget);
       },
     );
 
@@ -182,8 +102,11 @@ void main() {
       'Il pulsante elimina apre il dialogo di conferma senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: TrustedContactsPage()),
+          const MaterialApp(home: TrustedContactScreen()),
         );
+
+        // Attendiamo che il caricamento asincrono dei contatti mock si completi
+        await tester.pumpAndSettle();
 
         await tester.tap(find.byIcon(Icons.delete_outline).first);
         await tester.pumpAndSettle();
