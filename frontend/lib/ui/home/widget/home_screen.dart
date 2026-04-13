@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => HomeViewModel(),
-      child: const _HomeScreenView(),
+      child: const HomeScreenView(),
     );
   }
 }
@@ -25,8 +25,8 @@ class HomeScreen extends StatelessWidget {
 ///
 /// Riceve il [HomeViewModel] dal provider e compone il layout unendo
 /// [HomeDashboardWidget] per il corpo e [HomeActionsWidget] per il FAB.
-class _HomeScreenView extends StatelessWidget {
-  const _HomeScreenView();
+class HomeScreenView extends StatelessWidget {
+  const HomeScreenView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -14,13 +14,13 @@ void main() {
       viewModel = HomeViewModel();
     });
 
-    /// Helper: monta _HomeScreenView con il provider già iniettato.
+    /// Helper: monta HomeScreenView con il provider già iniettato.
     Future<void> pumpScreen(WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<HomeViewModel>.value(
             value: viewModel,
-            child: const _HomeScreenView(),
+            child: const HomeScreenView(),
           ),
         ),
       );
@@ -47,66 +47,4 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsNothing);
     });
   });
-}
-
-/// Vista pura esposta per i test (corrisponde a _HomeScreenView nel file principale).
-class _HomeScreenView extends StatelessWidget {
-  const _HomeScreenView();
-
-  @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: true,
-        backgroundColor: Colors.teal.shade200,
-        leading: IconButton(
-          icon: Icon(Icons.account_circle, size: 30, color: Colors.teal.shade900),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings, size: 28, color: Colors.teal.shade900),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (viewModel.error != null)
-            Container(
-              width: double.infinity,
-              color: Colors.red.shade50,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      viewModel.error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                    onPressed: viewModel.clearError,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-          const Expanded(child: HomeDashboardWidget()),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.teal.shade50,
-        child: Icon(Icons.keyboard_arrow_up, color: Colors.teal.shade800, size: 30),
-      ),
-    );
-  }
 }

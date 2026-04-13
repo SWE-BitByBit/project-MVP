@@ -18,14 +18,13 @@ void main() {
       viewModel = TrustedContactViewModel(mockRepo);
     });
 
-    /// Helper: monta _TrustedContactScreenView con il provider già iniettato.
+    /// Helper: monta TrustedContactScreenView con il provider già iniettato.
     Future<void> pumpScreen(WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<TrustedContactViewModel>.value(
             value: viewModel,
-            // Testiamo la vista pura, non il compositor TrustedContactScreen
-            child: const _TrustedContactScreenView(),
+            child: const TrustedContactScreenView(),
           ),
         ),
       );
@@ -80,57 +79,4 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsNothing);
     });
   });
-}
-
-/// Vista pura di TrustedContactsScreen esposta per i test,
-/// speculare alla classe privata _TrustedContactScreenView nel file principale.
-class _TrustedContactScreenView extends StatelessWidget {
-  const _TrustedContactScreenView();
-
-  @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<TrustedContactViewModel>();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contatti Fidati'),
-        centerTitle: true,
-        backgroundColor: Colors.teal.shade200,
-      ),
-      body: Column(
-        children: [
-          if (viewModel.error != null)
-            Container(
-              width: double.infinity,
-              color: Colors.red.shade50,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      viewModel.error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                    onPressed: viewModel.clearError,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-          const Expanded(child: TrustedContactListWidget()),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.teal,
-        tooltip: 'Aggiungi contatto fidato',
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-    );
-  }
 }

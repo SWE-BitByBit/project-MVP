@@ -24,7 +24,7 @@ class TrustedContactScreen extends StatelessWidget {
         vm.loadContacts();
         return vm;
       },
-      child: const _TrustedContactScreenView(),
+      child: const TrustedContactScreenView(),
     );
   }
 }
@@ -34,8 +34,8 @@ class TrustedContactScreen extends StatelessWidget {
 /// Riceve il [TrustedContactViewModel] dal provider e compone il layout
 /// unendo [TrustedContactListWidget] per la lista e [TrustedContactActionsWidget]
 /// per le azioni disponibili.
-class _TrustedContactScreenView extends StatelessWidget {
-  const _TrustedContactScreenView();
+class TrustedContactScreenView extends StatelessWidget {
+  const TrustedContactScreenView({super.key});
 
   @override
   Widget build(BuildContext context) {
