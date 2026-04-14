@@ -1,0 +1,101 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: ['*']
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Test + Coverage + SonarCloud Backend
+  # ─────────────────────────────────────────
+  backend-test:
+    name: Backend - Test & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # necessario per SonarCloud
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: make install
+
+      - name: Run tests and generate coverage
+        working-directory: backend
+        run: make coverage   # genera coverage.xml
+
+      - name: SonarCloud Scan - Backend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
+        with:
+          projectBaseDir: backend
+
+  # ─────────────────────────────────────────
+  # JOB 2: Test Frontend
+  # ─────────────────────────────────────────
+  frontend-test:
+    name: Frontend - Test & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Run tests and generate coverage
+        working-directory: frontend
+        run: flutter test --coverage test/
+
+      - name: SonarCloud Scan - Frontend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+        with:
+          projectBaseDir: frontend
+
+  # ─────────────────────────────────────────
+  # JOB 3: Deploy (solo push su main)
+  # ─────────────────────────────────────────
+  deploy:
+    name: Deploy su AWS
+    needs: [backend-test, frontend-test]  # parte solo se entrambi i job passano
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy
+        working-directory: backend
+        run: make deploy
