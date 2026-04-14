@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../view_model/home_view_model.dart';
 import 'home_dashboard_widget.dart';
 import 'home_actions_widget.dart';
+import '../../auth/widget/login_screen.dart';
 
 /// Schermata principale dell'applicazione.
 ///
@@ -42,7 +43,10 @@ class HomeScreenView extends StatelessWidget {
             color: Colors.teal.shade900,
           ),
           onPressed: () {
-            debugPrint("Vai al Profilo Utente!");
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
           },
         ),
         actions: [
