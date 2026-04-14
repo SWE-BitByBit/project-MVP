@@ -1,8 +1,9 @@
-import 'package:mvp_app_protegge_e_trasforma/domain/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
 class NoteService {
   Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
     //PLACEHOLDER
+    //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
     return [];
   }
@@ -12,6 +13,7 @@ class NoteService {
     String noteId,
   ) async {
     //PLACEHOLDER
+    //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
     return {
       "id": "placeholder",
@@ -26,11 +28,13 @@ class NoteService {
     Map<String, dynamic> json,
   ) async {
     //PLACEHOLDER
+    //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
   Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
     //PLACEHOLDER
+    //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
   }
 }

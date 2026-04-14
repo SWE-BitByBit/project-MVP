@@ -2,11 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/proxy_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
 class DiaryViewmodel with ChangeNotifier {
   LocalNote? _currentNote;
@@ -17,7 +17,8 @@ class DiaryViewmodel with ChangeNotifier {
   //late AuthRepository authRepo;
 
   DiaryViewmodel() {
-    loadPreviews(DiarySession.getDiaryInstance().getDiaryType());
+    //Chiamare DiaryAccess se l'utente non ha effettuato l'accesso?
+    loadPreviews();
   }
 
   //Ritorna la lista di note salvate (ProxyNote)
@@ -38,6 +39,10 @@ class DiaryViewmodel with ChangeNotifier {
     _currentNote = await _noteRepo.getNoteById(type, note.getId()) as LocalNote;
     _loading = false;
     notifyListeners();
+  }
+
+  Note? getCurrentNote() {
+    return _currentNote;
   }
 
   //Se è selezionata una nota in _currentNote, essa viene rimossa e viene annullato l'indice selezionato.
@@ -118,7 +123,8 @@ class DiaryViewmodel with ChangeNotifier {
 
   ///Popola _savedNotes da database con ProxyNote. Se presenti, le note già in memoria vengono rimosse.
   ///Note ordinate per ultima modifica dalla più recente alla più remota
-  Future<void> loadPreviews(DiaryType targetDiary) async {
+  Future<void> loadPreviews() async {
+    DiaryType targetDiary = DiarySession.getDiaryInstance().getDiaryType();
     _loading = true;
     _savedNotes.clear();
     notifyListeners();

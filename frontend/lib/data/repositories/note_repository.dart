@@ -1,7 +1,7 @@
 import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/note_dto.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/dtos/note_dto.dart';
 
 class NoteRepository {
   Future<List<Note>> getNotes(DiaryType targetDiary) async {

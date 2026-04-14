@@ -1,6 +1,6 @@
-import 'note.dart';
-import 'proxy_note.dart';
-import 'note_element.dart';
+import '../../domain/models/diary/note.dart';
+import '../../domain/models/diary/proxy_note.dart';
+import '../../domain/models/diary/note_element.dart';
 
 class NoteDTO {
   ///Pre: json è un file JSON rappresentante una nota di uno dei diari (chiavi: id, title, creationDate, lastModified, elements (opzionale))

@@ -1,4 +1,4 @@
-import 'package:mvp_app_protegge_e_trasforma/domain/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
 class DiarySession {
   late DiaryType _diaryType;
