@@ -1,0 +1,1 @@
+enum DiaryType { realDiary, fakeDiary }
