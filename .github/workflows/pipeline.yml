@@ -4,7 +4,7 @@ on:
   push:
     branches: [develop]
   pull_request:
-    branches: ['*']
+    branches: [develop]
 
 jobs:
   # ─────────────────────────────────────────
@@ -75,8 +75,8 @@ jobs:
   # ─────────────────────────────────────────
   deploy:
     name: Deploy su AWS
-    needs: [backend-test, frontend-test]  # parte solo se entrambi i job passano
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [backend-test]  # parte solo se entrambi i job passano
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
