@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # SAM build artifacts
-.aws-sam/
+backend/.aws-sam/
 
 # C extensions
 *.so
