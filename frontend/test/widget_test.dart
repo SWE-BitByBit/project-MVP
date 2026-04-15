@@ -1,30 +1,118 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:mvp_app_protegge_e_trasforma/main.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
+/// Suite di smoke test dell'applicazione.
+///
+/// Questo file costituisce il punto di partenza per la suite di test del frontend.
+/// I test effettivi dei singoli widget e delle funzionalità business dovranno essere
+/// scritti dal verificatore incaricato.
+///
+/// Convenzioni da seguire nell'espansione di questa suite:
+/// - un file di test per ogni widget o pagina da verificare;
+/// - utilizzare [testWidgets] per test di rendering e interazione;
+/// - utilizzare [test] per test di logica pura;
+/// - ogni gruppo di test deve essere racchiuso in un [group] con nome descrittivo.
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Smoke test - Avvio applicazione', () {
+    testWidgets(
+      "L'applicazione si avvia e renderizza il widget radice senza errori",
+      (WidgetTester tester) async {
+        await tester.pumpWidget(const MainApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+        expect(find.byType(MaterialApp), findsOneWidget);
+      },
+    );
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  group('Smoke test - DashboardButtonWidget', () {
+    testWidgets(
+      'Il widget si istanzia e si renderizza senza errori con tutti i parametri obbligatori',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DashboardButtonWidget(
+                title: 'Test',
+                description: 'Descrizione di test',
+                icon: Icons.star,
+                backgroundColor: Colors.blue.shade50,
+                iconColor: Colors.blue,
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+        expect(find.byType(DashboardButtonWidget), findsOneWidget);
+      },
+    );
+  });
+
+  group('Smoke test - HomeScreen', () {
+    testWidgets(
+      'Il widget si renderizza senza errori',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: HomeScreen()),
+        );
+
+        // pump aggiuntivo per permettere al ChangeNotifierProvider di stabilizzarsi
+        await tester.pump();
+
+        expect(find.byType(HomeScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Il pulsante FAB apre il pannello emergenza senza errori',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: HomeScreen()),
+        );
+
+        await tester.pump();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(BottomSheet), findsOneWidget);
+      },
+    );
+  });
+
+  group('Smoke test - TrustedContactScreen', () {
+    testWidgets(
+      'Il widget si istanzia e si renderizza senza errori',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: TrustedContactScreen()),
+        );
+
+        // Attendiamo che il caricamento asincrono dei contatti mock si completi
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TrustedContactScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Il pulsante elimina apre il dialogo di conferma senza errori',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: TrustedContactScreen()),
+        );
+
+        // Attendiamo che il caricamento asincrono dei contatti mock si completi
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.delete_outline).first);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsOneWidget);
+      },
+    );
   });
 }
