@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,7 +31,6 @@ class AuthService {
   /// e scambia il codice di autorizzazione ottenuto con i token di accesso.
   /// Restituisce una [Map] contenente i token grezzi in caso di successo.
   Future<Map<String, dynamic>> login() async {
-    // 1. Costruiamo l'URL per l'accesso con Google
     final authUrl = Uri.https(_cognitoDomain, '/oauth2/authorize', {
       'response_type': 'code',
       'client_id': _clientId,
@@ -41,19 +41,16 @@ class AuthService {
       'prompt': 'select_account',
     });
 
-    // 2. Apriamo il browser interno e aspettiamo la risposta dell'utente
     final result = await FlutterWebAuth2.authenticate(
       url: authUrl.toString(),
       callbackUrlScheme: "com.bitbybit.appcheproteggeetrasforma",
     );
 
-    // 3. Estraiamo il [code] temporaneo fornito da Google/Cognito
     final code = Uri.parse(result).queryParameters['code'];
     if (code == null) {
       throw Exception('Codice di autorizzazione mancante.');
     }
 
-    // 4. Prepariamo lo scambio Codice -> Token (codificando le credenziali in Base64)
     final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
 
     final tokenResponse = await http.post(
@@ -70,14 +67,12 @@ class AuthService {
       },
     );
 
-    // 5. Controlliamo se AWS ha restituito un esito positivo
     if (tokenResponse.statusCode != 200) {
       throw Exception(
         'Errore durante il recupero dei token: ${tokenResponse.body}',
       );
     }
 
-    // 6. Restituiamo il dizionario dei dati grezzi ricevuti nella [tokenResponse]
     return jsonDecode(tokenResponse.body);
   }
 
@@ -97,8 +92,7 @@ class AuthService {
         callbackUrlScheme: "com.bitbybit.appcheproteggeetrasforma",
       );
     } catch (e) {
-      // Ignoriamo gli errori di chiusura finestra che possono capitare durante il logout
-      print('Errore durante il logout di rete: $e');
+      debugPrint('Errore durante il logout di rete: $e');
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../domain/user.dart';
 import '../dtos/user_dto.dart';
 import '../services/auth_service.dart';
@@ -29,18 +30,13 @@ class AuthRepository {
   /// nella variabile [_currentUser].
   Future<User?> login() async {
     try {
-      // 1. Chiediamo al motore (Service) di fare il lavoro sporco su internet
       final Map<String, dynamic> rawData = await _authService.login();
-
-      // 2. Trasformiamo la mappa grezza in una stringa JSON
       final String jsonString = jsonEncode(rawData);
-
-      // 3. Usiamo il traduttore (DTO) per creare l'utente pulito
       _currentUser = UserDTO.fromJson(jsonString);
 
       return _currentUser;
     } catch (e) {
-      print('Errore nel Repository durante il login: $e');
+      debugPrint('Errore nel Repository durante il login: $e');
       return null;
     }
   }

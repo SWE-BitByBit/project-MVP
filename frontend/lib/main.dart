@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importa il pacchetto per le variabili d'ambiente
 import 'ui/home/widget/home_screen.dart';
+import 'data/services/auth_service.dart';
+import 'data/repositories/auth_repository.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///
@@ -19,24 +21,30 @@ Future<void> main() async {
     debugPrint("Attenzione: Impossibile caricare il file .env: $e");
   }
 
-  runApp(const MainApp());
+  final authService = AuthService();
+  final authRepository = AuthRepository(authService);
+
+  runApp(MainApp(authRepository: authRepository));
 }
 
 /// Classe principale che configura il tema e la navigazione dell'applicazione.
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  /// Repository per la gestione dell'autenticazione.
+  final AuthRepository authRepository;
+
+  /// Inizializza l'applicazione con il [authRepository] fornito.
+  const MainApp({super.key, required this.authRepository});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'L\'App che Protegge e Trasforma',
-      debugShowCheckedModeBanner:
-          false, // Rimuove il banner "Debug" in alto a destra
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(authRepository: authRepository),
     );
   }
 }

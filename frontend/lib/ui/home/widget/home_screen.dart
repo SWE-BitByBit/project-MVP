@@ -4,6 +4,7 @@ import '../view_model/home_view_model.dart';
 import 'home_dashboard_widget.dart';
 import 'home_actions_widget.dart';
 import '../../auth/widget/login_screen.dart';
+import '../../../data/repositories/auth_repository.dart';
 
 /// Schermata principale dell'applicazione.
 ///
@@ -11,13 +12,18 @@ import '../../auth/widget/login_screen.dart';
 /// [ChangeNotifierProvider] e delega la logica di stato e la costruzione
 /// dell'interfaccia grafica ai widget sottostanti.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  /// Repository per la gestione dell'autenticazione.
+  final AuthRepository authRepository;
 
+  /// Inizializza la schermata con il [authRepository] fornito.
+  const HomeScreen({super.key, required this.authRepository});
+
+  /// Costruisce l'interfaccia della schermata iniettando il [HomeViewModel].
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => HomeViewModel(),
-      child: const HomeScreenView(),
+      child: HomeScreenView(authRepository: authRepository),
     );
   }
 }
@@ -27,8 +33,13 @@ class HomeScreen extends StatelessWidget {
 /// Riceve il [HomeViewModel] dal provider e compone il layout unendo
 /// [HomeDashboardWidget] per il corpo e [HomeActionsWidget] per il FAB.
 class HomeScreenView extends StatelessWidget {
-  const HomeScreenView({super.key});
+  /// Repository per la gestione dell'autenticazione.
+  final AuthRepository authRepository;
 
+  /// Inizializza la vista della home con il [authRepository] fornito.
+  const HomeScreenView({super.key, required this.authRepository});
+
+  /// Costruisce il layout della home con [AppBar], dashboard e pulsanti di azione.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +56,10 @@ class HomeScreenView extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              MaterialPageRoute(
+                builder: (context) =>
+                    LoginScreen(authRepository: authRepository),
+              ),
             );
           },
         ),

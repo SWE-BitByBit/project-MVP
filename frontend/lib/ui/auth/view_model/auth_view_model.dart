@@ -28,6 +28,13 @@ class AuthViewModel extends ChangeNotifier {
   /// Restituisce l'utente corrente recuperandolo direttamente da [_authRepository].
   User? get currentUser => _authRepository.getCurrentUser();
 
+  /// Controlla se esiste una sessione utente valida e notifica i listener.
+  void checkExistingSession() {
+    if (_authRepository.getCurrentUser() != null) {
+      notifyListeners();
+    }
+  }
+
   /// Avvia la procedura di login tramite [_authRepository], aggiornando lo stato della UI.
   Future<void> login() async {
     _setLoading(true);

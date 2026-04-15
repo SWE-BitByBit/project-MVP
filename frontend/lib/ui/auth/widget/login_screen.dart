@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../data/services/auth_service.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../view_model/auth_view_model.dart';
 import 'header_widget.dart';
@@ -8,19 +7,17 @@ import 'logged_in_banner_widget.dart';
 
 /// Rappresenta la schermata principale per l'autenticazione dell'utente.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  /// Repository per la gestione dell'autenticazione.
+  final AuthRepository authRepository;
+
+  /// Inizializza la schermata con il [authRepository] fornito.
+  const LoginScreen({super.key, required this.authRepository});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  /// Servizio per la gestione delle chiamate API lato AWS.
-  late final AuthService _authService;
-
-  /// Repository per la logica di persistenza e gestione dati utente.
-  late final AuthRepository _authRepository;
-
   /// View Model per la gestione dello stato della schermata di login.
   late final AuthViewModel _viewModel;
 
@@ -28,9 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _authService = AuthService();
-    _authRepository = AuthRepository(_authService);
-    _viewModel = AuthViewModel(_authRepository);
+    _viewModel = AuthViewModel(widget.authRepository);
+    _viewModel.checkExistingSession();
   }
 
   /// Esegue la pulizia delle risorse, tra cui la chiusura del [_viewModel].
