@@ -3,13 +3,20 @@ import '../../../../domain/user.dart';
 import '../../../../data/repositories/auth_repository.dart';
 
 /// Gestisce lo stato della UI per l'autenticazione e coordina le azioni dell'utente.
+///
+/// Utilizza [_authRepository] per eseguire le operazioni di accesso e aggiorna
+/// lo stato di [_isLoading] e [_errorMessage].
 class AuthViewModel extends ChangeNotifier {
+  /// Repository per l'accesso ai dati di autenticazione.
   final AuthRepository _authRepository;
 
+  /// Indica se è in corso un'operazione di caricamento.
   bool _isLoading = false;
+
+  /// Messaggio di errore da visualizzare nella UI in caso di fallimento.
   String? _errorMessage;
 
-  /// Inizializza il view model con un'istanza di [authRepository].
+  /// Inizializza il view model associando l'istanza di [_authRepository].
   AuthViewModel(this._authRepository);
 
   /// Indica se è in corso un'operazione asincrona (mostra la rotellina di caricamento).
@@ -18,13 +25,13 @@ class AuthViewModel extends ChangeNotifier {
   /// Contiene un eventuale messaggio di errore da mostrare all'utente.
   String? get errorMessage => _errorMessage;
 
-  /// Restituisce l'utente corrente ottenuto dal repository.
+  /// Restituisce l'utente corrente recuperandolo direttamente da [_authRepository].
   User? get currentUser => _authRepository.getCurrentUser();
 
-  /// Avvia la procedura di login, aggiornando lo stato della UI.
+  /// Avvia la procedura di login tramite [_authRepository], aggiornando lo stato della UI.
   Future<void> login() async {
     _setLoading(true);
-    _errorMessage = null; // Resettiamo eventuali errori precedenti
+    _errorMessage = null;
 
     try {
       final user = await _authRepository.login();
@@ -34,22 +41,20 @@ class AuthViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Si è verificato un errore di connessione.';
     } finally {
-      // finally viene eseguito SEMPRE, sia che vada bene, sia che vada in errore.
-      // Spegniamo la rotellina di caricamento.
       _setLoading(false);
     }
   }
 
-  /// Avvia la procedura di logout e notifica la UI.
+  /// Avvia la procedura di logout richiamando [_authRepository] e notifica la UI.
   Future<void> logout() async {
     _setLoading(true);
     await _authRepository.logout();
     _setLoading(false);
   }
 
-  /// Aggiorna lo stato di caricamento locale e notifica la grafica.
+  /// Aggiorna lo stato di caricamento tramite [value] e notifica i listener della grafica.
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners(); // Questo è il comando magico che aggiorna lo schermo!
+    notifyListeners();
   }
 }

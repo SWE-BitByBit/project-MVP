@@ -16,17 +16,13 @@ class GoogleLoginButtonWidget extends StatelessWidget {
   /// Costruisce l'interfaccia del pulsante.
   @override
   Widget build(BuildContext context) {
-    // Se isLoading è vero, mostriamo la rotellina, altrimenti il bottone cliccabile
     if (isLoading) {
       return const Center(child: CircularProgressIndicator(color: Colors.teal));
     }
 
     return OutlinedButton.icon(
       onPressed: onPressedCallback,
-      icon: Image.asset(
-        'assets/google_logo.jpg', // Assicurati di avere l'immagine nella cartella assets!
-        height: 24,
-      ),
+      icon: Image.asset('assets/google_logo.jpg', height: 24),
       label: const Text('Accedi con Google'),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),

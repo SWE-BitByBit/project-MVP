@@ -2,9 +2,14 @@ import 'dart:convert';
 import '../../domain/user.dart';
 
 /// Fornisce metodi di utilità per la conversione dei dati di autenticazione.
-/// Traduce i dati grezzi provenienti da AWS Cognito in oggetti [User] e viceversa.
+///
+/// Traduce i dati grezzi provenienti da AWS Cognito in oggetti [User] e viceversa,
+/// gestendo la decodifica dei token JWT.
 class UserDTO {
   /// Converte una stringa [jsonString] contenente i token grezzi in un oggetto [User].
+  ///
+  /// Estrae il payload dal campo `id_token` presente in [jsonString] e lo mappa
+  /// sui campi dell'oggetto di dominio.
   static User fromJson(String jsonString) {
     final Map<String, dynamic> data = jsonDecode(jsonString);
 
@@ -32,7 +37,7 @@ class UserDTO {
     );
   }
 
-  /// Converte un oggetto [user] in un formato JSON compatibile con le API esterne.
+  /// Converte un oggetto [user] in un formato [Map] compatibile con le API esterne.
   static Map<String, dynamic> toJson(User user) {
     return {
       'sub': user.sub,

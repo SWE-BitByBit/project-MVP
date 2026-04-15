@@ -15,11 +15,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Inizializziamo la nostra catena di architettura
+  /// Servizio per la gestione delle chiamate API lato AWS.
   late final AuthService _authService;
+
+  /// Repository per la logica di persistenza e gestione dati utente.
   late final AuthRepository _authRepository;
+
+  /// View Model per la gestione dello stato della schermata di login.
   late final AuthViewModel _viewModel;
 
+  /// Inizializza i servizi e i componenti necessari per la schermata.
   @override
   void initState() {
     super.initState();
@@ -28,13 +33,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _viewModel = AuthViewModel(_authRepository);
   }
 
+  /// Esegue la pulizia delle risorse, tra cui la chiusura del [_viewModel].
   @override
   void dispose() {
-    _viewModel.dispose(); // Pulizia della memoria quando si chiude la schermata
+    _viewModel.dispose();
     super.dispose();
   }
 
-  /// Costruisce l'interfaccia utente combinando i vari widget.
+  /// Costruisce l'interfaccia utente complessiva delegando la logica ai widget figli.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,8 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: ListenableBuilder(
-              // ListenableBuilder "ascolta" il ViewModel.
-              // Quando il ViewModel chiama notifyListeners(), questa parte si ridisegna!
               listenable: _viewModel,
               builder: (context, child) {
                 final isUserLoggedIn = _viewModel.currentUser != null;
@@ -59,11 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1. HEADER (Sempre visibile)
                     const HeaderWidget(),
                     const SizedBox(height: 48),
 
-                    // Mostra un messaggio di errore se il ViewModel ne ha uno
                     if (_viewModel.errorMessage != null) ...[
                       Text(
                         _viewModel.errorMessage!,
@@ -73,9 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // 2. LOGICA CONDIZIONALE: Bottone o Banner?
                     if (isUserLoggedIn) ...[
-                      // Se è loggato, mostra il banner passandogli l'email
                       LoggedInBannerWidget(
                         email: _viewModel.currentUser!.email,
                       ),
@@ -88,12 +88,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ] else ...[
-                      // Se NON è loggato, mostra il bottone Google
                       GoogleLoginButtonWidget(
                         isLoading: _viewModel.isLoading,
                         onPressedCallback: () async {
                           await _viewModel.login();
-                          // In futuro qui metteremo il codice per navigare alla HomePage!
                         },
                       ),
                       const SizedBox(height: 16),

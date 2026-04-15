@@ -4,22 +4,31 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Gestisce la comunicazione di rete con AWS Cognito per l'autenticazione.
-/// Si occupa esclusivamente di recuperare i dati grezzi, senza applicare logiche di business.
+///
+/// Si occupa esclusivamente di recuperare i dati grezzi tramite i parametri di
+/// configurazione come [_cognitoDomain] e [_clientId].
 class AuthService {
-  // Leggiamo le chiavi segrete dal file .env per garantire la massima sicurezza
+  /// Dominio di AWS Cognito recuperato dal file .env.
   final String _cognitoDomain = dotenv.env['COGNITO_DOMAIN'] ?? '';
+
+  /// ID Client fornito da AWS Cognito.
   final String _clientId = dotenv.env['COGNITO_CLIENT_ID'] ?? '';
+
+  /// Segreto Client per lo scambio dei token.
   final String _clientSecret = dotenv.env['COGNITO_CLIENT_SECRET'] ?? '';
 
+  /// URI di reindirizzamento dopo il login.
   final String _redirectUri =
       'com.bitbybit.appcheproteggeetrasforma://callback';
+
+  /// Scopi (scopes) richiesti per l'autenticazione OAuth2.
   final List<String> _scopes = const ['profile', 'email', 'openid'];
 
   /// Avvia il flusso di login OAuth 2.0 con AWS Cognito e Google.
   ///
-  /// Apre una pagina web sicura, attende che l'utente effettui l'accesso e scambia
-  /// il codice di autorizzazione con i token di accesso.
-  /// Restituisce una mappa grezza contenente i token in caso di successo.
+  /// Apre una pagina web sicura utilizzando [_redirectUri], attende che l'utente effettui l'accesso
+  /// e scambia il codice di autorizzazione ottenuto con i token di accesso.
+  /// Restituisce una [Map] contenente i token grezzi in caso di successo.
   Future<Map<String, dynamic>> login() async {
     // 1. Costruiamo l'URL per l'accesso con Google
     final authUrl = Uri.https(_cognitoDomain, '/oauth2/authorize', {
@@ -38,13 +47,13 @@ class AuthService {
       callbackUrlScheme: "com.bitbybit.appcheproteggeetrasforma",
     );
 
-    // 3. Estraiamo il codice temporaneo fornito da Google/Cognito
+    // 3. Estraiamo il [code] temporaneo fornito da Google/Cognito
     final code = Uri.parse(result).queryParameters['code'];
     if (code == null) {
       throw Exception('Codice di autorizzazione mancante.');
     }
 
-    // 4. Prepariamo lo scambio Codice -> Token (codificando le nostre credenziali in Base64)
+    // 4. Prepariamo lo scambio Codice -> Token (codificando le credenziali in Base64)
     final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
 
     final tokenResponse = await http.post(
@@ -61,19 +70,21 @@ class AuthService {
       },
     );
 
-    // 5. Controlliamo se AWS ci ha dato l'ok
+    // 5. Controlliamo se AWS ha restituito un esito positivo
     if (tokenResponse.statusCode != 200) {
       throw Exception(
         'Errore durante il recupero dei token: ${tokenResponse.body}',
       );
     }
 
-    // 6. Restituiamo il dizionario (Map) dei dati grezzi, ESATTAMENTE come richiesto dal diagramma UML
+    // 6. Restituiamo il dizionario dei dati grezzi ricevuti nella [tokenResponse]
     return jsonDecode(tokenResponse.body);
   }
 
-  /// Avvia il flusso di logout sul server AWS Cognito.
-  /// Apre brevemente una connessione web per invalidare la sessione lato server.
+  /// Avvia il flusso di logout sul server AWS Cognito usando [_clientId].
+  ///
+  /// Apre brevemente una connessione web per invalidare la sessione lato server
+  /// reindirizzando l'utente su [_redirectUri].
   Future<void> logout() async {
     final url = Uri.https(_cognitoDomain, '/logout', {
       'client_id': _clientId,
