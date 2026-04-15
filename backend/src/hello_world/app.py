@@ -25,7 +25,7 @@ def get_contact(table, event):
 
 def lambda_handler(event, context):
     """ Handler della lambda"""
-    dynamodb = boto3.resource("dynamodb")
+    dynamodb = boto3.resource("dynamodb", region_name="eu-south-1")
     table = dynamodb.Table(os.environ["TABLE_NAME"])
 
     if event.get("routeKey") ==  "GET /contacts/{contact_id}":
