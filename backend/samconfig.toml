@@ -17,8 +17,8 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = false
 resolve_s3 = false
 region = "eu-south-1"
-s3_prefix = "ProgettoSviluppo-GitHub"
-s3_bucket = "bucket-deploy"
+s3_prefix = "ProgettoSviluppo-test"
+s3_bucket = "bucket-deploy-prova"
 
 [default.package.parameters]
 resolve_s3 = true
