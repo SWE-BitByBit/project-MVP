@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/ui/chat/widget/chat_screen.dart';
+import 'ui/home/widget/home_screen.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
   /// Costruisce il widget radice dell'applicazione.
   ///
   /// Restituisce un [MaterialApp] con il tema globale basato sul colore
-  /// primario teal e imposta [HomePage] come schermata iniziale.
+  /// primario teal e imposta [HomeScreen] come schermata iniziale.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,7 +25,7 @@ class MainApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const ChatScreen(),
+      home: const HomeScreen(),
     );
   }
 }

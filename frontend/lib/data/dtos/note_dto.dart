@@ -25,12 +25,7 @@ class NoteDTO {
   ///Pre: note è un oggetto di un sottotipo di Note (ProxyNote o LocalNote)
   ///Post: toJson ritorna un file JSON contenente tutte le informazioni di note, inclusa la lista (ordinata) dei suoi elementi
   Map<String, dynamic> toJson(Note note) {
-    final Map<String, dynamic> json = {
-      "id": note.getId(),
-      "title": note.getTitle(),
-      "creationDate": note.getCreationDate(),
-      "lastModified": note.getUpdateDate(),
-    };
+    ///Recupero elementi nota
     List<NoteElement> elements = note.getNoteElements();
 
     ///Aggiunge la chiave anche se la lista è vuota
@@ -41,7 +36,12 @@ class NoteDTO {
         "type": elements[i].getType(),
       });
     }
-    json["elements"] = elementMap;
-    return json;
+    return {
+      "id": note.getId(),
+      "title": note.getTitle(),
+      "creationDate": note.getCreationDate(),
+      "lastModified": note.getUpdateDate(),
+      "elements": elementMap,
+    };
   }
 }

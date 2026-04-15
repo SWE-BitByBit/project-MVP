@@ -16,7 +16,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DashboardButton(
+            body: DashboardButtonWidget(
               title: 'Nuova Chat',
               description: 'Inizia una conversazione',
               icon: Icons.chat,
@@ -37,7 +37,7 @@ void main() {
       expect(find.byIcon(Icons.chat), findsOneWidget);
 
       // 3. ACT: Il robot muove il dito e "tocca" il nostro bottone
-      await tester.tap(find.byType(DashboardButton));
+      await tester.tap(find.byType(DashboardButtonWidget));
 
       // Diamo a Flutter il tempo di finire l'animazione dell'effetto click (es. l'onda del Material)
       await tester.pumpAndSettle();

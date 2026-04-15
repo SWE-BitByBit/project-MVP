@@ -13,6 +13,7 @@ class DiaryScreen extends StatelessWidget {
       create: (_) {
         final viewmodel = DiaryViewmodel();
       },
+      child: const DiaryScreenView(),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Rappresenta un singolo pulsante all'interno della dashboard.
 /// Include un'icona, un titolo e una breve descrizione testuale della funzionalità.
-class DashboardButton extends StatelessWidget {
+class DashboardButtonWidget extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
@@ -10,12 +10,12 @@ class DashboardButton extends StatelessWidget {
   final Color iconColor;
   final VoidCallback onTap;
 
-  /// Crea un'istanza di [DashboardButton] con le proprietà visive e il comportamento specificati.
+  /// Crea un'istanza di [DashboardButtonWidget] con le proprietà visive e il comportamento specificati.
   ///
   /// I parametri [title], [description], [icon], [backgroundColor], [iconColor] e [onTap]
   /// sono obbligatori e definiscono rispettivamente il testo del titolo, la descrizione,
   /// l'icona, i colori e la callback invocata al tocco del pulsante.
-  const DashboardButton({
+  const DashboardButtonWidget({
     super.key,
     required this.title,
     required this.description,

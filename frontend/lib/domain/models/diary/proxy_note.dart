@@ -9,6 +9,10 @@ class ProxyNote implements Note {
   String _title;
   final DateTime _creationDate;
   DateTime _lastModified;
+
+  final NoteRepository _noteRepo = NoteRepository();
+
+  ///Nota reale
   LocalNote? _note;
 
   ProxyNote(this._id, this._title, this._creationDate, this._lastModified);
@@ -69,8 +73,7 @@ class ProxyNote implements Note {
   ///Se la variabile _note è nulla, carica la nota completa e gliela assegna
   Future<void> _load() async {
     if (_note == null) {
-      NoteRepository noteRepo = NoteRepository();
-      final loadedNote = await noteRepo.getNoteById(
+      final loadedNote = await _noteRepo.getNoteById(
         DiarySession.getDiaryInstance().getDiaryType(),
         _id,
       );
