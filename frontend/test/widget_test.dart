@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/main.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/dashboard_button_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
@@ -53,50 +53,41 @@ void main() {
   });
 
   group('Smoke test - HomeScreen', () {
-    testWidgets(
-      'Il widget si renderizza senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(home: HomeScreen()),
-        );
+    testWidgets('Il widget si renderizza senza errori', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
-        // pump aggiuntivo per permettere al ChangeNotifierProvider di stabilizzarsi
-        await tester.pump();
+      // pump aggiuntivo per permettere al ChangeNotifierProvider di stabilizzarsi
+      await tester.pump();
 
-        expect(find.byType(HomeScreen), findsOneWidget);
-      },
-    );
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
 
-    testWidgets(
-      'Il pulsante FAB apre il pannello emergenza senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(home: HomeScreen()),
-        );
+    testWidgets('Il pulsante FAB apre il pannello emergenza senza errori', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
-        await tester.pump();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
 
-        expect(find.byType(BottomSheet), findsOneWidget);
-      },
-    );
+      expect(find.byType(BottomSheet), findsOneWidget);
+    });
   });
 
   group('Smoke test - TrustedContactScreen', () {
-    testWidgets(
-      'Il widget si istanzia e si renderizza senza errori',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(home: TrustedContactScreen()),
-        );
+    testWidgets('Il widget si istanzia e si renderizza senza errori', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: TrustedContactScreen()));
 
-        // Attendiamo che il caricamento asincrono dei contatti mock si completi
-        await tester.pumpAndSettle();
+      // Attendiamo che il caricamento asincrono dei contatti mock si completi
+      await tester.pumpAndSettle();
 
-        expect(find.byType(TrustedContactScreen), findsOneWidget);
-      },
-    );
+      expect(find.byType(TrustedContactScreen), findsOneWidget);
+    });
 
     testWidgets(
       'Il pulsante elimina apre il dialogo di conferma senza errori',

@@ -47,34 +47,13 @@ class TrustedContactViewModel extends ChangeNotifier {
   ///
   /// Costruisce un [TrustedContact] con i parametri ricevuti, lo invia al
   /// repository e ricarica la lista aggiornata in caso di successo.
-  Future<void> _createContact({
-    required String name,
-    required String email,
-    required String phoneNumber,
-  }) async {
-    final newContact = TrustedContact(
-      id: '',
-      name: name,
-      email: email,
-      phoneNumber: phoneNumber,
-    );
+  Future<void> _createContact(TrustedContact newContact) async {
     await _repository.createContact(newContact);
     await _loadContacts();
   }
 
   /// Aggiorna un contatto esistente con i nuovi dati forniti.
-  Future<void> _updateContact({
-    required String id,
-    required String name,
-    required String email,
-    required String phoneNumber,
-  }) async {
-    final updatedContact = TrustedContact(
-      id: id,
-      name: name,
-      email: email,
-      phoneNumber: phoneNumber,
-    );
+  Future<void> _updateContact(TrustedContact updatedContact) async {
     await _repository.updateContact(updatedContact);
     await _loadContacts();
   }

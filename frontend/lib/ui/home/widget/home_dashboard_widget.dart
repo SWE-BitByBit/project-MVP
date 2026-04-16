@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/home_view_model.dart';
-import '../../core/widgets/dashboard_button_widget.dart';
+import '../../core/dashboard_button_widget.dart';
 import '../../chat/widget/chat_screen.dart';
 import '../../trusted_contacts/widget/trusted_contacts_screen.dart';
 
@@ -37,9 +37,7 @@ class HomeDashboardWidget extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ChatScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
               );
             },
           );

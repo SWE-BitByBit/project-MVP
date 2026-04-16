@@ -4,8 +4,6 @@ import 'package:flutter/foundation.dart';
 
 typedef CommandAction0<T> = Future<T> Function();
 typedef CommandAction1<T, A> = Future<T> Function(A);
-typedef CommandAction3<T, A, C, S> = Future<T> Function(A, C, S);
-typedef CommandAction4<T, A, C, S, G> = Future<T> Function(A, C, S, G);
 
 /// Facilita l'interazione con il ViewModel
 ///
