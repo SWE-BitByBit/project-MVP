@@ -12,16 +12,16 @@ import 'material_list_widget.dart';
 /// Configura il [MaterialViewModel] tramite provider, avvia il caricamento
 /// iniziale dei dati e mostra la barra dei filtri e la lista dei materiali.
 class MaterialScreen extends StatelessWidget {
-  const MaterialScreen({super.key});
+  final MaterialRepository? repository;
+  const MaterialScreen({super.key, this.repository});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
-        // 1. Creiamo le dipendenze (In un'app completa potrebbero arrivare dal main)
-        final service = MaterialService();
-        final repository = MaterialRepository(service);
-        final viewModel = MaterialViewModel(repository);
+        // 1. Creiamo le dipendenze (Usa quella iniettata se presente, utile per i test)
+        final effectiveRepository = repository ?? MaterialRepository(MaterialService());
+        final viewModel = MaterialViewModel(effectiveRepository);
 
         // 2. MAGIA DEL COMMAND: Avviamo il download appena si apre la pagina!
         viewModel.loadMaterials.execute();
