@@ -7,11 +7,11 @@ class HeaderWidget extends StatelessWidget {
   /// Costruisce l'interfaccia dell'intestazione.
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        const Icon(Icons.lock_outline, size: 64, color: Colors.teal),
-        const SizedBox(height: 16),
-        const Text(
+        Icon(Icons.lock_outline, size: 64, color: Colors.teal),
+        SizedBox(height: 16),
+        Text(
           'Accedi al tuo account',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),

@@ -43,6 +43,25 @@ void main() {
       // Act & Assert
       expect(() => UserDTO.fromJson(mockJson), throwsException);
     });
+
+    test('Deve gestire campi mancanti nel JWT usando valori di default', () {
+      // Arrange: payload vuoto {}
+      final payload = base64Url.encode(utf8.encode(jsonEncode({}))).replaceAll('=', '');
+      
+      final mockJson = jsonEncode({
+        'id_token': 'header.$payload.signature',
+        'access_token': 'abc',
+      });
+
+      // Act
+      final user = UserDTO.fromJson(mockJson);
+
+      // Assert: i campi devono essere stringhe vuote grazie agli operatori ?? nel DTO
+      expect(user.sub, '');
+      expect(user.email, '');
+      expect(user.name, '');
+      expect(user.surname, '');
+    });
   });
 
   group('UserDTO - toJson', () {
