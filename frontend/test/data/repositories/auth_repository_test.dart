@@ -46,6 +46,20 @@ void main() {
       expect(repository.getCurrentUser(), isNull);
       expect(repository.isLoggedIn(), isFalse);
     });
+
+    test('login restituisce null se il service restituisce dati malformati (JWT invalido)', () async {
+      // Arrange: service restituisce JSON ma con id_token non valido
+      mockService.mockedTokenResponse = {
+        'id_token': 'token_invalido', // Non ha 3 parti
+      };
+
+      // Act
+      final user = await repository.login();
+
+      // Assert
+      expect(user, isNull);
+      expect(repository.getCurrentUser(), isNull);
+    });
   });
 
   group('AuthRepository - Logout', () {

@@ -47,6 +47,19 @@ void main() {
       expect(viewModel.errorMessage, contains('Autenticazione fallita'));
       expect(viewModel.isLoading, isFalse);
     });
+
+    test('login lancia eccezione e imposta errore connessione', () async {
+      // Arrange
+      mockRepository.shouldThrowException = true;
+
+      // Act
+      await viewModel.login();
+
+      // Assert
+      expect(viewModel.currentUser, isNull);
+      expect(viewModel.errorMessage, contains('errore di connessione'));
+      expect(viewModel.isLoading, isFalse);
+    });
   });
 
   group('AuthViewModel - Logout', () {

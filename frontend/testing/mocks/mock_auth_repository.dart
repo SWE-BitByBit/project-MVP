@@ -7,8 +7,11 @@ class MockAuthRepository implements AuthRepository {
   /// Utente corrente simulato.
   User? _mockedUser;
   
-  /// Se [true], simula un errore durante il login.
+  /// Se [true], simula un valore nullo restituito dal repository (es. annullamento).
   bool shouldThrowError = false;
+
+  /// Se [true], simula un'eccezione lanciata dal repository (es. errore connessione).
+  bool shouldThrowException = false;
 
   @override
   User? getCurrentUser() => _mockedUser;
@@ -18,6 +21,9 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<User?> login() async {
+    if (shouldThrowException) {
+      throw Exception('Connessione fallita');
+    }
     if (shouldThrowError) return null;
     
     _mockedUser = const User(
