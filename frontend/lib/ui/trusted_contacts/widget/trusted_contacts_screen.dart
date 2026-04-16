@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../data/services/trusted_contact_service.dart';
 import '../../../data/repositories/trusted_contact_repository.dart';
 import '../view_model/trusted_contact_view_model.dart';
@@ -20,9 +21,9 @@ class TrustedContactScreen extends StatelessWidget {
       create: (_) {
         final service = TrustedContactService();
         final repo = TrustedContactRepository(service);
-        final vm = TrustedContactViewModel(repo);
-        vm.loadContacts();
-        return vm;
+        final viewModel = TrustedContactViewModel(repo);
+        viewModel.loadContacts();
+        return viewModel;
       },
       child: const TrustedContactScreenView(),
     );
@@ -54,11 +55,16 @@ class TrustedContactScreenView extends StatelessWidget {
                   width: double.infinity,
                   color: Colors.red.shade50,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.red, size: 18),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -67,8 +73,11 @@ class TrustedContactScreenView extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close,
-                            color: Colors.red, size: 18),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.red,
+                          size: 18,
+                        ),
                         onPressed: viewModel.clearError,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -76,9 +85,7 @@ class TrustedContactScreenView extends StatelessWidget {
                     ],
                   ),
                 ),
-              const Expanded(
-                child: TrustedContactListWidget(),
-              ),
+              const Expanded(child: TrustedContactListWidget()),
             ],
           );
         },
