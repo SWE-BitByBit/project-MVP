@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/material/widget/material_list_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/material/view_model/material_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/repositories/material_repository.dart';
 import '../../../../testing/mocks/mock_material_repository.dart';
 
 void main() {
@@ -28,18 +27,16 @@ void main() {
 
   group('MaterialListWidget Widget Test', () {
     testWidgets('Deve mostrare CircularProgressIndicator durante il caricamento', (WidgetTester tester) async {
-      // Configuriamo il mock per attendere, così da dare tempo alla UI di mostrare il loading
       mockRepository.shouldWait = true;
       
-      // Avviamo l'esecuzione del comando (senza attendere il completamento immediato)
       final future = viewModel.loadMaterials.execute();
 
       await tester.pumpWidget(createWidget());
-      await tester.pump(); // Innesca un build frame
+      await tester.pump();
       
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       
-      // Pulizia: attendiamo che il comando finisca per evitare eccezioni di disposing
+      await tester.pump(const Duration(milliseconds: 100));
       await future;
     });
 

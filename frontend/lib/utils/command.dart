@@ -28,7 +28,6 @@ class Command0<T> extends ChangeNotifier {
   /// Gestisce in automatico l'aggiornamento di [isExecuting] e
   /// [errorMessage], notificando i listener della UI.
   Future<void> execute() async {
-    // Evita esecuzioni sovrapposte (doppi click)
     if (_isExecuting) return;
 
     _isExecuting = true;

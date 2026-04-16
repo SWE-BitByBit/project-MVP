@@ -14,22 +14,17 @@ void main() {
 
   group('MaterialViewModel Unit Test', () {
     test('loadMaterials deve popolare la lista dei materiali', () async {
-      // Act
       await viewModel.loadMaterials.execute();
 
-      // Assert
       expect(viewModel.materials.length, 3);
       expect(viewModel.currentFilter, isNull);
     });
 
     test('filterByType deve filtrare correttamente i materiali', () async {
-      // Arrangia: carichiamo i dati
       await viewModel.loadMaterials.execute();
 
-      // Act: applichiamo filtro LAW
       viewModel.filterByType(ResourceType.law);
 
-      // Assert
       expect(viewModel.currentFilter, ResourceType.law);
       expect(viewModel.materials.length, 1);
       expect(viewModel.materials.every((r) => r.type == ResourceType.law), isTrue);
@@ -38,11 +33,9 @@ void main() {
     test('filterByType deve funzionare come un toggle', () async {
       await viewModel.loadMaterials.execute();
 
-      // Seleziona LAW
       viewModel.filterByType(ResourceType.law);
       expect(viewModel.currentFilter, ResourceType.law);
 
-      // Seleziona di nuovo LAW -> deve diventare null
       viewModel.filterByType(ResourceType.law);
       expect(viewModel.currentFilter, isNull);
       expect(viewModel.materials.length, 3);

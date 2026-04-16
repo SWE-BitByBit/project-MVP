@@ -15,7 +15,7 @@ class MaterialListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<MaterialViewModel>(
       builder: (context, viewModel, child) {
-        // 1. ASCOLTIAMO IL COMMAND: C'è un errore di rete?
+        // Gestione errore di rete
         if (viewModel.loadMaterials.errorMessage != null) {
           return Center(
             child: Text(
@@ -25,22 +25,21 @@ class MaterialListWidget extends StatelessWidget {
           );
         }
 
-        // 2. ASCOLTIAMO IL COMMAND: Sta scaricando i dati?
+        // Gestione caricamento dati
         if (viewModel.loadMaterials.isExecuting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // 3. ASCOLTIAMO IL VIEWMODEL: Scaricamento finito, prendiamo i dati!
         final materials = viewModel.materials;
 
-        // Gestione stato vuoto (es. se un filtro non ha risultati)
+        // Gestione stato vuoto
         if (materials.isEmpty) {
           return const Center(
             child: Text('Nessun materiale trovato per questa categoria.'),
           );
         }
 
-        // 4. Disegniamo la lista finale
+        // Lista finale
         return ListView.builder(
           itemCount: materials.length,
           itemBuilder: (context, index) {
@@ -53,7 +52,7 @@ class MaterialListWidget extends StatelessWidget {
   }
 }
 
-/// Widget interno per disegnare la singola scheda di una [Resource].
+/// Widget interno per la visualizzazione della singola risorsa.
 class _ResourceCardWidget extends StatelessWidget {
   final Resource resource;
 
@@ -64,7 +63,6 @@ class _ResourceCardWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
-      // L'ExpansionTile crea un bell'effetto "a tendina" per leggere i dettagli
       child: ExpansionTile(
         leading: Icon(Icons.menu_book, color: Colors.teal.shade700),
         title: Text(
@@ -89,8 +87,6 @@ class _ResourceCardWidget extends StatelessWidget {
                     icon: const Icon(Icons.open_in_browser),
                     label: const Text('Visita il Link'),
                     onPressed: () {
-                      // Nota: Per l'MVP limitiamoci a stampare in console.
-                      // In futuro userai il pacchetto 'url_launcher' qui.
                       debugPrint('Devo aprire il link: ${resource.url}');
                     },
                   ),

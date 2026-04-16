@@ -8,10 +8,8 @@ class MaterialService {
   /// Simula un ritardo di rete di 1 secondo per testare le animazioni di
   /// caricamento nella UI, e restituisce una lista di mappe JSON.
   Future<List<Map<String, dynamic>>> fetchMaterials() async {
-    // Simuliamo il tempo di attesa di una vera chiamata API
     await Future.delayed(const Duration(seconds: 1));
 
-    // Dati grezzi simulati (Mock) come se arrivassero da un database
     return [
       {
         'id': 'legge-1',

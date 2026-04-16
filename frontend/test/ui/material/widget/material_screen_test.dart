@@ -9,14 +9,11 @@ void main() {
     testWidgets('Deve caricare la schermata con AppBar e ListWidget', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(home: MaterialScreen(repository: MockMaterialRepository())));
       
-      // Verifica AppBar
       expect(find.text('Materiale Informativo'), findsOneWidget);
       
-      // Verifica presenza dei filtri (almeno uno come esempio)
       expect(find.text('Leggi'), findsOneWidget);
       expect(find.text('Guide'), findsOneWidget);
       
-      // Verifica presenza del widget lista
       expect(find.byType(MaterialListWidget), findsOneWidget);
     });
 

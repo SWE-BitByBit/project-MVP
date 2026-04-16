@@ -45,7 +45,6 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 100));
       });
 
-      // Avviamo due esecuzioni quasi contemporanee
       command.execute();
       await command.execute();
 

@@ -13,26 +13,20 @@ void main() {
 
   group('MaterialRepository Unit Test', () {
     test('getMaterials deve chiamare il servizio al primo tentativo', () async {
-      // Act
       final materials = await repository.getMaterials();
 
-      // Assert
       expect(materials.length, 2);
       expect(materials[0].title, 'Test Law');
     });
 
     test('getMaterials deve usare la cache interna per le chiamate successive', () async {
-      // Prime caricamento
       await repository.getMaterials();
       
-      // Modifichiamo il mock (se chiamasse il servizio, cambierebbero i dati)
       mockService.mockedData = [];
 
-      // Act
       final cachedMaterials = await repository.getMaterials();
 
-      // Assert
-      expect(cachedMaterials.length, 2); // Ancora 2, presi dalla cache
+      expect(cachedMaterials.length, 2);
       expect(cachedMaterials[0].title, 'Test Law');
     });
   });

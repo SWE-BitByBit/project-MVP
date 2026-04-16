@@ -19,11 +19,9 @@ class MaterialScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
-        // 1. Creiamo le dipendenze (Usa quella iniettata se presente, utile per i test)
         final effectiveRepository = repository ?? MaterialRepository(MaterialService());
         final viewModel = MaterialViewModel(effectiveRepository);
 
-        // 2. MAGIA DEL COMMAND: Avviamo il download appena si apre la pagina!
         viewModel.loadMaterials.execute();
 
         return viewModel;
