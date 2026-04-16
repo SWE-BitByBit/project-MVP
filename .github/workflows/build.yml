@@ -50,6 +50,10 @@ jobs:
             flutter-version: "3.x"
             channel: "stable"
     
+      - name: Create .env from stub
+        working-directory: frontend
+        run: cp .env.stub .env
+
       - name: Install dependencies
         working-directory: frontend
         run: flutter pub get
