@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../view_model/home_view_model.dart';
 import 'home_dashboard_widget.dart';
 import 'home_actions_widget.dart';
+import '../../settings/widget/settings_screen.dart';
 
 /// Schermata principale dell'applicazione.
 ///
@@ -49,7 +50,9 @@ class HomeScreenView extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.settings, size: 28, color: Colors.teal.shade900),
             onPressed: () {
-              debugPrint("Vai alle Impostazioni!");
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
             },
           ),
           const SizedBox(width: 10),
