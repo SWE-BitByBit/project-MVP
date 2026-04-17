@@ -117,8 +117,7 @@ class TrustedContactListWidget extends StatelessWidget {
         return AlertDialog(
           title: const Text('Elimina Contatto'),
           content: Text(
-            'Sei sicuro di voler rimuovere $contactName dai tuoi contatti fidati? '
-            'Questa azione non può essere annullata.',
+            'Sei sicuro di voler rimuovere $contactName dai tuoi contatti fidati? ',
           ),
           actions: [
             TextButton(

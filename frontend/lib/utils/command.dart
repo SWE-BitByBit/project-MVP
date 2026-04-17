@@ -73,32 +73,3 @@ class Command1<T, A> extends Command<T> {
     await _execute(() => _action(argument));
   }
 }
-
-/* /// [Command] con 3 argomenti.
-/// Prende un tipo [CommandAction3] come azione da eseguire.
-class Command3<T, A, C, S> extends Command<T> {
-  Command3(this._action);
-
-  final CommandAction3<T, A, C, S> _action;
-
-  Future<void> execute(A argument1, C argument2, S argument3) async {
-    await _execute(() => _action(argument1, argument2, argument3));
-  }
-}
-
-/// [Command] con 4 argomenti.
-/// Prende un tipo [CommandAction4] come azione da eseguire.
-class Command4<T, A, C, S, G> extends Command<T> {
-  Command4(this._action);
-
-  final CommandAction4<T, A, C, S, G> _action;
-
-  Future<void> execute(
-    A argument1,
-    C argument2,
-    S argument3,
-    G arguments4,
-  ) async {
-    await _execute(() => _action(argument1, argument2, argument3, arguments4));
-  }
-} */

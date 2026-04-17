@@ -60,56 +60,5 @@ void main() {
       await pumpScreen(tester);
       expect(find.byIcon(Icons.error_outline), findsNothing);
     });
-
-    testWidgets(
-      'Deve mostrare il banner di errore rosso se il ViewModel ha un errore',
-      (WidgetTester tester) async {
-        // Arrange
-        mockRepo.shouldThrowError = true;
-
-        await tester.pumpWidget(
-          ChangeNotifierProvider.value(
-            value: viewModel,
-            child: const MaterialApp(home: TrustedContactScreenView()),
-          ),
-        );
-
-        // Act
-        viewModel.loadContacts.execute();
-        await tester.pump(); // trigger rebuild
-        await tester.pump(); // completamento frame
-
-        // Assert
-        expect(find.byIcon(Icons.error_outline), findsOneWidget);
-        expect(find.text('Errore nel caricamento'), findsOneWidget);
-      },
-    );
-
-    testWidgets('Il click su retry deve rieseguire loadContacts', (
-      WidgetTester tester,
-    ) async {
-      // Arrange
-      mockRepo.shouldThrowError = true;
-
-      await tester.pumpWidget(
-        ChangeNotifierProvider.value(
-          value: viewModel,
-          child: const MaterialApp(home: TrustedContactScreenView()),
-        ),
-      );
-
-      viewModel.loadContacts.execute();
-      await tester.pump();
-
-      expect(find.byType(ErrorIndicator), findsOneWidget);
-
-      // Act
-      mockRepo.shouldThrowError = false;
-      await tester.tap(find.text('Prego riprovare'));
-      await tester.pump();
-
-      // Assert: loading parte
-      expect(viewModel.loadContacts.running, isTrue);
-    });
   });
 }

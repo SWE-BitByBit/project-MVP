@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_list_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
 import '../../../../testing/mocks/mock_trusted_contact_repository.dart';
 
@@ -43,25 +44,30 @@ void main() {
       },
     );
 
-    testWidgets('Stato loading: deve mostrare il CircularProgressIndicator', (
-      WidgetTester tester,
+    testWidgets('mostra CircularProgressIndicator durante il loading', (
+      tester,
     ) async {
-      // 1. Prima montiamo il widget (stato iniziale: lista vuota, non loading)
-      await pumpListWidget(tester);
+      final mockRepo = MockTrustedContactRepository()
+        ..simulatedDelay = const Duration(seconds: 1);
 
-      // 2. Simuliamo un caricamento lento e avviamo senza await
-      mockRepo.simulatedDelay = const Duration(seconds: 1);
-      viewModel.loadContacts.execute(); // non await: il loading è in corso
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => TrustedContactViewModel(mockRepo),
+          child: const MaterialApp(home: TrustedContactScreenView()),
+        ),
+      );
 
-      // 3. Un singolo frame affinché isLoading sia true e la UI si aggiorni
+      // Primo frame: il Future NON è ancora completato
       await tester.pump();
 
+      // Loader visibile
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Nessun contatto fidato'), findsNothing);
 
-      // 4. Puliamo il timer residuo
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      mockRepo.simulatedDelay = Duration.zero;
+      // Facciamo finire il delay
+      await tester.pumpAndSettle();
+
+      // Loader sparisce
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('Popolato: deve mostrare tutti i contatti caricati', (

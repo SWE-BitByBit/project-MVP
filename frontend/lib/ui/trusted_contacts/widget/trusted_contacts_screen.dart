@@ -48,6 +48,9 @@ class TrustedContactScreenView extends StatelessWidget {
       ),
       body: Consumer<TrustedContactViewModel>(
         builder: (context, viewModel, child) {
+          if (viewModel.loadContacts.completed) {
+            return const TrustedContactListWidget();
+          }
           return Column(
             children: [
               if (viewModel.loadContacts.running)
@@ -67,7 +70,7 @@ class TrustedContactScreenView extends StatelessWidget {
             ],
           );
         },
-        child: const Expanded(child: TrustedContactListWidget()),
+        child: const TrustedContactListWidget(),
       ),
       floatingActionButton: const TrustedContactActionsWidget(),
     );
