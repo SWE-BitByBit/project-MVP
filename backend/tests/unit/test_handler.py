@@ -14,7 +14,7 @@ TEST_USER_ID = str(uuid4())
 def setUp_mock_dynamo(monkeypatch):
     monkeypatch.setenv("TABLE_NAME", TABLE_NAME)
     with mock_aws():
-        dynamodb = boto3.resource("dynamodb", region_name="eu-north-1")
+        dynamodb = boto3.resource("dynamodb", region_name="eu-south-1")
         dynamodb.create_table(
             TableName=TABLE_NAME,
             KeySchema=[
