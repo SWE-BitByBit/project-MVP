@@ -19,7 +19,7 @@ void main() {
       home: Scaffold(
         body: ChangeNotifierProvider<MaterialViewModel>.value(
           value: viewModel,
-          child: const MaterialListWidget(),
+          child: MaterialListWidget(viewModel: viewModel),
         ),
       ),
     );

@@ -49,7 +49,13 @@ class _MaterialScreenView extends StatelessWidget {
           _buildFilters(context),
           const Divider(height: 1),
           // Sezione bassa: La lista (che si espanderà per riempire lo spazio)
-          const Expanded(child: MaterialListWidget()),
+          Expanded(
+            child: Consumer<MaterialViewModel>(
+              builder: (context, viewModel, child) {
+                return MaterialListWidget(viewModel: viewModel);
+              },
+            ),
+          ),
         ],
       ),
     );

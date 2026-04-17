@@ -1,46 +1,75 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
-/// Un'implementazione personalizzata del pattern Command.
+typedef CommandAction0<T> = Future<T> Function();
+typedef CommandAction1<T, A> = Future<T> Function(A);
+
+/// Facilita l'interazione con il ViewModel
 ///
-/// Incapsula un'operazione asincrona, gestendo automaticamente lo stato
-/// di esecuzione (caricamento) e gli eventuali errori.
-class Command0<T> extends ChangeNotifier {
-  /// L'azione asincrona che il comando deve eseguire.
-  final Future<T> Function() _action;
+/// Incapsula un'azione,
+/// espone i suoi stati: running, error, compleated, result.
+/// Assicura che non venga eseguita un'azione mentre un'altra è in esecuzione.
+abstract class Command<T> extends ChangeNotifier {
+  Command();
 
-  /// Indica se l'operazione è attualmente in corso.
-  bool _isExecuting = false;
+  bool _running = false;
+  T? _result;
+  Exception? _error;
+  bool _completed = false;
 
-  /// Contiene un messaggio d'errore se l'esecuzione fallisce.
-  String? _errorMessage;
+  Exception? get error => _error;
+  bool get completed => _completed;
+  bool get running => _running;
+  T? get result => _result;
 
-  /// Inizializza il comando passandogli l'[_action] da eseguire.
-  Command0(this._action);
+  /// Per andare a pulire il valore del risultato dell'ultima esecuzione
+  void clearResult() {
+    _result = null;
+    notifyListeners();
+  }
 
-  /// Restituisce true se l'azione è attualmente in esecuzione.
-  bool get isExecuting => _isExecuting;
+  /// Implementazione interna di Execute
+  Future<void> _execute(CommandAction0<T> action) async {
+    if (_running) return;
 
-  /// Restituisce il messaggio d'errore o null se non ci sono errori.
-  String? get errorMessage => _errorMessage;
-
-  /// Avvia l'esecuzione dell'azione.
-  ///
-  /// Gestisce in automatico l'aggiornamento di [isExecuting] e
-  /// [errorMessage], notificando i listener della UI.
-  Future<void> execute() async {
-    if (_isExecuting) return;
-
-    _isExecuting = true;
-    _errorMessage = null;
+    _running = true;
+    _completed = false;
+    _error = null;
     notifyListeners();
 
     try {
-      await _action();
-    } catch (e) {
-      _errorMessage = 'Si è verificato un errore durante il recupero dei dati.';
+      _result = await action();
+      _completed = true;
+    } on Exception catch (error) {
+      _error = error;
     } finally {
-      _isExecuting = false;
+      _running = false;
       notifyListeners();
     }
+  }
+}
+
+/// [Command] senza argomenti.
+/// Prende un tipo [CommandAction0] come azione da eseguire.
+class Command0<T> extends Command<T> {
+  Command0(this._action);
+
+  final CommandAction0<T> _action;
+
+  Future<void> execute() async {
+    await _execute(_action);
+  }
+}
+
+/// [Command] con un argomento.
+/// Prende un tipo [CommandAction1] come azione da eseguire.
+class Command1<T, A> extends Command<T> {
+  Command1(this._action);
+
+  final CommandAction1<T, A> _action;
+
+  Future<void> execute(A argument) async {
+    await _execute(() => _action(argument));
   }
 }

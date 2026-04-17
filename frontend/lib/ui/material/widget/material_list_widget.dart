@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 
 import '../../../domain/resource.dart';
 import '../view_model/material_view_model.dart';
@@ -9,24 +9,24 @@ import '../view_model/material_view_model.dart';
 /// Ascolta lo stato del [MaterialViewModel] per mostrare un indicatore
 /// di caricamento tramite il comando, eventuali errori, oppure la lista popolata.
 class MaterialListWidget extends StatelessWidget {
-  const MaterialListWidget({super.key});
+  final MaterialViewModel viewModel;
+
+  const MaterialListWidget({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MaterialViewModel>(
-      builder: (context, viewModel, child) {
         // Gestione errore di rete
-        if (viewModel.loadMaterials.errorMessage != null) {
+        if (viewModel.loadMaterials.error != null) {
           return Center(
             child: Text(
-              viewModel.loadMaterials.errorMessage!,
+              'Si è verificato un errore durante il recupero dei dati.',
               style: const TextStyle(color: Colors.red, fontSize: 16),
             ),
           );
         }
 
         // Gestione caricamento dati
-        if (viewModel.loadMaterials.isExecuting) {
+        if (viewModel.loadMaterials.running) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -47,8 +47,6 @@ class MaterialListWidget extends StatelessWidget {
             return _ResourceCardWidget(resource: resource);
           },
         );
-      },
-    );
   }
 }
 

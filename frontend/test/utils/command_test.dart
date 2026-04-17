@@ -5,11 +5,11 @@ void main() {
   group('Command0 Unit Test', () {
     test('Stato iniziale deve essere non in esecuzione e senza errori', () {
       final command = Command0(() async => true);
-      expect(command.isExecuting, isFalse);
-      expect(command.errorMessage, isNull);
+      expect(command.running, isFalse);
+      expect(command.error, isNull);
     });
 
-    test('L\'esecuzione deve aggiornare isExecuting correttamente', () async {
+    test('L\'esecuzione deve aggiornare running correttamente', () async {
       bool actionCalled = false;
       final command = Command0(() async {
         actionCalled = true;
@@ -18,12 +18,12 @@ void main() {
       });
 
       final future = command.execute();
-      expect(command.isExecuting, isTrue);
+      expect(command.running, isTrue);
       
       await future;
       
       expect(actionCalled, isTrue);
-      expect(command.isExecuting, isFalse);
+      expect(command.running, isFalse);
     });
 
     test('Deve gestire gli errori e impostare un messaggio d\'errore', () async {
@@ -33,9 +33,9 @@ void main() {
 
       await command.execute();
 
-      expect(command.isExecuting, isFalse);
-      expect(command.errorMessage, isNotNull);
-      expect(command.errorMessage, contains('errore durante il recupero dei dati'));
+      expect(command.running, isFalse);
+      expect(command.error, isNotNull);
+      expect(command.error.toString(), contains('Fail'));
     });
 
     test('Non deve eseguire se è già in corso', () async {
