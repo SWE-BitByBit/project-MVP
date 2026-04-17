@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 import '../../../domain/resource.dart';
@@ -84,8 +85,13 @@ class _ResourceCardWidget extends StatelessWidget {
                   ElevatedButton.icon(
                     icon: const Icon(Icons.open_in_browser),
                     label: const Text('Visita il Link'),
-                    onPressed: () {
-                      debugPrint('Devo aprire il link: ${resource.url}');
+                    onPressed: () async {
+                      final uri = Uri.parse(resource.url!);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      } else {
+                        debugPrint('Impossibile aprire il link: ${resource.url}');
+                      }
                     },
                   ),
               ],
