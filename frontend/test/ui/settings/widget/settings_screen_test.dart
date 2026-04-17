@@ -15,7 +15,7 @@ void main() {
       await tester.pumpWidget(createWidget());
       
       expect(find.text('Impostazioni'), findsOneWidget);
-      expect(find.text('Impostazioni Funzionalità'), findsOneWidget);
+      expect(find.text('Dead Man\'s Switch'), findsOneWidget);
       expect(find.text('Informazioni sull\'App'), findsOneWidget);
     });
 
