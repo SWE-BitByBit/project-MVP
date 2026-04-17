@@ -4,7 +4,13 @@ PYTHON ?= python3
 SONAR_TOKEN ?= 8dbef9dd3740b3fa17be1de5706958dbc736bf63
 
 clean:
-	rm -rf ./venv/ .coverage coverage.xml pytest-coverage.txt pytest.xml htmlcov/
+	rm -rf ./venv/ \
+	.coverage \
+	coverage.xml \
+	htmlcov/ \
+    pytest-coverage.txt \
+	pytest.xml \
+	.aws-sam/ 
 
 checkOSDependencies:
 	$(PYTHON) --version
