@@ -57,8 +57,11 @@ void main() {
     testWidgets('Il click su "Informazioni" deve navigare verso MaterialScreen', (WidgetTester tester) async {
       await pumpDashboard(tester);
       
-      await tester.tap(find.text('Informazioni'));
-      await tester.pumpAndSettle();
+      final button = find.text('Informazioni');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(MaterialScreen), findsOneWidget);
     });
