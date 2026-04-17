@@ -1,5 +1,6 @@
 import json
 from typing import Any, Dict, Final
+from botocore.config import Config
 import boto3
 
 class S3Client:
@@ -9,9 +10,10 @@ class S3Client:
 
     def __init__(self) -> None:
         """
-        Inizializza il client S3.
+        Inizializza il client S3 specificando un timeout esplicito.
         """
-        self._s3 = boto3.client('s3')
+        config = Config(connect_timeout=5, read_timeout=5)
+        self._s3 = boto3.client('s3', config=config)
 
     def get_object_content(self, bucket: str, key: str) -> str:
         """
