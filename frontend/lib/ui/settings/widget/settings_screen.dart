@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/settings_view_model.dart';
+import 'dead_mans_switch_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -62,8 +63,11 @@ class SettingsScreenView extends StatelessWidget {
                 title: const Text('Impostazioni Dead Man\'s Switch'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // INSERRE QUI LA LOGICA DI NAVIGAZIONE ALLE IMPOSTAZIONI DEL DEAD MAN'S SWITCH
-                  debugPrint("Naviga alle impostazioni del Dead Man's Switch");
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const DeadMansSwitchScreen(),
+                    ),
+                  );
                 },
               ),
               const Divider(height: 1),
