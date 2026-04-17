@@ -3,7 +3,7 @@
 version = 0.1
 
 [default.global.parameters]
-stack_name = "mvp_app_protegge_e_trasforma"
+stack_name = "ProgettoSviluppo-app-protegge-e-trasforma-mvp"
 
 [default.build.parameters]
 cached = true
@@ -14,8 +14,11 @@ lint = true
 
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
-confirm_changeset = true
-resolve_s3 = true
+confirm_changeset = false
+resolve_s3 = false
+region = "eu-south-1"
+s3_prefix = "ProgettoSviluppo-test"
+s3_bucket = "bucket-deploy-prova"
 
 [default.package.parameters]
 resolve_s3 = true
