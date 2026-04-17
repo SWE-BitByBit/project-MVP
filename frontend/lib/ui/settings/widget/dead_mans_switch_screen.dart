@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../view_model/dead_mans_switch_view_model.dart';
+import '../../core/widgets/error_banner_widget.dart';
 
 class DeadMansSwitchScreen extends StatelessWidget {
   const DeadMansSwitchScreen({super.key});
@@ -20,8 +21,6 @@ class DeadMansSwitchScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unitaMisura = ['Ore', 'Giorni', 'Settimane'];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dead Man\'s Switch'),
@@ -38,124 +37,95 @@ class DeadMansSwitchScreenView extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             children: [
               if (viewModel.error != null)
-                Container(
-                  color: Colors.red.shade50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          viewModel.error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                        onPressed: viewModel.clearError,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
+                ErrorBannerWidget(
+                  error: viewModel.error!,
+                  onClose: viewModel.clearError,
                 ),
               SwitchListTile(
                 title: const Text('Attiva Dead Man\'s Switch'),
                 subtitle: const Text('Verifica inattività e invia allarme'),
                 value: viewModel.isActive,
                 onChanged: viewModel.toggleActive,
-                activeColor: Colors.teal,
+                activeThumbColor: Colors.teal,
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 24),
-              
-              // --- PRIMO TIMER ---
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      initialValue: viewModel.firstTimerValue.toString(),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        labelText: 'Primo timer',
-                        border: OutlineInputBorder(),
-                      ),
-                      enabled: viewModel.isActive,
-                      onChanged: (value) {
-                        final parsed = int.tryParse(value);
-                        if (parsed != null) viewModel.setFirstTimerValue(parsed);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 1,
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                      value: viewModel.firstTimerUnit,
-                      items: unitaMisura.map((String unit) {
-                        return DropdownMenuItem<String>(value: unit, child: Text(unit));
-                      }).toList(),
-                      onChanged: viewModel.isActive
-                          ? (value) {
-                              if (value != null) viewModel.setFirstTimerUnit(value);
-                            }
-                          : null,
-                    ),
-                  ),
-                ],
+              _TimerRow(
+                label: 'Primo timer',
+                value: viewModel.firstTimerValue,
+                unit: viewModel.firstTimerUnit,
+                isActive: viewModel.isActive,
+                onValueChanged: viewModel.setFirstTimerValue,
+                onUnitChanged: viewModel.setFirstTimerUnit,
               ),
-              
               const SizedBox(height: 16),
-              
-              // --- SECONDO TIMER ---
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      initialValue: viewModel.secondTimerValue.toString(),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        labelText: 'Secondo timer',
-                        border: OutlineInputBorder(),
-                      ),
-                      enabled: viewModel.isActive,
-                      onChanged: (value) {
-                        final parsed = int.tryParse(value);
-                        if (parsed != null) viewModel.setSecondTimerValue(parsed);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 1,
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                      value: viewModel.secondTimerUnit,
-                      items: unitaMisura.map((String unit) {
-                        return DropdownMenuItem<String>(value: unit, child: Text(unit));
-                      }).toList(),
-                      onChanged: viewModel.isActive
-                          ? (value) {
-                              if (value != null) viewModel.setSecondTimerUnit(value);
-                            }
-                          : null,
-                    ),
-                  ),
-                ],
+              _TimerRow(
+                label: 'Secondo timer',
+                value: viewModel.secondTimerValue,
+                unit: viewModel.secondTimerUnit,
+                isActive: viewModel.isActive,
+                onValueChanged: viewModel.setSecondTimerValue,
+                onUnitChanged: viewModel.setSecondTimerUnit,
               ),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _TimerRow extends StatelessWidget {
+  final String label;
+  final int value;
+  final String unit;
+  final bool isActive;
+  final Function(int) onValueChanged;
+  final Function(String) onUnitChanged;
+
+  const _TimerRow({
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.isActive,
+    required this.onValueChanged,
+    required this.onUnitChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final unitaMisura = ['Ore', 'Giorni', 'Settimane'];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            initialValue: value.toString(),
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: label,
+              border: const OutlineInputBorder(),
+            ),
+            enabled: isActive,
+            onChanged: (val) {
+              final parsed = int.tryParse(val);
+              if (parsed != null) onValueChanged(parsed);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: DropdownButtonFormField<String>(
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            value: unit,
+            items: unitaMisura.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+            onChanged: isActive ? (val) { if (val != null) onUnitChanged(val); } : null,
+          ),
+        ),
+      ],
     );
   }
 }

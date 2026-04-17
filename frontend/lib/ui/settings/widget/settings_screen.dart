@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/settings_view_model.dart';
 import 'dead_mans_switch_screen.dart';
+import '../../core/widgets/error_banner_widget.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -36,27 +37,9 @@ class SettingsScreenView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             children: [
               if (viewModel.error != null)
-                Container(
-                  color: Colors.red.shade50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          viewModel.error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                        onPressed: viewModel.clearError,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
+                ErrorBannerWidget(
+                  error: viewModel.error!,
+                  onClose: viewModel.clearError,
                 ),
               ListTile(
                 leading: Icon(Icons.build, color: Colors.teal.shade900),
