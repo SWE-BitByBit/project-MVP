@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
@@ -6,24 +7,26 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.d
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
 class DiaryViewmodel with ChangeNotifier {
-  LocalNote? _currentNote;
-  int? _selectedIndex;
+  Note? _currentNote;
   final List<Note> _savedNotes = [];
+  final List<NoteElement> _currentNoteElements = [];
   bool _loading = false;
   final NoteRepository _noteRepo = NoteRepository();
   //late AuthRepository authRepo;
-
-  DiaryViewmodel() {
-    //Chiamare DiaryAccess se l'utente non ha effettuato l'accesso?
-    loadPreviews();
-  }
+  DiaryViewmodel();
 
   //Ritorna la lista di note salvate (ProxyNote)
   List<Note> getSavedNotes() {
     return _savedNotes;
+  }
+
+  //Semplice metodo
+  int getNoteListSize() {
+    return _savedNotes.length;
   }
 
   //Ritorna true se si stanno effettuando operazioni di caricamento da memoria
@@ -33,12 +36,17 @@ class DiaryViewmodel with ChangeNotifier {
 
   ///Pre: non è selezionata nessuna nota (_currentNote è vuota)
   ///Post: _currentNote contiene una LocalNote
-  Future<void> loadNote(DiaryType type, Note note) async {
-    _loading = true;
-    notifyListeners();
-    _currentNote = await _noteRepo.getNoteById(type, note.getId()) as LocalNote;
-    _loading = false;
-    notifyListeners();
+  void loadNote(int index) {
+    print("CIAO");
+    //if (_currentNote == null) {
+
+    _currentNote = _savedNotes[index];
+    if (_currentNote != null) _currentNote!.load();
+    /*_currentNote =
+        _noteRepo.getNoteById(session.loggedDiary!, _savedNotes[index].getId())
+         ;*/
+
+    //}
   }
 
   Note? getCurrentNote() {
@@ -49,9 +57,18 @@ class DiaryViewmodel with ChangeNotifier {
   void unloadNote() {
     if (_currentNote != null) {
       _currentNote = null;
-      _selectedIndex = null;
     }
   }
+
+  /*List<NoteElement> loadNoteElements(int index) {
+    _loading = true;
+    notifyListeners();
+    loadNote(index);
+    _currentNoteElements.addAll(_currentNote!.getNoteElements());
+    _loading = false;
+    notifyListeners();
+    return _currentNoteElements;
+  }*/
 
   //Ordina le note in ordine decrescente,
   void sortNotes() {
@@ -59,42 +76,45 @@ class DiaryViewmodel with ChangeNotifier {
   }
 
   //Elimina la nota presente all'indice [index]
-  Future<void> deleteNote(int index) async {
+  Future<void> deleteNote(int index, DiaryType diary) async {
     //Eliminazione nel database
-    await _noteRepo.deleteNote(
-      DiarySession.getDiaryInstance().getDiaryType(),
-      _savedNotes[index],
-    );
+    await _noteRepo.deleteNote(diary, _savedNotes[index]);
     //Eliminazione in locale
     _savedNotes.removeAt(index);
     unloadNote();
     notifyListeners();
   }
 
-  //Aggiunge una nota al diario ma non la salva in memoria
-  void addNewNote() {
+  //Aggiunge una nuova [ProxyNote] al diario e la salva in memoria
+  void addNewNote(DiaryType diary) {
     //Caricamento
     _loading = true;
     notifyListeners();
 
     //Creazione nota vuota
     String noteId = _generateNoteId(15);
-    _savedNotes.add(ProxyNote(noteId, "", DateTime.now(), DateTime.now()));
-    //_savedNotes.length - 1 = ultima nota aggiunta
-    _selectedIndex = _savedNotes.length - 1;
-
-    //Apri la nuova nota
-    loadNote(
-      DiarySession.getDiaryInstance().getDiaryType(),
-      _savedNotes[_selectedIndex!],
-    );
+    Note newNote = ProxyNote(noteId, "", DateTime.now(), DateTime.now(), diary);
+    //Salvataggio nota
+    _savedNotes.add(newNote);
+    _noteRepo.saveNote(diary, newNote);
     _loading = false;
     notifyListeners();
   }
 
+  //Aggiunge un nuovo elemento alla [Note] passata
+  void addNoteElement(Note note, String elem, int pos) {
+    note.addElement(elem, "text", pos);
+    notifyListeners();
+  }
+
+  void addNoteMediaElement(Note note, File file, String type, int pos) {
+    note.addElement(file.path, type, pos);
+    notifyListeners();
+  }
+
   //Salva la nota su server. Da chiamare dopo che sono avvenuto modifiche alla nota.
-  Future<void> saveNote(LocalNote note) async {
-    _noteRepo.saveNote(DiarySession.getDiaryInstance().getDiaryType(), note);
+  Future<void> saveNote(Note note, DiaryType diary) async {
+    _noteRepo.saveNote(diary, note);
   }
 
   //Genera una stringa casuale (non già presente nella lista) da usare come Id per le note
@@ -123,12 +143,11 @@ class DiaryViewmodel with ChangeNotifier {
 
   ///Popola _savedNotes da database con ProxyNote. Se presenti, le note già in memoria vengono rimosse.
   ///Note ordinate per ultima modifica dalla più recente alla più remota
-  Future<void> loadPreviews() async {
-    DiaryType targetDiary = DiarySession.getDiaryInstance().getDiaryType();
+  Future<void> loadPreviews(DiaryType diary) async {
     _loading = true;
     _savedNotes.clear();
     notifyListeners();
-    List<Note> noteList = await _noteRepo.getNotes(targetDiary);
+    List<Note> noteList = await _noteRepo.getNotes(diary);
     for (int i = 0; i < noteList.length; i++) {
       _savedNotes.insert(i, noteList[i]);
     }

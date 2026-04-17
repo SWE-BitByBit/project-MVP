@@ -5,8 +5,8 @@ class NoteService {
     {
       "id": "0",
       "title": "Nota test 1",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 18-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 18:00:30",
       "elements": [
         {"type": "text", "content": "Nota di prova"},
       ],
@@ -14,8 +14,8 @@ class NoteService {
     {
       "id": "1",
       "title": "Nota test 2",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 16-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 16:00:30",
       "elements": [
         {"type": "text", "content": "Nota di prova con due elementi"},
         {"type": "text", "content": "Secondo elemento"},
@@ -24,8 +24,8 @@ class NoteService {
     {
       "id": "2",
       "title": "Nota test 3",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 15-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 15:00:30",
       "elements": [],
     },
   ];
@@ -34,20 +34,20 @@ class NoteService {
     {
       "id": "0",
       "title": "Nota test 1",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 18-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 18:00:30",
     },
     {
       "id": "1",
       "title": "Nota test 2",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 16-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 16:00:30",
     },
     {
       "id": "2",
       "title": "Nota test 3",
-      "creationDate": "2026-04-14 10-00-30",
-      "lastModified": "2026-04-14 15-00-30",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 15:00:30",
     },
   ];
 
@@ -67,8 +67,10 @@ class NoteService {
     await Future.delayed(const Duration(milliseconds: 100));
 
     ///Workaround data la mancanza della logica backend
-    int temp = noteId as int;
-    return _placeHolderComplete[temp];
+    Map<String, dynamic> out = _placeHolderComplete
+        .where((json) => (json["id"] == noteId))
+        .toList()[0];
+    return out;
   }
 
   Future<void> saveNote(

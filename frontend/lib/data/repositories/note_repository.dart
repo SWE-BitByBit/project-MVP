@@ -20,8 +20,11 @@ class NoteRepository {
     List<Map<String, dynamic>> rawNotes = await _noteService.fetchNotes(
       targetDiary,
     );
-
-    return rawNotes.map((json) => _noteDTO.fromJson(json)).toList();
+    List<Note> noteOut = [];
+    for (int i = 0; i < rawNotes.length; i++) {
+      noteOut.add(_noteDTO.fromJson(rawNotes[i], targetDiary));
+    }
+    return noteOut;
   }
 
   ///Ritorna una nota completa recuperata dal service in base al [noteId] fornito
@@ -32,7 +35,7 @@ class NoteRepository {
       targetDiary,
       noteId,
     );
-    return _noteDTO.fromJson(json);
+    return _noteDTO.fromJson(json, targetDiary);
   }
 
   ///Crea una nuova nota nel backend

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_viewmodel.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
 import 'package:provider/provider.dart';
 
 class DiaryAccessScreen extends StatelessWidget {
@@ -21,10 +22,10 @@ class DiaryAccessScreen extends StatelessWidget {
 class DiaryAccess extends StatefulWidget {
   const DiaryAccess({super.key});
   @override
-  DiaryAccessView createState() => DiaryAccessView();
+  DiaryAccessScreenView createState() => DiaryAccessScreenView();
 }
 
-class DiaryAccessView extends State<DiaryAccess> {
+class DiaryAccessScreenView extends State<DiaryAccess> {
   final _diaryPassword = TextEditingController();
 
   @override
@@ -33,10 +34,16 @@ class DiaryAccessView extends State<DiaryAccess> {
     super.dispose();
   }
 
+  final diarySession = DiarySession.session;
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DiaryAccessViewmodel>();
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Accesso al diario'),
+        centerTitle: true,
+        backgroundColor: Colors.teal.shade200,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(30.0),
@@ -61,6 +68,16 @@ class DiaryAccessView extends State<DiaryAccess> {
                 child: ElevatedButton(
                   onPressed: () {
                     vm.login(_diaryPassword.text);
+                    //Redirect se l'utente ha effettuato il login con successo
+                    if (diarySession.isDiaryAuth != null &&
+                        diarySession.isDiaryAuth == true) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DiaryScreen(),
+                        ),
+                      );
+                    }
                   },
                   child: Text('Accedi'),
                 ),

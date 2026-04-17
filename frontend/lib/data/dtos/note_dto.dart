@@ -1,3 +1,6 @@
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+
 import '../../domain/models/diary/note.dart';
 import '../../domain/models/diary/proxy_note.dart';
 import '../../domain/models/diary/note_element.dart';
@@ -5,16 +8,16 @@ import '../../domain/models/diary/note_element.dart';
 class NoteDTO {
   ///Pre: json è un file JSON rappresentante una nota di uno dei diari (chiavi: id, title, creationDate, lastModified, elements (opzionale))
   ///Post: fromJson ritorna un oggetto sottotipo di Note contenente tutte le informazioni presenti nel file JSON inserito in input
-  Note fromJson(Map<String, dynamic> json) {
+  Note fromJson(Map<String, dynamic> json, DiaryType targetDiary) {
     String id = json["id"];
     String title = json["title"];
-    DateTime creationDate = json["creationDate"];
-    DateTime lastModified = json["lastModified"];
-
-    ProxyNote note = ProxyNote(id, title, creationDate, lastModified);
+    DateTime creationDate = DateTime.parse(json["creationDate"]);
+    DateTime lastModified = DateTime.parse(json["lastModified"]);
+    Note note = ProxyNote(id, title, creationDate, lastModified, targetDiary);
     //se JSON "completo" crea nota reale
     if (json.containsKey("elements")) {
-      List<Map<String, dynamic>> elementMap = json["elements"];
+      note = LocalNote(id, title, creationDate, lastModified);
+      dynamic elementMap = json["elements"];
       for (int i = 0; i < elementMap.length; i++) {
         note.addElement(elementMap[i]["content"], elementMap[i]["type"], i);
       }

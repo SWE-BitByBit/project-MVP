@@ -1,6 +1,6 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 
@@ -9,13 +9,20 @@ class ProxyNote implements Note {
   String _title;
   final DateTime _creationDate;
   DateTime _lastModified;
+  final DiaryType _origin;
 
   final NoteRepository _noteRepo = NoteRepository();
 
   ///Nota reale
-  LocalNote? _note;
+  LocalNote? _realNote;
 
-  ProxyNote(this._id, this._title, this._creationDate, this._lastModified);
+  ProxyNote(
+    this._id,
+    this._title,
+    this._creationDate,
+    this._lastModified,
+    this._origin,
+  );
 
   //Ritorna il titolo della nota
   @override
@@ -44,8 +51,8 @@ class ProxyNote implements Note {
   //Ritorna la lista degli elementi della nota reale. Carica la nota reale prima di eseguire l'operazione.
   @override
   List<NoteElement> getNoteElements() {
-    _load();
-    return _note!.getNoteElements();
+    load();
+    return _realNote!.getNoteElements();
   }
 
   //Se il parametro [title] è diverso dal titolo attuale di ProxyNote, il titolo viene cambiato in [title] e _lastModified viene aggiornato. Altrimenti non fa nulla.
@@ -63,21 +70,31 @@ class ProxyNote implements Note {
     _lastModified = DateTime.now();
   }
 
+  @override
+  int getElementCount() {
+    load();
+    return _realNote!.getElementCount();
+  }
+
   //Aggiunge un elemento alla lista degli elementi della nota reale. Carica la nota reale prima di eseguire l'operazione.
   @override
   void addElement(String elem, String type, int pos) {
-    _load();
-    _note!.addElement(elem, type, pos);
+    load();
+    _realNote!.addElement(elem, type, pos);
   }
 
+  LocalNote getRealNote() {
+    load();
+    return _realNote!;
+  }
+
+  @override
   ///Se la variabile _note è nulla, carica la nota completa e gliela assegna
-  Future<void> _load() async {
-    if (_note == null) {
-      final loadedNote = await _noteRepo.getNoteById(
-        DiarySession.getDiaryInstance().getDiaryType(),
-        _id,
-      );
-      _note = loadedNote as LocalNote;
+  void load() async {
+    if (_realNote == null) {
+      final loadedNote = await _noteRepo.getNoteById(_origin, _id);
+      _realNote = loadedNote as LocalNote;
     }
+    _realNote!.load();
   }
 }

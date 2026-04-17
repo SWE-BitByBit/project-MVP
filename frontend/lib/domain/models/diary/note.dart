@@ -10,4 +10,6 @@ abstract interface class Note {
   void setTitle(String title);
   void updateLastModified();
   void addElement(String elem, String type, int pos);
+  int getElementCount();
+  void load() {}
 }

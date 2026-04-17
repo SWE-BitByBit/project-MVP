@@ -5,17 +5,18 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.d
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
 class DiaryAccessViewmodel with ChangeNotifier {
-  late DiarySession diarySession;
   final DiaryAccountRepository _accRepo = DiaryAccountRepository();
 
   //Inizializza diarySession se (un) login ha successo, altrimenti ritorna stringa di errore.
   String login(String pwd) {
     switch (_accRepo.clarifyAccessResult(pwd)) {
       case DiaryAccessResult.realDiary:
-        diarySession = DiarySession(DiaryType.realDiary, true);
+        final diarySession = DiarySession.session;
+        diarySession.initSession(DiaryType.realDiary);
         return 'Login effettuato con successo.';
       case DiaryAccessResult.fakeDiary:
-        diarySession = DiarySession(DiaryType.fakeDiary, true);
+        final diarySession = DiarySession.session;
+        diarySession.initSession(DiaryType.fakeDiary);
         return 'Login effettuato con successo.';
       case DiaryAccessResult.error:
         return 'Errore nel login.';
@@ -26,6 +27,7 @@ class DiaryAccessViewmodel with ChangeNotifier {
 
   //Termina la sessione
   String logout() {
+    final diarySession = DiarySession.session;
     diarySession.endSession();
     return 'Logout effettuato con successo.';
   }
