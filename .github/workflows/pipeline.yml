@@ -98,4 +98,6 @@ jobs:
 
       - name: Deploy
         working-directory: backend
-        run: make deploy
+        run: |
+          sam build
+          sam deploy
