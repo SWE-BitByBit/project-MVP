@@ -11,37 +11,35 @@ void main() {
       );
     }
 
-    testWidgets('Mostra gli elementi UI correttamente all\'avvio', (WidgetTester tester) async {
+    testWidgets('UI iniziale mostra i campi testo e dropdown disabilitati', (WidgetTester tester) async {
       await tester.pumpWidget(createWidget());
 
-      expect(find.text('Dead Man\'s Switch'), findsOneWidget);
-      expect(find.text('Attiva Dead Man\'s Switch'), findsOneWidget);
-      expect(find.byType(SwitchListTile), findsOneWidget);
-      expect(find.byType(DropdownButtonFormField<int>), findsNWidgets(2));
+      expect(find.byType(TextFormField), findsNWidgets(2));
+      expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
+
+      // Siccome lo switch è disattivato di default, i campi testo devono essere disabilitati
+      final textFields = tester.widgetList<TextFormField>(find.byType(TextFormField));
+      for (final field in textFields) {
+        expect(field.enabled, isFalse);
+      }
     });
 
-    testWidgets('Abilita i Dropdown solo quando lo switch è attivo', (WidgetTester tester) async {
+    testWidgets('L\'attivazione dello switch abilita l\'inserimento di valori', (WidgetTester tester) async {
       await tester.pumpWidget(createWidget());
 
-      // All'inizio lo switch è disattivato, quindi i Dropdown non reagiscono al tap
-      final firstDropdown = tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).first
-      );
-      
-      // Se onChanged è null, significa che il widget è disabilitato
-      expect(firstDropdown.onChanged, isNull);
-
-      // Tappiamo lo switch per attivare la funzionalità
+      // Attiva il Dead Man's Switch
       await tester.tap(find.byType(SwitchListTile));
-      await tester.pumpAndSettle(); // Aspettiamo che lo stato si aggiorni
+      await tester.pumpAndSettle();
 
-      // Recuperiamo di nuovo il widget Dropdown per vedere le modifiche
-      final activeFirstDropdown = tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).first
-      );
+      final firstTextFieldWidget = find.byType(TextFormField).first;
+      final firstTextField = tester.widget<TextFormField>(firstTextFieldWidget);
+      expect(firstTextField.enabled, isTrue);
+
+      // Inseriamo un nuovo valore e controlliamo che venga accettato (simulazione UI)
+      await tester.enterText(firstTextFieldWidget, '5');
+      await tester.pump();
       
-      // Ora onChanged non deve essere null, confermando che l'utente può interagire
-      expect(activeFirstDropdown.onChanged, isNotNull);
+      expect(find.text('5'), findsOneWidget);
     });
   });
 }

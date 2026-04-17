@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../view_model/dead_mans_switch_view_model.dart';
 
@@ -19,6 +20,8 @@ class DeadMansSwitchScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unitaMisura = ['Ore', 'Giorni', 'Settimane'];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dead Man\'s Switch'),
@@ -67,42 +70,87 @@ class DeadMansSwitchScreenView extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 24),
-              DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Primo timer',
-                  border: OutlineInputBorder(),
-                ),
-                value: viewModel.firstTimerMinutes,
-                items: [5, 10, 15, 30, 60].map((int value) {
-                  return DropdownMenuItem<int>(
-                    value: value,
-                    child: Text('$value minuti'),
-                  );
-                }).toList(),
-                onChanged: viewModel.isActive
-                    ? (value) {
-                        if (value != null) viewModel.setFirstTimer(value);
-                      }
-                    : null,
+              
+              // --- PRIMO TIMER ---
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      initialValue: viewModel.firstTimerValue.toString(),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: 'Primo timer',
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: viewModel.isActive,
+                      onChanged: (value) {
+                        final parsed = int.tryParse(value);
+                        if (parsed != null) viewModel.setFirstTimerValue(parsed);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      value: viewModel.firstTimerUnit,
+                      items: unitaMisura.map((String unit) {
+                        return DropdownMenuItem<String>(value: unit, child: Text(unit));
+                      }).toList(),
+                      onChanged: viewModel.isActive
+                          ? (value) {
+                              if (value != null) viewModel.setFirstTimerUnit(value);
+                            }
+                          : null,
+                    ),
+                  ),
+                ],
               ),
+              
               const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Secondo timer',
-                  border: OutlineInputBorder(),
-                ),
-                value: viewModel.secondTimerMinutes,
-                items: [1, 2, 5, 10, 15].map((int value) {
-                  return DropdownMenuItem<int>(
-                    value: value,
-                    child: Text('$value minuti'),
-                  );
-                }).toList(),
-                onChanged: viewModel.isActive
-                    ? (value) {
-                        if (value != null) viewModel.setSecondTimer(value);
-                      }
-                    : null,
+              
+              // --- SECONDO TIMER ---
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      initialValue: viewModel.secondTimerValue.toString(),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: 'Secondo timer',
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: viewModel.isActive,
+                      onChanged: (value) {
+                        final parsed = int.tryParse(value);
+                        if (parsed != null) viewModel.setSecondTimerValue(parsed);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      value: viewModel.secondTimerUnit,
+                      items: unitaMisura.map((String unit) {
+                        return DropdownMenuItem<String>(value: unit, child: Text(unit));
+                      }).toList(),
+                      onChanged: viewModel.isActive
+                          ? (value) {
+                              if (value != null) viewModel.setSecondTimerUnit(value);
+                            }
+                          : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           );

@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 
 class DeadMansSwitchViewModel extends ChangeNotifier {
   bool _isActive = false;
-  int _firstTimerMinutes = 15;
-  int _secondTimerMinutes = 5;
+  
+  int _firstTimerValue = 1;
+  String _firstTimerUnit = 'Giorni';
+  
+  int _secondTimerValue = 12;
+  String _secondTimerUnit = 'Ore';
+  
   String? _error;
 
   bool get isLoading => false;
   bool get isActive => _isActive;
-  int get firstTimerMinutes => _firstTimerMinutes;
-  int get secondTimerMinutes => _secondTimerMinutes;
+  
+  int get firstTimerValue => _firstTimerValue;
+  String get firstTimerUnit => _firstTimerUnit;
+  
+  int get secondTimerValue => _secondTimerValue;
+  String get secondTimerUnit => _secondTimerUnit;
+  
   String? get error => _error;
 
   void toggleActive(bool value) {
@@ -17,13 +27,23 @@ class DeadMansSwitchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFirstTimer(int value) {
-    _firstTimerMinutes = value;
+  void setFirstTimerValue(int value) {
+    _firstTimerValue = value;
     notifyListeners();
   }
 
-  void setSecondTimer(int value) {
-    _secondTimerMinutes = value;
+  void setFirstTimerUnit(String unit) {
+    _firstTimerUnit = unit;
+    notifyListeners();
+  }
+
+  void setSecondTimerValue(int value) {
+    _secondTimerValue = value;
+    notifyListeners();
+  }
+
+  void setSecondTimerUnit(String unit) {
+    _secondTimerUnit = unit;
     notifyListeners();
   }
 

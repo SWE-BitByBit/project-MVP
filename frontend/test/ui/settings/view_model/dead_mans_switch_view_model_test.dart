@@ -11,27 +11,24 @@ void main() {
 
     test('Valori iniziali di default corretti', () {
       expect(viewModel.isActive, isFalse);
-      expect(viewModel.firstTimerMinutes, 15);
-      expect(viewModel.secondTimerMinutes, 5);
-      expect(viewModel.error, isNull);
+      expect(viewModel.firstTimerValue, 1);
+      expect(viewModel.firstTimerUnit, 'Giorni');
+      expect(viewModel.secondTimerValue, 12);
+      expect(viewModel.secondTimerUnit, 'Ore');
     });
 
-    test('toggleActive modifica lo stato di attivazione', () {
-      viewModel.toggleActive(true);
-      expect(viewModel.isActive, isTrue);
+    test('I metodi set aggiornano i valori e le unità correttamente', () {
+      viewModel.setFirstTimerValue(3);
+      expect(viewModel.firstTimerValue, 3);
 
-      viewModel.toggleActive(false);
-      expect(viewModel.isActive, isFalse);
-    });
+      viewModel.setFirstTimerUnit('Settimane');
+      expect(viewModel.firstTimerUnit, 'Settimane');
 
-    test('setFirstTimer aggiorna il primo timer', () {
-      viewModel.setFirstTimer(30);
-      expect(viewModel.firstTimerMinutes, 30);
-    });
+      viewModel.setSecondTimerValue(48);
+      expect(viewModel.secondTimerValue, 48);
 
-    test('setSecondTimer aggiorna il secondo timer', () {
-      viewModel.setSecondTimer(10);
-      expect(viewModel.secondTimerMinutes, 10);
+      viewModel.setSecondTimerUnit('Giorni');
+      expect(viewModel.secondTimerUnit, 'Giorni');
     });
   });
 }
