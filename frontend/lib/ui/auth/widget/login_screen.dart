@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: ListenableBuilder(
-              listenable: _viewModel,
+              listenable: Listenable.merge([_viewModel, _viewModel.login, _viewModel.logout]),
               builder: (context, child) {
                 final isUserLoggedIn = _viewModel.currentUser != null;
 
@@ -62,9 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     const HeaderWidget(),
                     const SizedBox(height: 48),
 
-                    if (_viewModel.errorMessage != null) ...[
+                    if (_viewModel.login.error != null) ...[
                       Text(
-                        _viewModel.errorMessage!,
+                        _viewModel.login.error.toString().replaceAll('Exception: ', ''),
                         style: const TextStyle(color: Colors.red),
                         textAlign: TextAlign.center,
                       ),
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
                       TextButton(
-                        onPressed: () => _viewModel.logout(),
+                        onPressed: () => _viewModel.logout.execute(),
                         child: const Text(
                           'Disconnetti',
                           style: TextStyle(color: Colors.grey),
@@ -85,9 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ] else ...[
                       GoogleLoginButtonWidget(
-                        isLoading: _viewModel.isLoading,
+                        isLoading: _viewModel.login.running,
                         onPressedCallback: () async {
-                          await _viewModel.login();
+                          await _viewModel.login.execute();
                         },
                       ),
                       const SizedBox(height: 16),

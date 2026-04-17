@@ -14,8 +14,8 @@ void main() {
 
   group('AuthViewModel - Stato Iniziale', () {
     test('Lo stato iniziale deve essere corretto', () {
-      expect(viewModel.isLoading, isFalse);
-      expect(viewModel.errorMessage, isNull);
+      expect(viewModel.login.running, isFalse);
+      expect(viewModel.login.error, isNull);
       expect(viewModel.currentUser, isNull);
     });
   });
@@ -26,13 +26,13 @@ void main() {
       // Il mock restituisce un utente di default in caso di successo
       
       // Act
-      await viewModel.login();
+      await viewModel.login.execute();
 
       // Assert
       expect(viewModel.currentUser, isNotNull);
       expect(viewModel.currentUser?.email, 'test@example.com');
-      expect(viewModel.isLoading, isFalse);
-      expect(viewModel.errorMessage, isNull);
+      expect(viewModel.login.running, isFalse);
+      expect(viewModel.login.error, isNull);
     });
 
     test('login fallisce e imposta un messaggio di errore', () async {
@@ -40,12 +40,12 @@ void main() {
       mockRepository.shouldThrowError = true;
 
       // Act
-      await viewModel.login();
+      await viewModel.login.execute();
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.errorMessage, contains('Autenticazione fallita'));
-      expect(viewModel.isLoading, isFalse);
+      expect(viewModel.login.error.toString(), contains('Autenticazione fallita'));
+      expect(viewModel.login.running, isFalse);
     });
 
     test('login lancia eccezione e imposta errore connessione', () async {
@@ -53,27 +53,27 @@ void main() {
       mockRepository.shouldThrowException = true;
 
       // Act
-      await viewModel.login();
+      await viewModel.login.execute();
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.errorMessage, contains('errore di connessione'));
-      expect(viewModel.isLoading, isFalse);
+      expect(viewModel.login.error.toString(), contains('errore di connessione'));
+      expect(viewModel.login.running, isFalse);
     });
   });
 
   group('AuthViewModel - Logout', () {
     test('logout rimuove l\'utente corrente', () async {
       // Arrange
-      await viewModel.login();
+      await viewModel.login.execute();
       expect(viewModel.currentUser, isNotNull);
 
       // Act
-      await viewModel.logout();
+      await viewModel.logout.execute();
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.isLoading, isFalse);
+      expect(viewModel.logout.running, isFalse);
     });
   });
 
