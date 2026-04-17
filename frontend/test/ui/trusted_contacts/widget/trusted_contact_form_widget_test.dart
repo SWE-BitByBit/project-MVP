@@ -141,34 +141,5 @@ void main() {
         expect(find.text('Aggiorna contatto'), findsOneWidget);
       },
     );
-
-    /* testWidgets(
-      'Deve mostrare il CircularProgressIndicator al posto del bottone durante il caricamento',
-      (WidgetTester tester) async {
-        // Simuliamo un'operazione lenta
-        mockRepo.simulatedDelay = const Duration(seconds: 1);
-
-        await pumpFormWidget(tester, onDismiss: () {});
-
-        // Avviamo una createContact senza await, in modo che il ViewModel sia in loading
-        viewModel.createContact.execute(
-          TrustedContact(
-            id: '',
-            name: 'Test',
-            email: 'test@test.com',
-            phoneNumber: '000',
-          ),
-        );
-        await tester.pump(); // Un singolo frame: isLoading è ancora true
-
-        // Il testo del bottone sparisce, compare lo spinner
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text('Salva contatto'), findsNothing);
-
-        // Puliamo
-        await tester.pumpAndSettle(const Duration(seconds: 1));
-        mockRepo.simulatedDelay = Duration.zero;
-      },
-    ); */
   });
 }

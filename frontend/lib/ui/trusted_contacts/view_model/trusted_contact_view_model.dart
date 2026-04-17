@@ -39,8 +39,11 @@ class TrustedContactViewModel extends ChangeNotifier {
   /// Aggiorna [isLoading] durante il caricamento e imposta [error]
   /// in caso di fallimento.
   Future<void> _loadContacts() async {
-    _contacts = await _repository.getContacts();
-    notifyListeners();
+    try {
+      _contacts = await _repository.getContacts();
+    } finally {
+      notifyListeners();
+    }
   }
 
   /// Crea un nuovo contatto fidato con i dati forniti e aggiorna la lista.
