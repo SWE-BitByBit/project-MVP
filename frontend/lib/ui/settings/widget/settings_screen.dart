@@ -81,7 +81,7 @@ class SettingsScreenView extends StatelessWidget {
                     applicationVersion: '0.0.0',
                     applicationIcon: Icon(Icons.security, size: 40, color: Colors.teal.shade900),
                     children: [
-                      const Text('Applicazione per la protezione e trasformazione.'),
+                      const Text('Applicazione che protegge e trasforma.'),
                     ],
                   );
                 },

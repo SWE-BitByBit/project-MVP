@@ -69,7 +69,7 @@ class DeadMansSwitchScreenView extends StatelessWidget {
               const SizedBox(height: 24),
               DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Primo timer (Preallarme)',
+                  labelText: 'Primo timer',
                   border: OutlineInputBorder(),
                 ),
                 value: viewModel.firstTimerMinutes,
@@ -88,7 +88,7 @@ class DeadMansSwitchScreenView extends StatelessWidget {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Secondo timer (Allarme definitivo)',
+                  labelText: 'Secondo timer',
                   border: OutlineInputBorder(),
                 ),
                 value: viewModel.secondTimerMinutes,
