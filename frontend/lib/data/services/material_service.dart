@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Servizio responsabile del recupero dei materiali informativi dalla sorgente dati.
+/// Servizio responsabile del recupero dei materiali informativi tramite chiamata API.
 ///
-/// Attualmente simula una chiamata di rete restituendo dati statici. In futuro,
-/// questa classe gestirà le chiamate HTTP o le query ad AWS Cognito/DynamoDB.
+/// Gestisce le richieste HTTP verso l'endpoint AWS Lambda configurato.
 class MaterialService {
   final String _apiUrl =
       'https://6zkvgiq4k4.execute-api.eu-south-1.amazonaws.com/dev/materials';
 
-  /// Recupera una lista grezza di materiali informativi.
+  /// Effettua una richiesta GET per recuperare la lista dei materiali.
   ///
-  /// Simula un ritardo di rete di 1 secondo per testare le animazioni di
-  /// caricamento nella UI, e restituisce una lista di mappe JSON.
+  /// Restituisce una lista di mappe JSON decodificate dal corpo della risposta.
+  /// Solleva un'eccezione in caso di errore di rete o risposta non valida dal server.
   Future<List<Map<String, dynamic>>> fetchMaterials() async {
     try {
       final response = await http.get(Uri.parse(_apiUrl));

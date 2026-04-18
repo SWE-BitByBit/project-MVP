@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../../../domain/resource.dart';
-import '../../../domain/resource_type.dart';
+import '../../../domain/models/material/resource.dart';
+import '../../../domain/models/material/resource_type.dart';
 import '../../../data/repositories/material_repository.dart';
 import '../../../utils/command.dart';
 

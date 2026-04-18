@@ -1,6 +1,6 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/material_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/resource.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/resource_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
 
 class MockMaterialRepository implements MaterialRepository {
   bool shouldThrowError = false;

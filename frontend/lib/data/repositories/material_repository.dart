@@ -1,4 +1,4 @@
-import '../../domain/resource.dart';
+import '../../domain/models/material/resource.dart';
 import '../services/material_service.dart';
 import '../dtos/resource_dto.dart';
 

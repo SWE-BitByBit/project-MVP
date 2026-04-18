@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
-import '../../../domain/resource.dart';
+import '../../../domain/models/material/resource.dart';
 import '../view_model/material_view_model.dart';
 
 /// Widget responsabile della visualizzazione della lista di materiali.
@@ -14,6 +14,7 @@ class MaterialListWidget extends StatelessWidget {
 
   const MaterialListWidget({super.key, required this.viewModel});
 
+  /// Costruisce la porzione di UI deputata alla lista e gestisce gli stati di caricamento ed errore.
   @override
   Widget build(BuildContext context) {
         // Gestione errore di rete
@@ -57,6 +58,7 @@ class _ResourceCardWidget extends StatelessWidget {
 
   const _ResourceCardWidget({required this.resource});
 
+  /// Costruisce la singola riga cliccabile della risorsa in formato Card.
   @override
   Widget build(BuildContext context) {
     return Card(

@@ -3,7 +3,8 @@ import pytest
 import boto3
 from moto import mock_aws
 
-from src.materials.material_handler import S3Client, MaterialHandler, lambda_handler
+from src.materials.client import S3Client
+from src.materials.material_handler import MaterialHandler, lambda_handler
 
 
 @pytest.fixture

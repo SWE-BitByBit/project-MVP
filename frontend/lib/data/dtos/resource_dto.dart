@@ -1,9 +1,10 @@
-import '../../domain/resource.dart';
-import '../../domain/resource_type.dart';
+import '../../domain/models/material/resource.dart';
+import '../../domain/models/material/resource_type.dart';
 
 /// Classe responsabile della traduzione dei dati grezzi dal backend
 /// nel formato di dominio [Resource] utilizzato dall'applicazione.
 class ResourceDTO {
+  /// Traduce la mappa [json] proveniente dall'API in un'istanza di [Resource].
   static Resource fromJson(Map<String, dynamic> json) {
     return Resource(
       id: json['id'] as String? ?? '',
@@ -14,6 +15,7 @@ class ResourceDTO {
     );
   }
 
+  /// Converte l'istanza di [resource] in una mappa JSON.
   static Map<String, dynamic> toJson(Resource resource) {
     return {
       'id': resource.id,
@@ -24,6 +26,7 @@ class ResourceDTO {
     };
   }
 
+  /// Converte la stringa [typeString] nell'enumerativo [ResourceType] corrispondente.
   static ResourceType _parseResourceType(String? typeString) {
     if (typeString == null) return ResourceType.article;
 

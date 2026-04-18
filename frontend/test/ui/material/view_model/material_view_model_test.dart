@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/material/view_model/material_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/resource_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
 import '../../../../testing/mocks/mock_material_repository.dart';
 
 void main() {

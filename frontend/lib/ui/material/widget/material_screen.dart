@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/resource_type.dart';
+import '../../../domain/models/material/resource_type.dart';
 import '../../../data/services/material_service.dart';
 import '../../../data/repositories/material_repository.dart';
 import '../view_model/material_view_model.dart';
 import 'material_list_widget.dart';
+import '../../core/widgets/filter_chip_widget.dart';
 
 /// Schermata principale per la consultazione del materiale informativo.
 ///
@@ -15,6 +16,7 @@ class MaterialScreen extends StatelessWidget {
   final MaterialRepository? repository;
   const MaterialScreen({super.key, this.repository});
 
+  /// Costruisce la schermata principale configurando il [MaterialViewModel].
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -35,6 +37,7 @@ class MaterialScreen extends StatelessWidget {
 class _MaterialScreenView extends StatelessWidget {
   const _MaterialScreenView();
 
+  /// Costruisce l'interfaccia utente utilizzando lo stato corrente del view model.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,20 +75,20 @@ class _MaterialScreenView extends StatelessWidget {
                 .horizontal, // Permette di scorrere se ci sono troppi bottoni
             child: Row(
               children: [
-                _FilterChipWidget(
+                FilterChipWidget(
                   label: 'Leggi',
                   isSelected: viewModel.currentFilter == ResourceType.law,
                   onSelected: () => viewModel.filterByType(ResourceType.law),
                 ),
                 const SizedBox(width: 8),
-                _FilterChipWidget(
+                FilterChipWidget(
                   label: 'Community',
                   isSelected: viewModel.currentFilter == ResourceType.community,
                   onSelected: () =>
                       viewModel.filterByType(ResourceType.community),
                 ),
                 const SizedBox(width: 8),
-                _FilterChipWidget(
+                FilterChipWidget(
                   label: 'Guide',
                   isSelected: viewModel.currentFilter == ResourceType.article,
                   onSelected: () =>
@@ -100,26 +103,3 @@ class _MaterialScreenView extends StatelessWidget {
   }
 }
 
-/// Widget interno di supporto per disegnare un singolo chip di filtro.
-class _FilterChipWidget extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onSelected;
-
-  const _FilterChipWidget({
-    required this.label,
-    required this.isSelected,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      selectedColor: Colors.teal.shade100,
-      checkmarkColor: Colors.teal.shade900,
-    );
-  }
-}
