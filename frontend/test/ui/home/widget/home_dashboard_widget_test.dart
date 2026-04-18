@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_dashboard_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/material/widget/material_screen.dart';
 
 void main() {
   group('HomeDashboardWidget Widget Test', () {
@@ -51,6 +52,18 @@ void main() {
     testWidgets('Deve mostrare il pulsante "Informazioni"', (WidgetTester tester) async {
       await pumpDashboard(tester);
       expect(find.text('Informazioni'), findsOneWidget);
+    });
+
+    testWidgets('Il click su "Informazioni" deve navigare verso MaterialScreen', (WidgetTester tester) async {
+      await pumpDashboard(tester);
+      
+      final button = find.text('Informazioni');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(MaterialScreen), findsOneWidget);
     });
 
     testWidgets('Deve mostrare il CircularProgressIndicator quando isLoading è true', (WidgetTester tester) async {

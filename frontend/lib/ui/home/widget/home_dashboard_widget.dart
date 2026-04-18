@@ -4,6 +4,7 @@ import '../view_model/home_view_model.dart';
 import '../../core/widgets/dashboard_button_widget.dart';
 import '../../chat/widget/chat_screen.dart';
 import '../../trusted_contacts/widget/trusted_contacts_screen.dart';
+import '../../material/widget/material_screen.dart';
 
 /// Visualizza la griglia dei pulsanti principali della dashboard.
 ///
@@ -79,7 +80,10 @@ class HomeDashboardWidget extends StatelessWidget {
             backgroundColor: Colors.orange.shade50,
             iconColor: Colors.orange.shade800,
             onTap: () {
-              debugPrint("Hai cliccato Informazioni!");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MaterialScreen()),
+              );
             },
           );
         }
