@@ -15,11 +15,12 @@ class LocalChat implements Chat {
     required String title,
     required DateTime creationDate,
     required List<ChatMessage> messages,
-  })  : _id = id,
-        _title = title,
-        _creationDate = creationDate,
-        _lastModified = DateTime.now(), // Si auto-imposta al momento della creazione in RAM
-        _messages = messages;
+  }) : _id = id,
+       _title = title,
+       _creationDate = creationDate,
+       _lastModified =
+           DateTime.now(), // Si auto-imposta al momento della creazione in RAM
+       _messages = messages;
 
   @override
   String getId() => _id;

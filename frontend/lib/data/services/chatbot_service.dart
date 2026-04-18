@@ -1,7 +1,6 @@
 /// Servizio responsabile della comunicazione HTTP/REST con il backend AWS
 /// per la funzionalità del Chatbot.
 class ChatbotService {
-
   /// Recupera la lista delle anteprime delle chat.
   Future<List<Map<String, dynamic>>> fetchChatPreviews() async {
     // TODO: Implementare chiamata API reale
@@ -36,7 +35,11 @@ class ChatbotService {
   }
 
   /// Invia un messaggio all'AI specificando la modalità (Mirror o Detective) in formato stringa.
-  Future<Map<String, dynamic>> sendMessage(String chatId, String content, String mode) async {
+  Future<Map<String, dynamic>> sendMessage(
+    String chatId,
+    String content,
+    String mode,
+  ) async {
     // TODO: Implementare chiamata API reale (POST)
     await Future.delayed(const Duration(seconds: 1));
     return {
