@@ -7,6 +7,7 @@ abstract interface class Note {
   DateTime getCreationDate();
   DateTime getUpdateDate();
   List<NoteElement> getNoteElements();
+  void setElementText(int index, String newText);
   void setTitle(String title);
   void updateLastModified();
   void addElement(String elem, String type, int pos);

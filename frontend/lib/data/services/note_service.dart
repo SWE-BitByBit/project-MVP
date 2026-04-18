@@ -80,6 +80,7 @@ class NoteService {
     //PLACEHOLDER
     //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
+    print(json);
   }
 
   Future<void> deleteNote(DiaryType targetDiary, String noteId) async {

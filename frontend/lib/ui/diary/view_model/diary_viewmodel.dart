@@ -3,17 +3,13 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
 class DiaryViewmodel with ChangeNotifier {
   Note? _currentNote;
   final List<Note> _savedNotes = [];
-  final List<NoteElement> _currentNoteElements = [];
   bool _loading = false;
   final NoteRepository _noteRepo = NoteRepository();
   //late AuthRepository authRepo;
@@ -37,16 +33,11 @@ class DiaryViewmodel with ChangeNotifier {
   ///Pre: non è selezionata nessuna nota (_currentNote è vuota)
   ///Post: _currentNote contiene una LocalNote
   void loadNote(int index) {
-    print("CIAO");
-    //if (_currentNote == null) {
-
     _currentNote = _savedNotes[index];
-    if (_currentNote != null) _currentNote!.load();
-    /*_currentNote =
-        _noteRepo.getNoteById(session.loggedDiary!, _savedNotes[index].getId())
-         ;*/
-
-    //}
+    if (_currentNote != null) {
+      print("Note loaded");
+      _currentNote!.load();
+    }
   }
 
   Note? getCurrentNote() {
@@ -59,16 +50,6 @@ class DiaryViewmodel with ChangeNotifier {
       _currentNote = null;
     }
   }
-
-  /*List<NoteElement> loadNoteElements(int index) {
-    _loading = true;
-    notifyListeners();
-    loadNote(index);
-    _currentNoteElements.addAll(_currentNote!.getNoteElements());
-    _loading = false;
-    notifyListeners();
-    return _currentNoteElements;
-  }*/
 
   //Ordina le note in ordine decrescente,
   void sortNotes() {
@@ -114,6 +95,7 @@ class DiaryViewmodel with ChangeNotifier {
 
   //Salva la nota su server. Da chiamare dopo che sono avvenuto modifiche alla nota.
   Future<void> saveNote(Note note, DiaryType diary) async {
+    print("Called VM saveNote");
     _noteRepo.saveNote(diary, note);
   }
 

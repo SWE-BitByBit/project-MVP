@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 import 'package:provider/provider.dart';
 
 class NoteListWidget extends StatelessWidget {
   const NoteListWidget({super.key});
-  void _openNoteEditor(
-    BuildContext context,
-    DiaryViewmodel vm,
-    Note note,
-    int index,
-  ) {
+  void _openNoteEditor(BuildContext context, DiaryViewmodel vm, int index) {
+    vm.loadNote(index);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -22,13 +17,13 @@ class NoteListWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        vm.loadNote(index);
         return ChangeNotifierProvider.value(
           value: vm,
           child: NoteEditorWidget(
-            selectedNote: note,
-            onDismiss: () =>
-                () => Navigator.pop(sheetContext),
+            selectedNote: vm.getCurrentNote()!,
+            onDismiss: () {
+              () => Navigator.pop(sheetContext);
+            },
           ),
         );
       },
@@ -112,13 +107,13 @@ class NoteListWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final note = viewModel.getSavedNotes()[index];
           return ListTile(
-            onTap: () => _openNoteEditor(context, viewModel, note, index),
+            onTap: () => _openNoteEditor(context, viewModel, index),
             title: Text(
               note.getTitle(),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             subtitle: Text(
-              "Ultima modifica: ${DateFormat.yMMMMd().format(note.getUpdateDate())} alle ${DateFormat("H:mm").format(note.getUpdateDate())}\nData di creazione: ${DateFormat.yMMMMd().format(note.getCreationDate())} alle ${DateFormat("H:mm").format(note.getCreationDate())}",
+              "Ultima modifica: ${DateFormat("d/M/y").format(note.getUpdateDate())} alle ${DateFormat("H:mm").format(note.getUpdateDate())}\nData di creazione: ${DateFormat("d/M/y").format(note.getCreationDate())} alle ${DateFormat("H:mm").format(note.getCreationDate())}",
             ),
             isThreeLine: true,
             trailing: IconButton(

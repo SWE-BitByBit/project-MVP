@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
@@ -47,7 +48,13 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           return Card(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [TextField(controller: noteTextController)],
+              children: [
+                TextField(
+                  controller: noteTextController,
+                  maxLines: null,
+                  onChanged: (value) => element.setContent(value),
+                ),
+              ],
             ),
           );
         default:
@@ -58,12 +65,19 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
+  void _updateTitle() {
+    widget.selectedNote.setTitle(_titleController.text);
+  }
+
   @override
   void initState() {
-    super.initState();
     _titleController = TextEditingController(
       text: widget.selectedNote.getTitle(),
     );
+    _titleController.addListener(_updateTitle);
+    loading = true;
+    loadNote();
+    super.initState();
   }
 
   @override
@@ -72,16 +86,20 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     _titleController.dispose();
   }
 
-  void _showOptions(BuildContext context) async {
+  void _showOptions(BuildContext context, Note note) async {
     final viewModel = context.read<DiaryViewmodel>();
-    final note = viewModel.getCurrentNote();
     showMenu(
       position: RelativeRect.fromLTRB(100, 1000, 0, 0),
       context: context,
       items: [
         PopupMenuItem(
           onTap: () {
-            viewModel.addNoteElement(note!, "", note.getElementCount());
+            viewModel.addNoteElement(note, "", note.getElementCount());
+            setState(() {
+              _elements.add(
+                _createCard(note.getNoteElements()[note.getElementCount() - 1]),
+              );
+            });
           },
           child: Row(
             children: [
@@ -129,77 +147,114 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
+  Future<void> loadNote() async {
+    List<NoteElement> elems = widget.selectedNote.getNoteElements();
+    await Future.delayed(
+      Duration(milliseconds: 200),
+      () => {
+        setState(() {
+          //Necessario risettare elems perchè altrimenti rimane vuoto per qualche ragione
+          elems = widget.selectedNote.getNoteElements();
+          for (int i = 0; i < elems.length; i++) {
+            _elements.add(_createCard(elems[i]));
+          }
+          loading = false;
+        }),
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: <Widget>[
-          AppBar(backgroundColor: Colors.teal.shade200),
-          TextField(
-            controller: _titleController,
-            decoration: InputDecoration(labelText: 'Titolo nota'),
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          ),
-          Text(
-            "Creata il ${DateFormat.yMMMMd().format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
-          ),
-          Text(
-            "Ultima modifica: ${DateFormat.yMMMMd().format(widget.selectedNote.getUpdateDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getUpdateDate())}",
-          ),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                if (_elements.isEmpty == false) {
-                  return ListView.builder(
-                    itemBuilder: (BuildContext context, int index) {
-                      return _elements[index];
-                    },
-                  );
-                } else {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.edit, size: 64, color: Colors.teal.shade200),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Questa nota è vuota",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500,
-                          ),
+    if (loading) {
+      return Center(child: CircularProgressIndicator());
+    } else {
+      return PopScope(
+        child: Scaffold(
+          body: Column(
+            children: <Widget>[
+              AppBar(backgroundColor: Colors.teal.shade200),
+              TextField(
+                controller: _titleController,
+                maxLines: 1,
+                maxLength: 24,
+                decoration: InputDecoration(labelText: 'Titolo nota'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+              ),
+              Text(
+                "Creata il ${DateFormat("d/M/y").format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
+              ),
+              Text(
+                "Ultima modifica: ${DateFormat("d/M/y").format(widget.selectedNote.getUpdateDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getUpdateDate())}",
+              ),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (_elements.isEmpty == false) {
+                      return ListView.builder(
+                        itemCount: _elements.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return _elements[index];
+                        },
+                      );
+                    } else {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              size: 64,
+                              color: Colors.teal.shade200,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Questa nota è vuota",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Aggiungi un elemento con il pulsante qui sotto.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Aggiungi un elemento con il pulsante qui sotto.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            elevation: 10,
+            onPressed: () => _showOptions(context, widget.selectedNote),
+            backgroundColor: Colors.teal,
+            tooltip: 'Scegli un elemento da aggiungere alla nota',
+            child: const Icon(
+              Icons.create_new_folder_outlined,
+              color: Colors.white,
+              size: 28,
             ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 10,
-        onPressed: () => _showOptions(context),
-        backgroundColor: Colors.teal,
-        tooltip: 'Scegli un elemento da aggiungere alla nota',
-        child: const Icon(
-          Icons.create_new_folder_outlined,
-          color: Colors.white,
-          size: 28,
         ),
-      ),
-    );
+        onPopInvokedWithResult: (didPop, result) {
+          final viewModel = context.read<DiaryViewmodel>();
+          viewModel.saveNote(
+            widget.selectedNote,
+            DiarySession.session.loggedDiary!,
+          );
+        },
+      );
+    }
   }
 }

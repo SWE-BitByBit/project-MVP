@@ -52,7 +52,10 @@ class ProxyNote implements Note {
   @override
   List<NoteElement> getNoteElements() {
     load();
-    return _realNote!.getNoteElements();
+    if (_realNote != null) {
+      return _realNote!.getNoteElements();
+    }
+    return [];
   }
 
   //Se il parametro [title] è diverso dal titolo attuale di ProxyNote, il titolo viene cambiato in [title] e _lastModified viene aggiornato. Altrimenti non fa nulla.
@@ -71,6 +74,13 @@ class ProxyNote implements Note {
   }
 
   @override
+  void setElementText(int index, String newText) {
+    load();
+    _realNote!.setElementText(index, newText);
+    updateLastModified();
+  }
+
+  @override
   int getElementCount() {
     load();
     return _realNote!.getElementCount();
@@ -83,14 +93,9 @@ class ProxyNote implements Note {
     _realNote!.addElement(elem, type, pos);
   }
 
-  LocalNote getRealNote() {
-    load();
-    return _realNote!;
-  }
-
   @override
   ///Se la variabile _note è nulla, carica la nota completa e gliela assegna
-  void load() async {
+  Future<void> load() async {
     if (_realNote == null) {
       final loadedNote = await _noteRepo.getNoteById(_origin, _id);
       _realNote = loadedNote as LocalNote;
