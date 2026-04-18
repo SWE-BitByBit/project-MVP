@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 /// La struttura è predisposta per future espansioni (es. dati profilo utente,
 /// conteggio notifiche, elementi dashboard personalizzati).
 class HomeViewModel extends ChangeNotifier {
-
   // --- STATO DELLA UI ---
 
   String? _error;

@@ -25,12 +25,16 @@ class ChatWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         final message = messages[messages.length - 1 - index];
         return Align(
-          alignment: message.isUserMessage() ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: message.isUserMessage()
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 4),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: message.isUserMessage() ? Colors.teal[100] : Colors.grey[200],
+              color: message.isUserMessage()
+                  ? Colors.teal[100]
+                  : Colors.grey[200],
               borderRadius: BorderRadius.circular(12),
             ),
             child: SelectableText(message.content),
