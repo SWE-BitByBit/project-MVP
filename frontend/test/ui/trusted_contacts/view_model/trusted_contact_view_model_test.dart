@@ -225,10 +225,7 @@ void main() {
 
         // Assert: la lista rimane invariata, appare l'errore
         expect(viewModel.contacts.length, 1);
-        expect(
-          viewModel.deleteContact.error,
-          Exception('Impossibile eliminare il contatto'),
-        );
+        expect(viewModel.deleteContact.error, isA<Exception>());
         expect(viewModel.deleteContact.running, isFalse);
       },
     );

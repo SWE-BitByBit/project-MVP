@@ -30,6 +30,11 @@ class TrustedContactViewModel extends ChangeNotifier {
     createContact = Command1(_createContact);
     updateContact = Command1(_updateContact);
     deleteContact = Command1(_deleteContact);
+
+    loadContacts.addListener(notifyListeners);
+    createContact.addListener(notifyListeners);
+    updateContact.addListener(notifyListeners);
+    deleteContact.addListener(notifyListeners);
   }
 
   // --- METODI ---
