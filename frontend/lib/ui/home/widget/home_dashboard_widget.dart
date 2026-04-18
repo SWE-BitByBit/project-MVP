@@ -37,9 +37,7 @@ class HomeDashboardWidget extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ChatScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
               );
             },
           );

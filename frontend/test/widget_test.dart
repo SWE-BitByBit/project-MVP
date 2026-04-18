@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/main.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/auth_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/auth_repository.dart';
 
 /// Suite di smoke test dell'applicazione.
 ///
@@ -16,12 +19,23 @@ import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_
 /// - utilizzare [testWidgets] per test di rendering e interazione;
 /// - utilizzare [test] per test di logica pura;
 /// - ogni gruppo di test deve essere racchiuso in un [group] con nome descrittivo.
+/// Punto di ingresso per la suite di smoke test dell'applicazione.
 void main() {
+  setUpAll(() {
+    dotenv.loadFromString(envString: '''
+COGNITO_DOMAIN=test.auth.eu-central-1.amazoncognito.com
+COGNITO_CLIENT_ID=test_id
+COGNITO_CLIENT_SECRET=test_secret
+''');
+  });
+
   group('Smoke test - Avvio applicazione', () {
     testWidgets(
       "L'applicazione si avvia e renderizza il widget radice senza errori",
       (WidgetTester tester) async {
-        await tester.pumpWidget(const MainApp());
+        await tester.pumpWidget(MainApp(
+          authRepository: AuthRepository(AuthService()),
+        ));
 
         expect(find.byType(MaterialApp), findsOneWidget);
       },
@@ -57,7 +71,11 @@ void main() {
       'Il widget si renderizza senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: HomeScreen()),
+          MaterialApp(
+            home: HomeScreen(
+              authRepository: AuthRepository(AuthService()),
+            ),
+          ),
         );
 
         // pump aggiuntivo per permettere al ChangeNotifierProvider di stabilizzarsi
@@ -71,7 +89,11 @@ void main() {
       'Il pulsante FAB apre il pannello emergenza senza errori',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          const MaterialApp(home: HomeScreen()),
+          MaterialApp(
+            home: HomeScreen(
+              authRepository: AuthRepository(AuthService()),
+            ),
+          ),
         );
 
         await tester.pump();

@@ -66,14 +66,9 @@ class TrustedContactListWidget extends StatelessWidget {
           ),
           title: Text(
             contact.getName(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          subtitle: Text(
-            '${contact.getEmail()}\n${contact.getPhone()}',
-          ),
+          subtitle: Text('${contact.getEmail()}\n${contact.getPhone()}'),
           isThreeLine: true,
           trailing: IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
