@@ -117,7 +117,7 @@ class _TimerRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          flex: 1,
+          flex: 2,
           child: DropdownButtonFormField<String>(
             decoration: const InputDecoration(border: OutlineInputBorder()),
             value: unit,
