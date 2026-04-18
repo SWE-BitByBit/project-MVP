@@ -49,7 +49,6 @@ class LocalNote implements Note {
   void setTitle(String title) {
     if (this.title != title) {
       this.title = title;
-      updateLastModified();
     }
   }
 
@@ -76,7 +75,6 @@ class LocalNote implements Note {
   @override
   void setElementText(int index, String newText) {
     noteContents[index].setContent(newText);
-    updateLastModified();
   }
 
   /// Pre: elem è una stringa che rappresenta il contentuto di un NoteElement,
@@ -84,7 +82,6 @@ class LocalNote implements Note {
   /// Post: Un nuovo oggetto NoteElement è stato aggiunto alla lista degli elementi della nota
   @override
   void addElement(String elem, String type, int pos) {
-    updateLastModified();
     switch (type) {
       case "text":
         noteContents.insert(pos, NoteTextElement(elem));

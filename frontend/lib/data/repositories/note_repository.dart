@@ -9,9 +9,9 @@ import 'package:mvp_app_protegge_e_trasforma/data/dtos/note_dto.dart';
 ///Inoltre gestisce anche le richieste del ViewModel relative al salvataggio e all'eliminazione delle note, convertendo gli oggetti [Note] passati dal ViewModel
 ///nei formati richiesti dal Service.
 class NoteRepository {
-  final NoteService _noteService = NoteService();
+  final NoteService _noteService;
   final NoteDTO _noteDTO = NoteDTO();
-  NoteRepository();
+  NoteRepository(this._noteService);
 
   ///Recupera le note di un diario senza le informazioni sui loro elementi
   ///

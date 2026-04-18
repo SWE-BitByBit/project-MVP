@@ -1,4 +1,5 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
@@ -10,8 +11,6 @@ class ProxyNote implements Note {
   final DateTime _creationDate;
   DateTime _lastModified;
   final DiaryType _origin;
-
-  final NoteRepository _noteRepo = NoteRepository();
 
   ///Nota reale
   LocalNote? _realNote;
@@ -63,7 +62,6 @@ class ProxyNote implements Note {
   void setTitle(String title) {
     if (title != _title) {
       _title = title;
-      updateLastModified();
     }
   }
 
@@ -77,7 +75,6 @@ class ProxyNote implements Note {
   void setElementText(int index, String newText) {
     load();
     _realNote!.setElementText(index, newText);
-    updateLastModified();
   }
 
   @override
@@ -97,7 +94,9 @@ class ProxyNote implements Note {
   ///Se la variabile _note è nulla, carica la nota completa e gliela assegna
   Future<void> load() async {
     if (_realNote == null) {
-      final loadedNote = await _noteRepo.getNoteById(_origin, _id);
+      NoteService s = NoteService();
+      NoteRepository r = NoteRepository(s);
+      final loadedNote = await r.getNoteById(_origin, _id);
       _realNote = loadedNote as LocalNote;
     }
     _realNote!.load();

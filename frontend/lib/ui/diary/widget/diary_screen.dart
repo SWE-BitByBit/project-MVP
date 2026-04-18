@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
@@ -25,7 +27,9 @@ class DiaryScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider(
       create: (_) {
-        final viewmodel = DiaryViewmodel();
+        final service = NoteService();
+        final repository = NoteRepository(service);
+        final viewmodel = DiaryViewmodel(repository);
         final diarySession = DiarySession.session;
 
         if (diarySession.isDiaryAuth != null) {

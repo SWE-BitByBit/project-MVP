@@ -11,9 +11,10 @@ class DiaryViewmodel with ChangeNotifier {
   Note? _currentNote;
   final List<Note> _savedNotes = [];
   bool _loading = false;
-  final NoteRepository _noteRepo = NoteRepository();
+
+  final NoteRepository _noteRepo;
   //late AuthRepository authRepo;
-  DiaryViewmodel();
+  DiaryViewmodel(this._noteRepo);
 
   //Ritorna la lista di note salvate (ProxyNote)
   List<Note> getSavedNotes() {
@@ -35,7 +36,6 @@ class DiaryViewmodel with ChangeNotifier {
   void loadNote(int index) {
     _currentNote = _savedNotes[index];
     if (_currentNote != null) {
-      print("Note loaded");
       _currentNote!.load();
     }
   }
@@ -85,18 +85,21 @@ class DiaryViewmodel with ChangeNotifier {
   //Aggiunge un nuovo elemento alla [Note] passata, in posizione [pos]
   void addNoteElement(Note note, String elem, int pos) {
     note.addElement(elem, "text", pos);
+    note.updateLastModified();
     notifyListeners();
   }
 
   //Aggiunge un elemento media (immagine/traccia audio) alla [Note] passata, in posizione [pos]
   void addNoteMediaElement(Note note, File file, String type, int pos) {
     note.addElement(file.path, type, pos);
+    note.updateLastModified();
     notifyListeners();
   }
 
   //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota.
   Future<void> saveNote(Note note, DiaryType diary) async {
     _noteRepo.saveNote(diary, note);
+    notifyListeners();
   }
 
   //Genera una stringa casuale (non già presente nella lista) da usare come Id per le note

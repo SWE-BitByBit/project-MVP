@@ -76,13 +76,13 @@ class NoteService {
   }
 
   ///Recupera una lista di [File] appartenenti alla nota di cui viene passato l'id.
-  Future<List<File>> fetchNoteMedia(
+  /*Future<List<File>> fetchNoteMedia(
     DiaryType targetDiary,
     String noteId,
   ) async {
     await Future.delayed(const Duration(milliseconds: 100));
     return [];
-  }
+  }*/
 
   Future<void> saveNote(
     DiaryType targetDiary,
