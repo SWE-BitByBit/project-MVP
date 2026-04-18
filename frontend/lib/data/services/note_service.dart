@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
 class NoteService {
@@ -73,6 +75,15 @@ class NoteService {
     return out;
   }
 
+  ///Recupera una lista di [File] appartenenti alla nota di cui viene passato l'id.
+  Future<List<File>> fetchNoteMedia(
+    DiaryType targetDiary,
+    String noteId,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    return [];
+  }
+
   Future<void> saveNote(
     DiaryType targetDiary,
     Map<String, dynamic> json,
@@ -81,6 +92,7 @@ class NoteService {
     //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
     print(json);
+    //Carica anche le note
   }
 
   Future<void> deleteNote(DiaryType targetDiary, String noteId) async {

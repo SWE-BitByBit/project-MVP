@@ -32,11 +32,14 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   late final TextEditingController _titleController;
   final _textControllers = <TextEditingController>[];
   final _imagePicker = ImagePicker();
-  File? _selectedImage;
+  final _imageUrls = <String>[];
+  final _audioUrls = <String>[];
+  File? _currentImage;
+  File? _currentAudio;
   final _elements = <Card>[];
   bool loading = false;
 
-  //Creazione elemento testuale
+  //Crea una [Card] rappresentante il [NoteElement] passato come parametro
   Card _createCard(NoteElement? element) {
     if (element != null) {
       switch (element.getType()) {
@@ -57,6 +60,27 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               ],
             ),
           );
+        case "image":
+          _imageUrls.add(element.getContent());
+          return Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.file(File(element.getContent())),
+                ),
+              ],
+            ),
+          );
+        case "audio":
+          _audioUrls.add(element.getContent());
+          return Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [Text("NYI")],
+            ),
+          );
         default:
       }
     }
@@ -65,6 +89,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
+  //Aggiorna il titolo della nota aperta nell'editor
   void _updateTitle() {
     widget.selectedNote.setTitle(_titleController.text);
   }
@@ -86,6 +111,17 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     _titleController.dispose();
   }
 
+  //Apre il selettore di immagini e imposta la variabile di utility [_currentImage] con il file scelto
+  Future _pickImage() async {
+    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _currentImage = File(image.path);
+      });
+    }
+  }
+
+  //Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
   void _showOptions(BuildContext context, Note note) async {
     final viewModel = context.read<DiaryViewmodel>();
     showMenu(
@@ -111,12 +147,23 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         ),
         PopupMenuItem(
           onTap: () {
-            /*viewModel.addNoteMediaElement(
-              note!,
-              _getImageFromGallery(),
-              "image",
-              note.getElementCount(),
-            );*/
+            _pickImage();
+            if (_currentImage != null) {
+              viewModel.addNoteMediaElement(
+                note,
+                _currentImage!,
+                "image",
+                note.getElementCount(),
+              );
+              setState(() {
+                _elements.add(
+                  _createCard(
+                    note.getNoteElements()[note.getElementCount() - 1],
+                  ),
+                );
+                _currentImage = null;
+              });
+            }
           },
           child: Row(
             children: [
@@ -147,6 +194,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
+  //Metodo per forzare il caricamento degli elementi della nota
   Future<void> loadNote() async {
     List<NoteElement> elems = widget.selectedNote.getNoteElements();
     await Future.delayed(
@@ -247,6 +295,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             ),
           ),
         ),
+        //Salva nota sse è stata effettivamente caricata
         onPopInvokedWithResult: (didPop, result) {
           final viewModel = context.read<DiaryViewmodel>();
           viewModel.saveNote(

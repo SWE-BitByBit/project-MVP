@@ -22,7 +22,10 @@ class NoteListWidget extends StatelessWidget {
           child: NoteEditorWidget(
             selectedNote: vm.getCurrentNote()!,
             onDismiss: () {
-              () => Navigator.pop(sheetContext);
+              () {
+                Navigator.pop(sheetContext);
+                vm.loadPreviews(DiarySession.session.loggedDiary!);
+              };
             },
           ),
         );

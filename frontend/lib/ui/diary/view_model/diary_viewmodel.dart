@@ -82,20 +82,20 @@ class DiaryViewmodel with ChangeNotifier {
     notifyListeners();
   }
 
-  //Aggiunge un nuovo elemento alla [Note] passata
+  //Aggiunge un nuovo elemento alla [Note] passata, in posizione [pos]
   void addNoteElement(Note note, String elem, int pos) {
     note.addElement(elem, "text", pos);
     notifyListeners();
   }
 
+  //Aggiunge un elemento media (immagine/traccia audio) alla [Note] passata, in posizione [pos]
   void addNoteMediaElement(Note note, File file, String type, int pos) {
     note.addElement(file.path, type, pos);
     notifyListeners();
   }
 
-  //Salva la nota su server. Da chiamare dopo che sono avvenuto modifiche alla nota.
+  //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota.
   Future<void> saveNote(Note note, DiaryType diary) async {
-    print("Called VM saveNote");
     _noteRepo.saveNote(diary, note);
   }
 
