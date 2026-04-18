@@ -120,7 +120,7 @@ class _TimerRow extends StatelessWidget {
           flex: 2,
           child: DropdownButtonFormField<String>(
             decoration: const InputDecoration(border: OutlineInputBorder()),
-            value: unit,
+            initialValue: unit,
             items: unitaMisura.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
             onChanged: isActive ? (val) { if (val != null) onUnitChanged(val); } : null,
           ),
