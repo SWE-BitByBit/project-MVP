@@ -99,7 +99,7 @@ class _TimerRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 2,
+          flex: 3,
           child: TextFormField(
             initialValue: value.toString(),
             keyboardType: TextInputType.number,
