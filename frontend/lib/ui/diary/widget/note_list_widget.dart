@@ -5,8 +5,13 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 import 'package:provider/provider.dart';
 
+/// Widget che visualizza la lista delle note appartenenti al diario in cui l'utente ha effettuato il login
+///
+/// Il pattern Consumer è implementato tramite l'utilizzo di [context.watch] per osservare il [DiaryViewmodel] e
+/// aggiornare l'interfaccia in seguito a notifiche tramite notifyListeners().
 class NoteListWidget extends StatelessWidget {
   const NoteListWidget({super.key});
+  //Apre la schermata [NoteEditorWidget] per la nota cliccata nella ListView
   void _openNoteEditor(BuildContext context, DiaryViewmodel vm, int index) {
     vm.loadNote(index);
     showModalBottomSheet(
@@ -33,6 +38,7 @@ class NoteListWidget extends StatelessWidget {
     );
   }
 
+  //Apre un [AlertDialog] per confermare l'eliminazione della nota
   void _showDeleteConfirmation(
     BuildContext context,
     DiaryViewmodel viewModel,
@@ -48,7 +54,7 @@ class NoteListWidget extends StatelessWidget {
           return AlertDialog(
             title: Text("Elimina nota"),
             content: Text(
-              "Eliminare definitivamente la nota $noteTitle creata il ${DateFormat.yMMMMd().format(noteDate)} alle ${DateFormat("H:mm").format(noteDate)}?\n"
+              "Eliminare definitivamente la nota $noteTitle creata il ${DateFormat("d/M/y").format(noteDate)} alle ${DateFormat("H:mm").format(noteDate)}?\n"
               "Una volta confermata l'eliminazione la nota non potrà più essere recuperata.",
             ),
             actions: [

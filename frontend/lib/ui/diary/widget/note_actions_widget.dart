@@ -3,8 +3,9 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.d
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-class NoteActionNewWidget extends StatelessWidget {
-  const NoteActionNewWidget({super.key});
+///Bottone per la creazione di una nuova [Note] e aggiunta alla lista delle note salvate della [DiarySession] attualmente attiva
+class NoteActionsWidget extends StatelessWidget {
+  const NoteActionsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

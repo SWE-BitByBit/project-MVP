@@ -8,21 +8,21 @@ import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 
+/// Widget che gestisce la modifica delle note
+///
+/// Essendo consumer di [DiaryViewmodel] si aggiorna in seguito a cambiamenti di stato del ViewModel
 class NoteEditorWidget extends StatefulWidget {
   //Callback per quando l'editor viene chiuso
   final VoidCallback onDismiss;
 
   //Nota da modificare
   final Note selectedNote;
+
   const NoteEditorWidget({
     super.key,
     required this.onDismiss,
     required this.selectedNote,
   });
-
-  ///Bottone per l'inserimento di una nuova sezione
-  ///bottone per l'eliminazione appare solo se l'elemento è selezionato
-  ///Titolo in alto
 
   @override
   State<NoteEditorWidget> createState() => _NoteEditorWidgetState();
@@ -39,6 +39,15 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   final _elements = <Card>[];
   bool loading = false;
 
+  //Rimuove l'elemento [noteElement] sia da [_elements] che dalla lista dei contenuti della nota aperta nell'editor
+  void _removeNoteElement(NoteElement element, Card card) {
+    final viewModel = context.read<DiaryViewmodel>();
+    viewModel.removeNoteElement(widget.selectedNote, element);
+    setState(() {
+      _elements.remove(card);
+    });
+  }
+
   //Crea una [Card] rappresentante il [NoteElement] passato come parametro
   Card _createCard(NoteElement? element) {
     if (element != null) {
@@ -48,18 +57,29 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             text: element.getContent(),
           );
           _textControllers.add(noteTextController);
-          return Card(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          Card card = Card();
+          card = Card(
+            child: Row(
+              //mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: noteTextController,
-                  maxLines: null,
-                  onChanged: (value) => element.setContent(value),
+                Expanded(
+                  child: TextField(
+                    controller: noteTextController,
+                    maxLines: null,
+                    onChanged: (value) => element.setContent(value),
+                  ),
+                ),
+                SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () {
+                    _removeNoteElement(element, card);
+                  },
                 ),
               ],
             ),
           );
+          return card;
         case "image":
           _imageUrls.add(element.getContent());
           return Card(
@@ -89,17 +109,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
-  //Aggiorna il titolo della nota aperta nell'editor
-  void _updateTitle() {
-    widget.selectedNote.setTitle(_titleController.text);
-  }
-
   @override
   void initState() {
     _titleController = TextEditingController(
       text: widget.selectedNote.getTitle(),
     );
-    _titleController.addListener(_updateTitle);
     loading = true;
     loadNote();
     super.initState();
@@ -298,6 +312,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         //Salva nota sse è stata effettivamente caricata
         onPopInvokedWithResult: (didPop, result) {
           final viewModel = context.read<DiaryViewmodel>();
+          viewModel.updateNoteTitle(_titleController.text);
           viewModel.saveNote(
             widget.selectedNote,
             DiarySession.session.loggedDiary!,

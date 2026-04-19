@@ -1,3 +1,5 @@
+/// Servizio responsabile della comunicazione HTTP/REST con il backend
+/// per l'accesso al diario.
 class DiaryAccountService {
   int validateDiaryPassword(String pwd) {
     ///PLACEHOLDER

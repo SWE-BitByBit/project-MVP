@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
+/// Servizio responsabile della comunicazione HTTP/REST con il backend
+/// per la funzionalità dei diari.
 class NoteService {
   final _placeHolderComplete = <Map<String, dynamic>>[
     {

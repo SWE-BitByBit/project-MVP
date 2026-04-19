@@ -1,9 +1,16 @@
 import 'package:mvp_app_protegge_e_trasforma/data/services/diary_access_result.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
 
+///Classe che fa da intermediario tra Service e ViewModel
+///
+///Si occupa di gestire i risultati dei tentativi di accesso dell'utente
+
 class DiaryAccountRepository {
+  final DiaryAccountService _service;
+
+  DiaryAccountRepository(this._service);
   DiaryAccessResult clarifyAccessResult(String pwd) {
-    int result = DiaryAccountService().validateDiaryPassword(pwd);
+    int result = _service.validateDiaryPassword(pwd);
     switch (result) {
       case 0:
         return DiaryAccessResult.error;

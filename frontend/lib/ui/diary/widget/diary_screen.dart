@@ -5,16 +5,21 @@ import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_action_new_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
 import 'package:provider/provider.dart';
 
+/// Pagina principale del diario.
+///
+/// Istanzia le dipendenze e poi fa dependency injection tramite [ChangeNotifierProvider]
+/// Logica di stato e l'effettiva costruzione della UI sono delegate ai vari widget
 class DiaryScreen extends StatelessWidget {
   const DiaryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final session = DiarySession.session;
+    //Se l'utente non ha effettuato l'accesso e in qualche modo arriva al diario, lo riporta alla schermata di login
     if (session.isDiaryAuth == null || session.isDiaryAuth == false) {
       Timer(
         const Duration(seconds: 1),
@@ -42,6 +47,10 @@ class DiaryScreen extends StatelessWidget {
   }
 }
 
+/// Vista pura
+///
+/// Riceve [DiaryViewmodel] dal provider e compone il layout con i widget [NoteListWidget] e [NoteActionsWidget]
+/// per la visualizzazione a lista delle note e la gestione del pulsante per l'aggiunta di note rispettivamente
 class DiaryScreenView extends StatelessWidget {
   const DiaryScreenView({super.key});
   @override
@@ -62,7 +71,7 @@ class DiaryScreenView extends StatelessWidget {
             return Column(children: [const Expanded(child: NoteListWidget())]);
           },
         ),
-        floatingActionButton: const NoteActionNewWidget(),
+        floatingActionButton: const NoteActionsWidget(),
       ),
     );
   }

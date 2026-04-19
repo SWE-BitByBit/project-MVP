@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_viewmodel.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
 import 'package:provider/provider.dart';
 
+/// Pagina per l'accesso al diario.
+///
+/// Istanzia le dipendenze e poi fa dependency injection tramite [ChangeNotifierProvider]
+/// Logica di stato e l'effettiva costruzione della UI sono delegate ai widget
 class DiaryAccessScreen extends StatelessWidget {
   const DiaryAccessScreen({super.key});
 
@@ -11,7 +17,9 @@ class DiaryAccessScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
-        final viewmodel = DiaryAccessViewmodel();
+        final service = DiaryAccountService();
+        final repo = DiaryAccountRepository(service);
+        final viewmodel = DiaryAccessViewmodel(repo);
         return viewmodel;
       },
       child: DiaryAccess(),
@@ -19,6 +27,10 @@ class DiaryAccessScreen extends StatelessWidget {
   }
 }
 
+/// Vista pura
+///
+/// Si occupa della creazione dell'interfaccia di accesso, e ,i n quanto Consumer di [DiaryAccessViewmodel]
+/// si aggiorna in seguito a cambiamenti di stato del ViewModel
 class DiaryAccess extends StatefulWidget {
   const DiaryAccess({super.key});
   @override
@@ -27,6 +39,13 @@ class DiaryAccess extends StatefulWidget {
 
 class DiaryAccessScreenView extends State<DiaryAccess> {
   final _diaryPassword = TextEditingController();
+  String error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    error = '';
+  }
 
   @override
   void dispose() {
@@ -67,7 +86,10 @@ class DiaryAccessScreenView extends State<DiaryAccess> {
                 height: 49,
                 child: ElevatedButton(
                   onPressed: () {
-                    vm.login(_diaryPassword.text);
+                    setState(() {
+                      error = vm.login(_diaryPassword.text);
+                    });
+
                     //Redirect se l'utente ha effettuato il login con successo
                     if (diarySession.isDiaryAuth != null &&
                         diarySession.isDiaryAuth == true) {
@@ -81,6 +103,11 @@ class DiaryAccessScreenView extends State<DiaryAccess> {
                   },
                   child: Text('Accedi'),
                 ),
+              ),
+              SizedBox(height: 26),
+              Text(
+                error,
+                style: TextStyle(color: Color(0xFFAA0000), fontSize: 18),
               ),
             ],
           ),

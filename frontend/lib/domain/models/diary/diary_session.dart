@@ -1,9 +1,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 
+/// Classe che gestisce la sessione della funzionalità dei diari
+///
+/// Implementa il pattern Singleton tramite il campo statico _session e il suo getter statico, in modo da rendere
+/// le informazioni sulla sessione accessibili dalle altre parti della funzionalità e fare in modo che esista solo una sessione attiva in un dato momento.
 class DiarySession {
   static final DiarySession _session = DiarySession._internal();
-  static DiarySession get session => _session;
+
   bool? isDiaryAuth;
   DiaryType? loggedDiary;
   DiarySession._internal() {
@@ -13,6 +17,12 @@ class DiarySession {
     return _session;
   }
 
+  /// Getter per la sessione
+  static DiarySession get session => _session;
+
+  /// Metodi
+
+  /// Inizializza la sessione per il [DiaryType] specificato
   void initSession(DiaryType diaryType) async {
     isDiaryAuth = true;
     loggedDiary = diaryType;
@@ -22,22 +32,9 @@ class DiarySession {
     await storage.write(key: "loggedDiary", value: loggedDiary.toString());
   }
 
-  Future<void> loadSession() async {
-    const storage = FlutterSecureStorage();
-    final response = await Future.wait([
-      storage.read(key: "isDiaryAuth"),
-      storage.read(key: "loggedDiary"),
-    ]);
-    if (response[0] != null) {
-      isDiaryAuth = bool.tryParse(response[0]!);
-    }
-    if (response[1] != null) {
-      loggedDiary = DiaryType.values.byName(response[1]!);
-    }
-  }
-
+  /// Termina la sessione
   void endSession() async {
-    isDiaryAuth = null;
+    isDiaryAuth = false;
     loggedDiary = null;
     const storage = FlutterSecureStorage();
     await Future.wait([
