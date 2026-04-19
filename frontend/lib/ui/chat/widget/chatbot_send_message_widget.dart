@@ -6,7 +6,8 @@ class ChatbotSendMessageWidget extends StatefulWidget {
   const ChatbotSendMessageWidget({super.key});
 
   @override
-  State<ChatbotSendMessageWidget> createState() => _ChatbotSendMessageWidgetState();
+  State<ChatbotSendMessageWidget> createState() =>
+      _ChatbotSendMessageWidgetState();
 }
 
 class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
@@ -30,10 +31,7 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
           decoration: BoxDecoration(
             color: Colors.grey[200],
-            border: Border.all(
-              color: Colors.teal.shade300,
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.teal.shade300, width: 1.5),
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
@@ -45,8 +43,9 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
                   minLines: 1,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                      hintText: 'Scrivi qui...',
-                      border: InputBorder.none,),
+                    hintText: 'Scrivi qui...',
+                    border: InputBorder.none,
+                  ),
                   onSubmitted: (_) => _handleSend(viewModel),
                 ),
               ),

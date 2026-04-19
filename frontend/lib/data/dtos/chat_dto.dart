@@ -6,7 +6,6 @@ import '../../domain/models/chatbot/chat_enums.dart';
 /// Oggetto di trasferimento dati per la serializzazione delle Chat.
 /// Mappa i dati JSON del backend verso il Dominio e viceversa.
 class ChatDTO {
-
   ChatDTO._(); // Costruttore privato: contiene solo metodi statici.
 
   /// Converte un JSON in un oggetto di Dominio [LocalChat].
@@ -36,7 +35,9 @@ class ChatDTO {
   /// Converte un oggetto [Chat] in un formato JSON per il Backend.
   static Map<String, dynamic> toJson(Chat chat) {
     // 1. Convertiamo tutti i ChatMessage in mappe JSON
-    final List<Map<String, dynamic>> messagesJson = chat.getMessages().map((msg) {
+    final List<Map<String, dynamic>> messagesJson = chat.getMessages().map((
+      msg,
+    ) {
       return {
         'id': msg.id,
         'content': msg.content,

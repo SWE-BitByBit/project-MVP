@@ -18,8 +18,8 @@ class TrustedContactRepository {
   /// Richiede i dati grezzi tramite [TrustedContactService] e li converte
   /// in una lista di oggetti di dominio [TrustedContact] tramite [TrustedContactDTO].
   Future<List<TrustedContact>> getContacts() async {
-    final List<Map<String, dynamic>> rawData =
-        await _trustedContactService.getContacts();
+    final List<Map<String, dynamic>> rawData = await _trustedContactService
+        .getContacts();
     return rawData.map((json) => TrustedContactDTO.fromJson(json)).toList();
   }
 
@@ -29,16 +29,16 @@ class TrustedContactRepository {
   /// al servizio e restituisce l'oggetto di dominio aggiornato con l'id assegnato.
   Future<TrustedContact> createContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
-    final Map<String, dynamic> rawResponse =
-        await _trustedContactService.addContact(contactData);
+    final Map<String, dynamic> rawResponse = await _trustedContactService
+        .addContact(contactData);
     return TrustedContactDTO.fromJson(rawResponse);
   }
 
   /// Aggiorna i dati di un contatto fidato esistente nel backend.
   Future<TrustedContact> updateContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
-    final Map<String, dynamic> rawResponse =
-        await _trustedContactService.updateContact(contactData);
+    final Map<String, dynamic> rawResponse = await _trustedContactService
+        .updateContact(contactData);
     return TrustedContactDTO.fromJson(rawResponse);
   }
 

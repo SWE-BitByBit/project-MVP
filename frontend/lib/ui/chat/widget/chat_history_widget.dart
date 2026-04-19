@@ -34,7 +34,9 @@ class ChatHistoryWidget extends StatelessWidget {
                   title: Text(preview.title),
                   onTap: () {
                     viewModel.openChat(preview.id);
-                    Navigator.pop(context); // Chiude il drawer dopo la selezione
+                    Navigator.pop(
+                      context,
+                    ); // Chiude il drawer dopo la selezione
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),

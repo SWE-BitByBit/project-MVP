@@ -1,7 +1,6 @@
 /// Servizio responsabile della comunicazione HTTP/REST con il backend
 /// per la funzionalità dei contatti fidati.
 class TrustedContactService {
-
   /// Recupera la lista grezzo dei contatti fidati dal backend.
   ///
   /// Restituisce una lista di mappe JSON con i dati di ciascun contatto.
@@ -34,7 +33,9 @@ class TrustedContactService {
   ///
   /// Accetta una mappa JSON con i dati del contatto da creare e restituisce
   /// la rappresentazione grezza del contatto appena creato, comprensiva dell'id assegnato.
-  Future<Map<String, dynamic>> addContact(Map<String, dynamic> contactData) async {
+  Future<Map<String, dynamic>> addContact(
+    Map<String, dynamic> contactData,
+  ) async {
     // TODO: Implementare chiamata API reale (POST /trusted-contacts)
     await Future.delayed(const Duration(milliseconds: 500));
     return {
@@ -46,7 +47,9 @@ class TrustedContactService {
   }
 
   /// Invia al backend la richiesta di aggiornamento di un contatto esistente.
-  Future<Map<String, dynamic>> updateContact(Map<String, dynamic> contactData) async {
+  Future<Map<String, dynamic>> updateContact(
+    Map<String, dynamic> contactData,
+  ) async {
     // TODO: Implementare chiamata API reale (PUT /trusted-contacts/{id})
     await Future.delayed(const Duration(milliseconds: 500));
     return contactData; // Restituisce i dati aggiornati
