@@ -109,7 +109,8 @@ class ChatbotViewModel extends ChangeNotifier {
 
     // 1. Creiamo e aggiungiamo istantaneamente il messaggio dell'utente alla UI
     final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(), // ID temporaneo locale
+      id: DateTime.now().millisecondsSinceEpoch
+          .toString(), // ID temporaneo locale
       content: content.trim(),
       type: MessageType.USER,
       timestamp: DateTime.now(),

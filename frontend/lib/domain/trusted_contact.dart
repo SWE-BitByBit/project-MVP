@@ -17,10 +17,10 @@ class TrustedContact {
     required String name,
     required String email,
     required String phoneNumber,
-  })  : _id = id,
-        _name = name,
-        _email = email,
-        _phoneNumber = phoneNumber;
+  }) : _id = id,
+       _name = name,
+       _email = email,
+       _phoneNumber = phoneNumber;
 
   /// Restituisce l'identificativo univoco del contatto.
   String getId() => _id;

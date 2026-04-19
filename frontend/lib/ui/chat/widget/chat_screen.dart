@@ -47,29 +47,26 @@ class ChatScreenView extends StatelessWidget {
         },
         appBar: AppBar(
           title: const _AppBarTitle(),
-          actions: const [
-            ChatbotModeToggleWidget(),
-            ChatbotCreateChatWidget(),
-          ],
+          actions: const [ChatbotModeToggleWidget(), ChatbotCreateChatWidget()],
         ),
         drawer: const ChatHistoryWidget(),
         body: Column(
           children: [
-            const Expanded(
-              child: ChatWidget(),
-            ),
+            const Expanded(child: ChatWidget()),
             Consumer<ChatbotViewModel>(
               builder: (context, vm, child) {
                 return Column(
                   children: [
-                    if (vm.isLoading)
-                      const LinearProgressIndicator(),
+                    if (vm.isLoading) const LinearProgressIndicator(),
                     if (vm.errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           vm.errorMessage!,
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],
@@ -90,7 +87,7 @@ class _AppBarTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = context.select<ChatbotViewModel, String>(
-            (vm) => vm.currentChat?.getTitle() ?? 'Nuova Conversazione'
+      (vm) => vm.currentChat?.getTitle() ?? 'Nuova Conversazione',
     );
     return Text(title);
   }
