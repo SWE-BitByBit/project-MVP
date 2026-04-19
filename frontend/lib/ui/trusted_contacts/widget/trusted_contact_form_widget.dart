@@ -36,9 +36,15 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
   void initState() {
     super.initState();
     // Inizializza i controller con i dati del contatto esistente o vuoti
-    _nameController = TextEditingController(text: widget.initialContact?.getName());
-    _emailController = TextEditingController(text: widget.initialContact?.getEmail());
-    _phoneController = TextEditingController(text: widget.initialContact?.getPhone());
+    _nameController = TextEditingController(
+      text: widget.initialContact?.getName(),
+    );
+    _emailController = TextEditingController(
+      text: widget.initialContact?.getEmail(),
+    );
+    _phoneController = TextEditingController(
+      text: widget.initialContact?.getPhone(),
+    );
   }
 
   @override
@@ -114,10 +120,12 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                 labelText: 'Nome e Cognome',
                 prefixIcon: const Icon(Icons.person),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Inserisci il nome' : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Inserisci il nome'
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -127,10 +135,12 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                 labelText: 'Numero di Cellulare',
                 prefixIcon: const Icon(Icons.phone),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Inserisci il numero' : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Inserisci il numero'
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -140,14 +150,18 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                 labelText: 'Indirizzo Email',
                 prefixIcon: const Icon(Icons.email),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Inserisci l\'email' : null,
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Inserisci l\'email'
+                  : null,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: viewModel.isLoading ? null : () => _submitForm(viewModel),
+              onPressed: viewModel.isLoading
+                  ? null
+                  : () => _submitForm(viewModel),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -160,14 +174,17 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2),
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     )
                   : Text(
                       isEditing ? 'Aggiorna contatto' : 'Salva contatto',
                       style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ],

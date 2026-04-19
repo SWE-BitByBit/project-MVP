@@ -24,11 +24,11 @@ class ProxyChat implements Chat {
     required DateTime creationDate,
     required DateTime lastModified,
     required ChatbotRepository repository,
-  })  : _id = id,
-        _title = title,
-        _creationDate = creationDate,
-        _lastModified = lastModified,
-        _repository = repository;
+  }) : _id = id,
+       _title = title,
+       _creationDate = creationDate,
+       _lastModified = lastModified,
+       _repository = repository;
 
   /// Metodo chiave del Proxy: scarica i messaggi completi solo quando richiesto.
   Future<void> load() async {

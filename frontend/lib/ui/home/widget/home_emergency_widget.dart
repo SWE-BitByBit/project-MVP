@@ -50,11 +50,7 @@ class HomeEmergencyWidget extends StatelessWidget {
                 debugPrint("SOS PREMUTO DAL MENU NASCOSTO!");
                 onDismiss();
               },
-              icon: const Icon(
-                Icons.warning,
-                color: Colors.white,
-                size: 28,
-              ),
+              icon: const Icon(Icons.warning, color: Colors.white, size: 28),
               label: const Text(
                 'SOS',
                 style: TextStyle(

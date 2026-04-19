@@ -14,17 +14,24 @@ class ChatbotRepository {
   ChatbotRepository(this._chatbotService);
 
   Future<List<ChatPreview>> getChatPreviews() async {
-    final List<Map<String, dynamic>> rawData = await _chatbotService.fetchChatPreviews();
+    final List<Map<String, dynamic>> rawData = await _chatbotService
+        .fetchChatPreviews();
 
-    return rawData.map((json) => ChatPreview(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      lastModified: DateTime.parse(json['lastModified'] as String),
-    )).toList();
+    return rawData
+        .map(
+          (json) => ChatPreview(
+            id: json['id'] as String,
+            title: json['title'] as String,
+            lastModified: DateTime.parse(json['lastModified'] as String),
+          ),
+        )
+        .toList();
   }
 
   Future<Chat> getChatById(String chatId) async {
-    final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(chatId);
+    final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(
+      chatId,
+    );
     return ChatDTO.fromJson(rawChat);
   }
 
@@ -38,7 +45,11 @@ class ChatbotRepository {
   }
 
   /// Invia un messaggio tramite il Service e restituisce una [MessageResponse].
-  Future<MessageResponse> sendMessage(Chat chat, String content, ChatMode mode) async {
+  Future<MessageResponse> sendMessage(
+    Chat chat,
+    String content,
+    ChatMode mode,
+  ) async {
     // Converte l'enum in stringa come richiesto dal Service ('MIRROR' o 'DETECTIVE')
     final String modeString = mode.name;
 
