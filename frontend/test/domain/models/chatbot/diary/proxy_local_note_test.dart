@@ -41,5 +41,16 @@ void main() {
         expect(sampleNote.getElementCount(), 1);
       },
     );
+
+    test(
+      "editNoteElement modifica correttamente il contenuto di un NoteElement",
+      () async {
+        await sampleNote.load();
+        NoteElement sampleElement = NoteTextElement("rnd");
+        sampleNote.addElement(sampleElement, 1);
+        sampleNote.editNoteElement(sampleElement, "not rnd");
+        expect(sampleElement.getContent(), "not rnd");
+      },
+    );
   });
 }

@@ -91,4 +91,13 @@ class LocalNote implements Note {
   void addElement(NoteElement element, int pos) {
     noteContents.insert(pos, element);
   }
+
+  @override
+  void editNoteElement(NoteElement element, String newText) {
+    noteContents
+        .where((listElem) => listElem == element)
+        .first
+        .setContent(newText);
+    updateLastModified();
+  }
 }

@@ -1,3 +1,5 @@
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
+
 import 'note_element.dart';
 
 /// Interfaccia che definisce i metodi standard per le note
@@ -11,6 +13,7 @@ abstract interface class Note {
   void setTitle(String title);
   void updateLastModified();
   void addElement(NoteElement element, int pos);
+  void editNoteElement(NoteElement element, String newText);
   int getElementCount();
   Future<void> load() async {}
 }

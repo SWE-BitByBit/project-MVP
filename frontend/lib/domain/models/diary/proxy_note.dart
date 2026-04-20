@@ -4,6 +4,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 
 /// Classe che implementa il pattern Virtual Proxy. Permette la visualizzazione delle informazioni base delle [Note], id, titolo,
 /// date di creazione e di ultima modifica, e rimandare ad un secondo momento il caricamento dei NoteElement.
@@ -103,6 +104,7 @@ class ProxyNote implements Note {
   void addElement(NoteElement element, int pos) {
     load();
     _realNote!.addElement(element, pos);
+    updateLastModified();
   }
 
   /// Rimuove il [NoteElement] passato come parametro dalla nota reale. Carica la nota reale prima di eseguire l'operazione.
@@ -110,6 +112,17 @@ class ProxyNote implements Note {
   void removeElement(NoteElement element) {
     load();
     _realNote!.removeElement(element);
+    updateLastModified();
+  }
+
+  /// Modifica il contenuto di un elemento testuale [NoteTextElement] della nota reale. Carica la nota reale prima di eseguire l'operazione.
+  @override
+  void editNoteElement(NoteElement element, String newText) {
+    load();
+    _realNote!.noteContents
+        .where((listElem) => listElem == element)
+        .first
+        .setContent(newText);
     updateLastModified();
   }
 }

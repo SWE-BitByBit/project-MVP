@@ -111,6 +111,14 @@ class DiaryViewmodel with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Aggiorna il contenuto di un [NoteTextElement] appartenente alla [Note] passata
+  void updateNoteTextElement(NoteElement element, String text) {
+    if (_currentNote != null) {
+      _currentNote!.editNoteElement(element, text);
+      notifyListeners();
+    }
+  }
+
   //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota.
   Future<void> saveNote(Note note, DiaryType diary) async {
     _noteRepo.saveNote(diary, note);

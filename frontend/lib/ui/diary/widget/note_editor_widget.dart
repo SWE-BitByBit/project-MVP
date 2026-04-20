@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:provider/provider.dart';
@@ -31,11 +33,10 @@ class NoteEditorWidget extends StatefulWidget {
 class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   late final TextEditingController _titleController;
   final _textControllers = <TextEditingController>[];
+  final _audioPlayers = <AudioPlayer>[];
   final _imagePicker = ImagePicker();
-  final _imageUrls = <String>[];
+  //final _imageUrls = <String>[];
   final _audioUrls = <String>[];
-  File? _currentImage;
-  File? _currentAudio;
   final _elements = <Card>[];
   bool loading = false;
 
@@ -48,8 +49,27 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     });
   }
 
+  String _formatDuration(Duration d) {
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+  }
+
+  void _handlePlayer(AudioPlayer player) {
+    if (player.playing) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  }
+
+  void _handleSeek(AudioPlayer player, double value) {
+    player.seek(Duration(seconds: value.toInt()));
+  }
+
   //Crea una [Card] rappresentante il [NoteElement] passato come parametro
   Card _createCard(NoteElement? element) {
+    final viewModel = context.read<DiaryViewmodel>();
     if (element != null) {
       switch (element.getType()) {
         case "text":
@@ -60,13 +80,13 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           Card card = Card();
           card = Card(
             child: Row(
-              //mainAxisSize: MainAxisSize.min,
               children: [
                 Expanded(
                   child: TextField(
                     controller: noteTextController,
                     maxLines: null,
-                    onChanged: (value) => element.setContent(value),
+                    onChanged: (value) =>
+                        viewModel.updateNoteTextElement(element, value),
                   ),
                 ),
                 SizedBox(width: 16),
@@ -81,26 +101,79 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           );
           return card;
         case "image":
-          _imageUrls.add(element.getContent());
-          return Card(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          //_imageUrls.add(element.getContent());
+          Card card = Card();
+          card = Card(
+            child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Image.file(File(element.getContent())),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: Image.file(File(element.getContent())),
+                  ),
+                ),
+                SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () {
+                    _removeNoteElement(element, card);
+                  },
                 ),
               ],
             ),
           );
+          return card;
         case "audio":
-          _audioUrls.add(element.getContent());
-          return Card(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [Text("NYI")],
+          //_audioUrls.add(element.getContent());
+          Card card = Card();
+          AudioPlayer player = AudioPlayer();
+          player.setUrl(element.getContent());
+          Duration position = Duration.zero;
+          Duration duration = Duration.zero;
+          card = Card(
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Slider(
+                        min: 0.0,
+                        max: duration.inSeconds.toDouble(),
+                        value: position.inSeconds.toDouble(),
+                        onChanged: (value) => _handleSeek(player, value),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              player.playing ? Icons.pause : Icons.play_arrow,
+                            ),
+                            onPressed: () => _handlePlayer(player),
+                          ),
+                          Text(
+                            "${_formatDuration(position)}/${_formatDuration(duration)}",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () {
+                    player.stop;
+                    player.dispose;
+                    _removeNoteElement(element, card);
+                  },
+                ),
+              ],
             ),
           );
+          return card;
         default:
       }
     }
@@ -123,14 +196,44 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   void dispose() {
     super.dispose();
     _titleController.dispose();
+    _textControllers.map((c) => c.dispose());
   }
 
-  //Apre il selettore di immagini e imposta la variabile di utility [_currentImage] con il file scelto
-  Future _pickImage() async {
+  //Apre il selettore di immagini e aggiunge l'immagine scelta alla nota
+  Future _addImageElement(Note note) async {
+    final viewModel = context.read<DiaryViewmodel>();
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      File pickedImage = File(image.path);
+      viewModel.addNoteMediaElement(
+        note,
+        pickedImage,
+        "image",
+        note.getElementCount(),
+      );
       setState(() {
-        _currentImage = File(image.path);
+        _elements.add(
+          _createCard(note.getNoteElements()[note.getElementCount() - 1]),
+        );
+      });
+    }
+  }
+
+  Future _addAudioElement(Note note) async {
+    final viewModel = context.read<DiaryViewmodel>();
+    final pickResult = await FilePicker.pickFiles(type: FileType.audio);
+    if (pickResult != null) {
+      final File audioFile = File(pickResult.files.single.path!);
+      viewModel.addNoteMediaElement(
+        note,
+        audioFile,
+        "audio",
+        note.getElementCount(),
+      );
+      setState(() {
+        _elements.add(
+          _createCard(note.getNoteElements()[note.getElementCount() - 1]),
+        );
       });
     }
   }
@@ -161,23 +264,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         ),
         PopupMenuItem(
           onTap: () {
-            _pickImage();
-            if (_currentImage != null) {
-              viewModel.addNoteMediaElement(
-                note,
-                _currentImage!,
-                "image",
-                note.getElementCount(),
-              );
-              setState(() {
-                _elements.add(
-                  _createCard(
-                    note.getNoteElements()[note.getElementCount() - 1],
-                  ),
-                );
-                _currentImage = null;
-              });
-            }
+            _addImageElement(note);
           },
           child: Row(
             children: [
@@ -189,12 +276,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         ),
         PopupMenuItem(
           onTap: () {
-            /*viewModel.addNoteMediaElement(
-              note!,
-              _getImageFromGallery(),
-              "audio",
-              note.getElementCount(),
-            );*/
+            _addAudioElement(note);
           },
           child: Row(
             children: [
@@ -209,7 +291,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   }
 
   //Metodo per forzare il caricamento degli elementi della nota
-  Future<void> loadNote() async {
+  Future loadNote() async {
     List<NoteElement> elems = widget.selectedNote.getNoteElements();
     await Future.delayed(
       Duration(milliseconds: 200),
@@ -244,12 +326,14 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
               ),
-              Text(
-                "Creata il ${DateFormat("d/M/y").format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
-              ),
-              Text(
+
+              /// Commentati finchè non capisco come farli aggiornare
+              /*Text(
                 "Ultima modifica: ${DateFormat("d/M/y").format(widget.selectedNote.getUpdateDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getUpdateDate())}",
               ),
+              Text(
+                "Creata il ${DateFormat("d/M/y").format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
+              ),*/
               Expanded(
                 child: Builder(
                   builder: (context) {
