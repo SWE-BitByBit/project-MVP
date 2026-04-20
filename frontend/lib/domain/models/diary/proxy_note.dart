@@ -100,9 +100,9 @@ class ProxyNote implements Note {
 
   //Aggiunge un elemento alla lista degli elementi della nota reale. Carica la nota reale prima di eseguire l'operazione.
   @override
-  void addElement(String elem, String type, int pos) {
+  void addElement(NoteElement element, int pos) {
     load();
-    _realNote!.addElement(elem, type, pos);
+    _realNote!.addElement(element, pos);
   }
 
   /// Rimuove il [NoteElement] passato come parametro dalla nota reale. Carica la nota reale prima di eseguire l'operazione.

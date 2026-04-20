@@ -5,7 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
 /// Classe che gestisce logica di presentazione e stato dell'interfaccia per la funzionalità dei
@@ -77,14 +80,27 @@ class DiaryViewmodel with ChangeNotifier {
 
   //Aggiunge un nuovo elemento alla [Note] passata, nella posizione passata come parametro
   void addNoteElement(Note note, String text, int pos) {
-    note.addElement(text, "text", pos);
+    NoteElement elem = NoteTextElement(text);
+    note.addElement(elem, pos);
     note.updateLastModified();
     notifyListeners();
   }
 
   //Aggiunge un elemento media (immagine/traccia audio) alla [Note] passata, in posizione [pos]
   void addNoteMediaElement(Note note, File file, String type, int pos) {
-    note.addElement(file.path, type, pos);
+    NoteElement elem;
+    switch (type) {
+      case "image":
+        elem = NoteImageElement(file.path);
+        break;
+      case "audio":
+        elem = NoteAudioElement(file.path);
+        break;
+      default:
+        elem = NoteTextElement("ERROR");
+        break;
+    }
+    note.addElement(elem, pos);
     note.updateLastModified();
     notifyListeners();
   }

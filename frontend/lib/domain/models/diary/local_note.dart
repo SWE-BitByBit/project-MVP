@@ -82,26 +82,13 @@ class LocalNote implements Note {
 
   /// Override necessario dato che è definito nell'interfaccia [Note]
   @override
-  void load() {}
+  Future<void> load() async {}
 
   /// Pre: elem è una stringa che rappresenta il contentuto di un NoteElement,
   ///       type è una string contenente il tipo del NoteElement, pos è la posizione di inserimento nella lista degli elementi della nota
   /// Post: Un nuovo oggetto NoteElement è stato aggiunto alla lista degli elementi della nota
   @override
-  void addElement(String elem, String type, int pos) {
-    switch (type) {
-      case "text":
-        noteContents.insert(pos, NoteTextElement(elem));
-        break;
-      case "image":
-        noteContents.insert(pos, NoteImageElement(elem));
-        break;
-      case "audio":
-        noteContents.insert(pos, NoteAudioElement(elem));
-        break;
-      default:
-        noteContents.insert(pos, NoteTextElement(elem));
-        break;
-    }
+  void addElement(NoteElement element, int pos) {
+    noteContents.insert(pos, element);
   }
 }

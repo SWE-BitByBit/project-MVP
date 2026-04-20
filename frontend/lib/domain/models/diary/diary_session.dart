@@ -23,7 +23,7 @@ class DiarySession {
   /// Metodi
 
   /// Inizializza la sessione per il [DiaryType] specificato
-  void initSession(DiaryType diaryType) async {
+  Future<void> initSession(DiaryType diaryType) async {
     isDiaryAuth = true;
     loggedDiary = diaryType;
 
@@ -33,7 +33,7 @@ class DiarySession {
   }
 
   /// Termina la sessione
-  void endSession() async {
+  Future<void> endSession() async {
     isDiaryAuth = false;
     loggedDiary = null;
     const storage = FlutterSecureStorage();

@@ -7,6 +7,7 @@ class MockNoteService implements NoteService {
 
   /// JSON di risposta restituito da [fetchNotes].
   List<Map<String, dynamic>> mockedNotesJson = [];
+  List<Map<String, dynamic>> mockedFullNotesJson = [];
 
   /// JSON di risposta restituito da [fetchNoteById].
   Map<String, dynamic> mockedFullNoteJson = {};
@@ -34,7 +35,12 @@ class MockNoteService implements NoteService {
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante fetchNotes');
     }
-    return mockedNotesJson;
+    switch (targetDiary) {
+      case DiaryType.realDiary:
+        return mockedNotesJson;
+      case DiaryType.fakeDiary:
+        return mockedFullNotesJson;
+    }
   }
 
   @override

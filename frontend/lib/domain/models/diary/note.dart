@@ -10,7 +10,7 @@ abstract interface class Note {
   void removeElement(NoteElement element);
   void setTitle(String title);
   void updateLastModified();
-  void addElement(String elem, String type, int pos);
+  void addElement(NoteElement element, int pos);
   int getElementCount();
-  void load() {}
+  Future<void> load() async {}
 }

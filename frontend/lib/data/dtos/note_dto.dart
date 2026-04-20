@@ -1,5 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 
 import '../../domain/models/diary/note.dart';
 import '../../domain/models/diary/proxy_note.dart';
@@ -8,6 +14,8 @@ import '../../domain/models/diary/note_element.dart';
 /// Oggetto di trasferimento dati per la serializzazione dei contatti fidati.
 /// Mappa i dati JSON del backend verso il Dominio e viceversa.
 class NoteDTO {
+  NoteDTO();
+
   ///Pre: json è un file JSON rappresentante una nota di uno dei diari (chiavi: id, title, creationDate, lastModified, elements (opzionale))
   ///Post: fromJson ritorna un oggetto sottotipo di Note contenente tutte le informazioni presenti nel file JSON inserito in input
   Note fromJson(Map<String, dynamic> json, DiaryType targetDiary) {
@@ -21,7 +29,22 @@ class NoteDTO {
       note = LocalNote(id, title, creationDate, lastModified);
       dynamic elementMap = json["elements"];
       for (int i = 0; i < elementMap.length; i++) {
-        note.addElement(elementMap[i]["content"], elementMap[i]["type"], i);
+        NoteElement elem;
+        switch (elementMap[i]["type"]) {
+          case "text":
+            elem = NoteTextElement(elementMap[i]["content"]);
+            break;
+          case "image":
+            elem = NoteImageElement(elementMap[i]["content"]);
+            break;
+          case "audio":
+            elem = NoteAudioElement(elementMap[i]["content"]);
+            break;
+          default:
+            elem = NoteTextElement(elementMap[i]["content"]);
+            break;
+        }
+        note.addElement(elem, i);
       }
     }
     return note;

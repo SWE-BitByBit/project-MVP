@@ -2,7 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/dtos/note_dto.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 
 void main() {
   group('NoteDTO', () {
@@ -69,7 +70,8 @@ void main() {
         DateTime.parse("2026-04-14 18:00:30"),
         DateTime.parse("2026-04-14 10:00:30"),
       );
-      sampleLocal.addElement("sample element", "text", 0);
+      NoteElement sampleElement = NoteTextElement("sample element");
+      sampleLocal.addElement(sampleElement, 0);
 
       final json = NoteDTO().toJson(sampleLocal);
       expect(json["id"], "sample");
