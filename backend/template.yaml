@@ -17,13 +17,37 @@ Resources:
       CodeUri: src/hello_world/
       Handler: app.lambda_handler
       Runtime: python3.12
+      FunctionName: hello-world
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-trusted-contacts-poc"
       Environment:
         Variables:
           TABLE_NAME: "trusted_contacts_poc"
+
+  TrustedContactsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: trusted-contacts-mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH 
+        - AttributeName: contact_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: contact_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
 
 Outputs:
   HelloWorldFunction:
     Description: Trusted Contacts Lambda Function ARN
     Value: !GetAtt HelloWorldFunction.Arn
 
+  TrustedContactsTable:
+    Description: DynamoDB Table Name
+    Value: !Ref TrustedContactsTable

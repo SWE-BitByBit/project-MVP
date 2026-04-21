@@ -51,9 +51,9 @@ sonar: coverage
 build:
 	source ./venv/bin/activate && sam build
 
-deploy:
-	source ./venv/bin/activate && sam build
-	source ./venv/bin/activate && sam deploy
+deploy: build
+	source ./venv/bin/activate
+	sam deploy
 
 #############
 #  Helpers  #
