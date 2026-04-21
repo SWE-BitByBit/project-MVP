@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
@@ -33,10 +34,9 @@ class NoteEditorWidget extends StatefulWidget {
 class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   late final TextEditingController _titleController;
   final _textControllers = <TextEditingController>[];
-  final _audioPlayers = <AudioPlayer>[];
+
+  DateTime? _lastUpdated;
   final _imagePicker = ImagePicker();
-  //final _imageUrls = <String>[];
-  final _audioUrls = <String>[];
   final _elements = <Card>[];
   bool loading = false;
 
@@ -46,25 +46,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     viewModel.removeNoteElement(widget.selectedNote, element);
     setState(() {
       _elements.remove(card);
+      _lastUpdated = widget.selectedNote.getUpdateDate();
     });
-  }
-
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
-  }
-
-  void _handlePlayer(AudioPlayer player) {
-    if (player.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
-  }
-
-  void _handleSeek(AudioPlayer player, double value) {
-    player.seek(Duration(seconds: value.toInt()));
   }
 
   //Crea una [Card] rappresentante il [NoteElement] passato come parametro
@@ -85,8 +68,12 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   child: TextField(
                     controller: noteTextController,
                     maxLines: null,
-                    onChanged: (value) =>
-                        viewModel.updateNoteTextElement(element, value),
+                    onChanged: (value) => {
+                      viewModel.updateNoteTextElement(element, value),
+                      setState(() {
+                        _lastUpdated = widget.selectedNote.getUpdateDate();
+                      }),
+                    },
                   ),
                 ),
                 SizedBox(width: 16),
@@ -101,7 +88,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           );
           return card;
         case "image":
-          //_imageUrls.add(element.getContent());
           Card card = Card();
           card = Card(
             child: Row(
@@ -124,49 +110,23 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           );
           return card;
         case "audio":
-          //_audioUrls.add(element.getContent());
           Card card = Card();
-          AudioPlayer player = AudioPlayer();
-          player.setUrl(element.getContent());
-          Duration position = Duration.zero;
-          Duration duration = Duration.zero;
           card = Card(
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Slider(
-                        min: 0.0,
-                        max: duration.inSeconds.toDouble(),
-                        value: position.inSeconds.toDouble(),
-                        onChanged: (value) => _handleSeek(player, value),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              player.playing ? Icons.pause : Icons.play_arrow,
-                            ),
-                            onPressed: () => _handlePlayer(player),
-                          ),
-                          Text(
-                            "${_formatDuration(position)}/${_formatDuration(duration)}",
-                          ),
-                        ],
-                      ),
-                    ],
+                Expanded(
+                  child: NoteAudioPlayerWidget(
+                    onDismiss: () {
+                      dispose();
+                    },
+                    trackUrl: element.getContent(),
                   ),
                 ),
-                SizedBox(width: 16),
+
+                /// Gestione audio delegata ad un widget separato
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () {
-                    player.stop;
-                    player.dispose;
                     _removeNoteElement(element, card);
                   },
                 ),
@@ -187,6 +147,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     _titleController = TextEditingController(
       text: widget.selectedNote.getTitle(),
     );
+    _lastUpdated = widget.selectedNote.getUpdateDate();
     loading = true;
     loadNote();
     super.initState();
@@ -215,6 +176,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         _elements.add(
           _createCard(note.getNoteElements()[note.getElementCount() - 1]),
         );
+        _lastUpdated = widget.selectedNote.getUpdateDate();
       });
     }
   }
@@ -234,8 +196,18 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         _elements.add(
           _createCard(note.getNoteElements()[note.getElementCount() - 1]),
         );
+        _lastUpdated = widget.selectedNote.getUpdateDate();
       });
     }
+  }
+
+  ///Aggiorna il titolo della nota usando il viewmodel
+  void _updateNoteTitle(String title) {
+    final viewModel = context.read<DiaryViewmodel>();
+    viewModel.updateNoteTitle(title);
+    setState(() {
+      _lastUpdated = widget.selectedNote.getUpdateDate();
+    });
   }
 
   //Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
@@ -252,6 +224,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               _elements.add(
                 _createCard(note.getNoteElements()[note.getElementCount() - 1]),
               );
+              _lastUpdated = widget.selectedNote.getUpdateDate();
             });
           },
           child: Row(
@@ -325,15 +298,15 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                 decoration: InputDecoration(labelText: 'Titolo nota'),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                onChanged: (value) => {_updateNoteTitle(value)},
               ),
 
-              /// Commentati finchè non capisco come farli aggiornare
-              /*Text(
-                "Ultima modifica: ${DateFormat("d/M/y").format(widget.selectedNote.getUpdateDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getUpdateDate())}",
+              Text(
+                "Ultima modifica: ${DateFormat("d/M/y").format(_lastUpdated!)} alle ${DateFormat("H:mm").format(_lastUpdated!)}",
               ),
               Text(
                 "Creata il ${DateFormat("d/M/y").format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
-              ),*/
+              ),
               Expanded(
                 child: Builder(
                   builder: (context) {
