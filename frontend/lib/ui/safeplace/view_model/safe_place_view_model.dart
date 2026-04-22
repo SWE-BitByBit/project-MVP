@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart'; // <--- Nuovo import
 import '../../../domain/models/safeplace/safe_place.dart';
+import '../../../data/services/location_service.dart';
 import '../../../data/repositories/safe_place_repository.dart';
 import '../../../utils/command.dart';
 
 class SafePlaceViewModel extends ChangeNotifier {
   final SafePlaceRepository _repository;
+  final LocationService _locationService;
 
   List<SafePlace> _safePlaces = [];
   SafePlace? _selectedPlace;
@@ -18,9 +20,12 @@ class SafePlaceViewModel extends ChangeNotifier {
   // Nuovo comando per la geolocalizzazione
   late final Command0<void> getUserLocationCommand;
 
-  SafePlaceViewModel(this._repository) {
+  SafePlaceViewModel(
+      this._repository, {
+        LocationService? locationService,
+      }) : _locationService = locationService ?? LocationService() {
     fetchSafePlacesCommand = Command0<void>(_fetchSafePlaces);
-    getUserLocationCommand = Command0<void>(_getUserLocation); // <--- Inizializzazione
+    getUserLocationCommand = Command0<void>(_getUserLocation);
   }
 
   List<SafePlace> get safePlaces => _safePlaces;
@@ -44,15 +49,15 @@ class SafePlaceViewModel extends ChangeNotifier {
     LocationPermission permission;
 
     // 1. Controlla se il GPS è acceso
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception('I servizi di localizzazione sono disabilitati. Accendi il GPS.');
     }
 
     // 2. Controlla i permessi dell'app
-    permission = await Geolocator.checkPermission();
+    permission = await _locationService.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      permission = await _locationService.requestPermission();
       if (permission == LocationPermission.denied) {
         throw Exception('Permessi negati. Non possiamo mostrare la tua posizione.');
       }
@@ -63,7 +68,7 @@ class SafePlaceViewModel extends ChangeNotifier {
     }
 
     // 3. Ottieni la posizione e aggiorna lo stato
-    _currentPosition = await Geolocator.getCurrentPosition();
+    _currentPosition = await _locationService.getCurrentPosition();
     notifyListeners();
   }
 }
