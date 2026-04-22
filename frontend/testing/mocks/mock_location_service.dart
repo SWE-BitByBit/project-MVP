@@ -2,12 +2,13 @@ import 'package:mvp_app_protegge_e_trasforma/data/services/location_service.dart
 import 'package:geolocator/geolocator.dart';
 
 class MockLocationService implements LocationService {
+  bool shouldFail = false;
   bool isServiceEnabled = true;
   LocationPermission permissionStatus = LocationPermission.always;
   LocationPermission requestPermissionResult = LocationPermission.always;
 
   @override
-  Future<bool> isLocationServiceEnabled() async => isServiceEnabled;
+  Future<bool> isLocationServiceEnabled() async => shouldFail ? false : isServiceEnabled;
 
   @override
   Future<LocationPermission> checkPermission() async => permissionStatus;
@@ -17,6 +18,7 @@ class MockLocationService implements LocationService {
 
   @override
   Future<Position> getCurrentPosition() async {
+    if (shouldFail) throw Exception('Errore GPS');
     return Position(
       longitude: 11.0,
       latitude: 45.0,

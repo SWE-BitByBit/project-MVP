@@ -9,6 +9,7 @@ import 'safe_place_map_widget.dart';
 import '../../../data/repositories/safe_place_repository.dart';
 import '../../../data/services/safe_place_service.dart';
 import '../../../utils/app_config.dart';
+import '../../../utils/locator.dart';
 
 
 /// Schermata principale che mostra la mappa dei luoghi sicuri.
@@ -26,21 +27,12 @@ class SafePlaceMapScreen extends StatefulWidget {
 
 class _SafePlaceMapScreenState extends State<SafePlaceMapScreen> {
   /// Istanza del ViewModel che controllerà questa schermata.
-  late final SafePlaceViewModel _viewModel;
+  late final SafePlaceViewModel _viewModel = getIt<SafePlaceViewModel>();
   final MapController _mapController = MapController();
 
   @override
   void initState() {
     super.initState();
-
-    // 1. Inizializzazione delle dipendenze (Service -> Repository -> ViewModel)
-    // In un'app complessa, questa parte viene spesso gestita da un pacchetto come 'get_it'
-    final service = SafePlaceService(baseUrl: AppConfig.apiBaseUrl,);
-    final repository = SafePlaceRepository(service);
-    _viewModel = SafePlaceViewModel(repository);
-
-    // 2. Avviamo il comando per recuperare i dati non appena la schermata viene creata
-    // Usiamo addPostFrameCallback per sicurezza, garantendo che il widget sia montato
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _viewModel.fetchSafePlacesCommand.execute();
     });

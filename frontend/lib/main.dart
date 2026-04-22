@@ -3,18 +3,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importa il pacchetto per
 import 'ui/home/widget/home_screen.dart';
 import 'data/services/auth_service.dart';
 import 'data/repositories/auth_repository.dart';
+import 'utils/locator.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///
 /// Inizializza le configurazioni di sistema e carica le variabili d'ambiente
 /// prima di avviare l'interfaccia utente tramite [runApp].
 Future<void> main() async {
-  // Assicura che i servizi dei widget di Flutter siano inizializzati.
-  // È obbligatorio chiamarlo se si eseguono operazioni asincrone nel main.
+
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Carica il file delle configurazioni segrete (.env).
-  // In caso di errore (file mancante), l'app stamperà l'errore in console.
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
@@ -23,6 +21,8 @@ Future<void> main() async {
 
   final authService = AuthService();
   final authRepository = AuthRepository(authService);
+  // INIZIALIZZA GET_IT QUI!
+  setupLocator();
 
   runApp(MainApp(authRepository: authRepository));
 }
