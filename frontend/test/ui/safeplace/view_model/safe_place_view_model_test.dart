@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../../lib/ui/safeplace/view_model/safe_place_view_model.dart';
-import '../../../../lib/domain/models/safeplace/safe_place.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/view_model/safe_place_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
 import '../../../../testing/mocks/mock_safe_place_repository.dart';
 
 void main() {

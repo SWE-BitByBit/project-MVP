@@ -1,8 +1,16 @@
-import '../../lib/data/services/safe_place_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/safe_place_service.dart';
+import 'package:http/http.dart' as http;
+
 
 
 /// Mock del Service per simulare risposte di rete positive e negative.
 class MockSafePlaceService implements SafePlaceService {
+
+  @override
+  final String baseUrl = 'http://mock-url.com'; // Un URL finto qualsiasi
+  @override
+  final http.Client client = http.Client(); // Un client finto
+
   bool shouldFail = false;
 
   @override

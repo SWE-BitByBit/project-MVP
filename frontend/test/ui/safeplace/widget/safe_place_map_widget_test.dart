@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 // Modifica questi import con i percorsi reali del tuo progetto
-import '../../../../lib/ui/safeplace/widget/safe_place_map_widget.dart';
-import '../../../../lib/domain/models/safeplace/safe_place.dart';
-import '../../../../lib/ui/safeplace/view_model/safe_place_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/widget/safe_place_map_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/view_model/safe_place_view_model.dart';
 import '../../../../testing/mocks/mock_safe_place_repository.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/domain/models/safeplace/safe_place.dart';
-import '../../../lib/data/dtos/safe_place_dto.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/dtos/safe_place_dto.dart';
 
 void main() {
   group('SafePlace e SafePlaceDTO Test', () {

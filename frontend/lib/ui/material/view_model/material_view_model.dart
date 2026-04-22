@@ -21,9 +21,11 @@ class MaterialViewModel extends ChangeNotifier {
   /// Comando reattivo per il caricamento asincrono dei materiali.
   late final Command0<void> loadMaterials;
 
+
   /// Inizializza il view model associando il [_repository] e configurando il comando.
   MaterialViewModel(this._repository) {
     loadMaterials = Command0<void>(_loadMaterials);
+    loadMaterials.addListener(notifyListeners);
   }
 
   /// Restituisce il filtro attualmente attivo, se presente.

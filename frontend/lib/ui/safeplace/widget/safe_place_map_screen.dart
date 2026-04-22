@@ -8,6 +8,8 @@ import '../view_model/safe_place_view_model.dart';
 import 'safe_place_map_widget.dart';
 import '../../../data/repositories/safe_place_repository.dart';
 import '../../../data/services/safe_place_service.dart';
+import '../../../utils/app_config.dart';
+
 
 /// Schermata principale che mostra la mappa dei luoghi sicuri.
 ///
@@ -33,7 +35,7 @@ class _SafePlaceMapScreenState extends State<SafePlaceMapScreen> {
 
     // 1. Inizializzazione delle dipendenze (Service -> Repository -> ViewModel)
     // In un'app complessa, questa parte viene spesso gestita da un pacchetto come 'get_it'
-    final service = SafePlaceService();
+    final service = SafePlaceService(baseUrl: AppConfig.apiBaseUrl,);
     final repository = SafePlaceRepository(service);
     _viewModel = SafePlaceViewModel(repository);
 

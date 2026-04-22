@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/data/repositories/safe_place_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/safe_place_repository.dart';
 import '../../../testing/mocks/mock_safe_place_service.dart';
 
 void main() {

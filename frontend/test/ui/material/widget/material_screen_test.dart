@@ -18,32 +18,15 @@ void main() {
     });
 
     testWidgets('Il cambio di filtro deve aggiornare la selezione visiva (Chip)', (WidgetTester tester) async {
-      // 1. Inizializzazione
-      await tester.pumpWidget(MaterialApp(
-          home: MaterialScreen(repository: MockMaterialRepository())
-      ));
-
-      // Aspetta che l'inizializzazione (initState) sia completata
+      await tester.pumpWidget(MaterialApp(home: MaterialScreen(repository: MockMaterialRepository())));
       await tester.pumpAndSettle();
 
-      // 2. Azione: Clicchiamo sul primo chip
-      final chipFinder = find.byType(FilterChip).first;
-      await tester.tap(chipFinder);
-
-      // 3. Gestione asincrona CRUCIALE:
-      // Il tap scatena un'animazione E probabilmente un comando asincrono.
-      // pump() serve per l'inizio del frame, pumpAndSettle() per svuotare la coda.
-      await tester.pump();
+      await tester.tap(find.text('Leggi'));
+      // Fondamentale: aspetta che l'animazione del click e il comando finiscano
       await tester.pumpAndSettle();
 
-      // 4. Verifica
-      final FilterChip updatedChip = tester.widget(chipFinder);
+      final FilterChip updatedChip = tester.widget(find.byType(FilterChip).first);
       expect(updatedChip.selected, isTrue);
-
-      // 5. BONUS: Assicurati che non ci siano timer o microtask rimasti
-      // Questo previene il SegFault in fase di "finalization"
-      await tester.pumpWidget(Container()); // Sostituisce l'app con un widget vuoto per fare il dispose
-      await tester.pumpAndSettle();
     });
   });
 }

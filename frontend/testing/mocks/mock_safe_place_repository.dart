@@ -1,6 +1,6 @@
 import 'dart:async';
-import '../../lib/domain/models/safeplace/safe_place.dart';
-import '../../lib/data/repositories/safe_place_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/safe_place_repository.dart';
 
 /// Mock del Repository per isolare il test del ViewModel.
 class MockSafePlaceRepository implements SafePlaceRepository {
