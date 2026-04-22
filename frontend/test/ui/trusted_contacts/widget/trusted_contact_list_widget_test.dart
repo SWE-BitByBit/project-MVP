@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_list_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
 import '../../../../testing/mocks/mock_trusted_contact_repository.dart';
 
@@ -32,34 +33,46 @@ void main() {
       );
     }
 
-    testWidgets('Stato vuoto: deve mostrare il messaggio "Nessun contatto fidato"', (WidgetTester tester) async {
-      // Nessun contatto caricato -> lista vuota
-      await pumpListWidget(tester);
+    testWidgets(
+      'Stato vuoto: deve mostrare il messaggio "Nessun contatto fidato"',
+      (WidgetTester tester) async {
+        // Nessun contatto caricato -> lista vuota
+        await pumpListWidget(tester);
 
-      expect(find.text('Nessun contatto fidato'), findsOneWidget);
-      expect(find.byIcon(Icons.group_off), findsOneWidget);
-    });
+        expect(find.text('Nessun contatto fidato'), findsOneWidget);
+        expect(find.byIcon(Icons.group_off), findsOneWidget);
+      },
+    );
 
-    testWidgets('Stato loading: deve mostrare il CircularProgressIndicator', (WidgetTester tester) async {
-      // 1. Prima montiamo il widget (stato iniziale: lista vuota, non loading)
-      await pumpListWidget(tester);
+    testWidgets('mostra CircularProgressIndicator durante il loading', (
+      tester,
+    ) async {
+      final mockRepo = MockTrustedContactRepository()
+        ..simulatedDelay = const Duration(seconds: 1);
 
-      // 2. Simuliamo un caricamento lento e avviamo senza await
-      mockRepo.simulatedDelay = const Duration(seconds: 1);
-      viewModel.loadContacts(); // non await: il loading è in corso
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => TrustedContactViewModel(mockRepo),
+          child: const MaterialApp(home: TrustedContactScreenView()),
+        ),
+      );
 
-      // 3. Un singolo frame affinché isLoading sia true e la UI si aggiorni
+      // Primo frame: il Future NON è ancora completato
       await tester.pump();
 
+      // Loader visibile
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Nessun contatto fidato'), findsNothing);
 
-      // 4. Puliamo il timer residuo
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      mockRepo.simulatedDelay = Duration.zero;
+      // Facciamo finire il delay
+      await tester.pumpAndSettle();
+
+      // Loader sparisce
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('Popolato: deve mostrare tutti i contatti caricati', (WidgetTester tester) async {
+    testWidgets('Popolato: deve mostrare tutti i contatti caricati', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       mockRepo.mockedContactsToReturn = [
         TrustedContact(
@@ -75,7 +88,7 @@ void main() {
           phoneNumber: '+39 333 0000002',
         ),
       ];
-      await viewModel.loadContacts();
+      await viewModel.loadContacts.execute();
       await pumpListWidget(tester);
       await tester.pumpAndSettle();
 
@@ -84,7 +97,9 @@ void main() {
       expect(find.text('Laura Bianchi'), findsOneWidget);
     });
 
-    testWidgets('Il click sul pulsante elimina mostra il dialog di conferma', (WidgetTester tester) async {
+    testWidgets('Il click sul pulsante elimina mostra il dialog di conferma', (
+      WidgetTester tester,
+    ) async {
       // Arrange: un contatto in lista
       mockRepo.mockedContactsToReturn = [
         TrustedContact(
@@ -94,7 +109,7 @@ void main() {
           phoneNumber: '0001',
         ),
       ];
-      await viewModel.loadContacts();
+      await viewModel.loadContacts.execute();
       await pumpListWidget(tester);
       await tester.pumpAndSettle();
 
@@ -108,7 +123,9 @@ void main() {
       expect(find.text('Elimina'), findsOneWidget);
     });
 
-    testWidgets('Il click su "Annulla" nel dialog chiude senza eliminare', (WidgetTester tester) async {
+    testWidgets('Il click su "Annulla" nel dialog chiude senza eliminare', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       mockRepo.mockedContactsToReturn = [
         TrustedContact(
@@ -118,7 +135,7 @@ void main() {
           phoneNumber: '0001',
         ),
       ];
-      await viewModel.loadContacts();
+      await viewModel.loadContacts.execute();
       await pumpListWidget(tester);
       await tester.pumpAndSettle();
 
@@ -136,7 +153,9 @@ void main() {
       expect(viewModel.contacts.length, 1);
     });
 
-    testWidgets('Il click su "Elimina" nel dialog rimuove il contatto', (WidgetTester tester) async {
+    testWidgets('Il click su "Elimina" nel dialog rimuove il contatto', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       mockRepo.mockedContactsToReturn = [
         TrustedContact(
@@ -146,7 +165,7 @@ void main() {
           phoneNumber: '0001',
         ),
       ];
-      await viewModel.loadContacts();
+      await viewModel.loadContacts.execute();
       await pumpListWidget(tester);
       await tester.pumpAndSettle();
 
@@ -164,12 +183,19 @@ void main() {
       expect(find.text('Elimina Contatto'), findsNothing);
       expect(viewModel.contacts, isEmpty);
     });
-    testWidgets('Il click su un contatto apre il modulo di modifica', (WidgetTester tester) async {
+    testWidgets('Il click su un contatto apre il modulo di modifica', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       mockRepo.mockedContactsToReturn = [
-        TrustedContact(id: 'c-1', name: 'Mario Rossi', email: 'mario@email.com', phoneNumber: '123'),
+        TrustedContact(
+          id: 'c-1',
+          name: 'Mario Rossi',
+          email: 'mario@email.com',
+          phoneNumber: '123',
+        ),
       ];
-      await viewModel.loadContacts();
+      await viewModel.loadContacts.execute();
       await pumpListWidget(tester);
       await tester.pumpAndSettle();
 

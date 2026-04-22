@@ -26,6 +26,10 @@ abstract class Command<T> extends ChangeNotifier {
   /// Per andare a pulire il valore del risultato dell'ultima esecuzione
   void clearResult() {
     _result = null;
+    _result = null;
+    _error = null;
+    _completed = false;
+
     notifyListeners();
   }
 

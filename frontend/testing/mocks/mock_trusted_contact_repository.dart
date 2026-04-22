@@ -7,7 +7,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
 /// successo, errore di rete o ritardo nella risposta senza toccare il vero
 /// backend.
 class MockTrustedContactRepository implements TrustedContactRepository {
-
   // --- VARIABILI DI CONTROLLO (Il Telecomando del Mock) ---
 
   /// Se impostato a [true], tutti i metodi lanceranno un'eccezione,
@@ -28,15 +27,18 @@ class MockTrustedContactRepository implements TrustedContactRepository {
   @override
   Future<List<TrustedContact>> getContacts() async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
-    if (shouldThrowError) throw Exception('Errore di rete simulato durante getContacts');
+    if (shouldThrowError) {
+      throw Exception('Errore nel caricamento dei contatti');
+    }
     return mockedContactsToReturn;
   }
 
   @override
   Future<TrustedContact> createContact(TrustedContact contact) async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
-    if (shouldThrowError) throw Exception('Errore di rete simulato durante createContact');
-
+    if (shouldThrowError) {
+      throw Exception('Errore di rete simulato durante createContact');
+    }
     if (mockedCreatedContact != null) return mockedCreatedContact!;
 
     // Fallback: restituisce il contatto con un id finto
@@ -60,7 +62,9 @@ class MockTrustedContactRepository implements TrustedContactRepository {
   @override
   Future<void> deleteContact(String contactId) async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
-    if (shouldThrowError) throw Exception('Errore di rete simulato durante deleteContact');
+    if (shouldThrowError) {
+      throw Exception('Errore di rete simulato durante deleteContact');
+    }
     // In caso di successo non fa nulla
   }
 }

@@ -55,29 +55,6 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
     super.dispose();
   }
 
-  /// Valida i campi e invoca l'operazione corretta sul ViewModel (creazione o modifica).
-  Future<void> _submitForm(TrustedContactViewModel viewModel) async {
-    if (_formKey.currentState!.validate()) {
-      if (widget.initialContact != null) {
-        // Modalità MODIFICA
-        await viewModel.updateContact(
-          id: widget.initialContact!.getId(),
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
-        );
-      } else {
-        // Modalità NUOVO
-        await viewModel.createContact(
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
-        );
-      }
-      widget.onDismiss();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<TrustedContactViewModel>();
@@ -139,7 +116,7 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                 ),
               ),
               validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Inserisci il numero'
+                  ? 'Inserisci il numero di telefono'
                   : null,
             ),
             const SizedBox(height: 16),
@@ -159,33 +136,35 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: viewModel.isLoading
+              onPressed:
+                  viewModel.createContact.running ||
+                      viewModel.updateContact.running
                   ? null
-                  : () => _submitForm(viewModel),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  : () {
+                      if (_formKey.currentState!.validate()) {
+                        final contact = TrustedContact(
+                          id: widget.initialContact?.getId() ?? '',
+                          name: _nameController.text.trim(),
+                          email: _emailController.text.trim(),
+                          phoneNumber: _phoneController.text.trim(),
+                        );
+
+                        if (isEditing) {
+                          viewModel.updateContact.execute(contact);
+                        } else {
+                          viewModel.createContact.execute(contact);
+                        }
+                        widget.onDismiss();
+                      }
+                    },
+              child: Text(
+                isEditing ? 'Aggiorna contatto' : 'Salva contatto',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: viewModel.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      isEditing ? 'Aggiorna contatto' : 'Salva contatto',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
             ),
           ],
         ),

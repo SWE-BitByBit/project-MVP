@@ -4,9 +4,9 @@ import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_wi
 
 void main() {
   group('DashboardButton Widget Test', () {
-
-    testWidgets('Deve mostrare i testi, l\'icona e scatenare l\'evento al click', (WidgetTester tester) async {
-
+    testWidgets('Deve mostrare i testi, l\'icona e scatenare l\'evento al click', (
+      WidgetTester tester,
+    ) async {
       // Variabile "spia" per capire se il bottone viene cliccato
       bool bottonePremuto = false;
 
@@ -43,8 +43,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // 4. ASSERT (Test Logico): Verifichiamo che il click abbia funzionato
-      expect(bottonePremuto, isTrue, reason: 'Il bottone doveva attivare la funzione onTap');
+      expect(
+        bottonePremuto,
+        isTrue,
+        reason: 'Il bottone doveva attivare la funzione onTap',
+      );
     });
-
   });
 }
