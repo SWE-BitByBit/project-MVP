@@ -1,25 +1,68 @@
 import 'package:get_it/get_it.dart';
-import '../../data/services/safe_place_service.dart';
-import '../../data/services/location_service.dart';
-import '../../data/repositories/safe_place_repository.dart';
-import '../../ui/safeplace/view_model/safe_place_view_model.dart';
+import '../data/network/api_client.dart';
+import '../data/network/http_api_client.dart';
+import '../data/services/auth_service.dart';
+import '../data/services/safe_place_service.dart';
+import '../data/services/location_service.dart';
+import '../data/repositories/safe_place_repository.dart';
+import '../data/repositories/auth_repository.dart';
+import '../ui/safeplace/view_model/safe_place_view_model.dart';
+import '../ui/auth/view_model/auth_view_model.dart';
 import 'app_config.dart';
 
-// L'istanza globale che useremo in tutta l'app
+/// Istanza globale del Service Locator [GetIt].
 final getIt = GetIt.instance;
 
+/// Configura tutte le dipendenze dell'applicazione tramite [GetIt].
+///
+/// Organizza la registrazione in moduli per garantire manutenibilità e pulizia.
 void setupLocator() {
-  // 1. SERVICES (Registrati come Singleton: ne esiste solo uno in tutta l'app)
+  // 1. CORE / GLOBAL SERVICES
+  _setupCore();
+
+  // 2. MODULO AUTHENTICATION
+  _setupAuth();
+
+  // 3. MODULO SAFE PLACES
+  _setupSafePlace();
+}
+
+/// Registra i servizi core di base (Rete, Configurazioni, ecc.)
+void _setupCore() {
+  // Registriamo il Network Client globale
   getIt.registerLazySingleton<LocationService>(() => LocationService());
+
+  getIt.registerLazySingleton<ApiClient>(
+        () => HttpApiClient(
+      baseUrl: AppConfig.apiBaseUrl,
+
+      getToken: () async {
+        if (getIt.isRegistered<AuthRepository>()) {
+          return getIt<AuthRepository>().getCurrentUser()?.accessToken;
+        }
+        return null;
+      },
+    ),
+  );
+}
+
+/// Registra le dipendenze relative al modulo di autenticazione.
+void _setupAuth() {
+  getIt.registerLazySingleton<AuthService>(() => AuthService());
+
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository(getIt<AuthService>()));
+
+  getIt.registerLazySingleton<AuthViewModel>(() => AuthViewModel(getIt<AuthRepository>()),);
+}
+
+/// Registra le dipendenze relative al modulo dei Luoghi Sicuri.
+void _setupSafePlace() {
   getIt.registerLazySingleton<SafePlaceService>(
           () => SafePlaceService(baseUrl: AppConfig.apiBaseUrl));
 
-  // 2. REPOSITORIES (Anche questi Singleton)
-  // Nota come passiamo `getIt()`! Così pesca il Service registrato sopra.
   getIt.registerLazySingleton<SafePlaceRepository>(
           () => SafePlaceRepository(getIt<SafePlaceService>()));
 
-  // 3. VIEWMODELS (Registrati come Factory: ne crea uno nuovo ogni volta che serve, o Singleton se vuoi mantenere i dati)
   getIt.registerFactory<SafePlaceViewModel>(
           () => SafePlaceViewModel(
         getIt<SafePlaceRepository>(),

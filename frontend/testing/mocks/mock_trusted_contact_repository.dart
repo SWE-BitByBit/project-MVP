@@ -1,5 +1,5 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/trusted_contact_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact.dart';
 
 /// Implementazione finta (Mock) e «programmabile» del [TrustedContactRepository] per i test.
 ///

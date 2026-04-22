@@ -2,34 +2,34 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../utils/app_config.dart';
 
-/// Gestisce la comunicazione di rete con AWS Cognito per l'autenticazione.
+/// Gestisce la comunicazione di rete con AWS Cognito per il flusso di autenticazione.
 ///
-/// Si occupa esclusivamente di recuperare i dati grezzi tramite i parametri di
-/// configurazione come [_cognitoDomain] e [_clientId].
+/// Questa classe implementa il protocollo OAuth 2.0 per ottenere i token di sessione.
 class AuthService {
-  /// Dominio di AWS Cognito recuperato dal file .env.
-  final String _cognitoDomain = dotenv.env['COGNITO_DOMAIN'] ?? '';
+  /// Dominio di autenticazione configurato in [AppConfig].
+  final String _cognitoDomain = AppConfig.cognitoDomain;
 
-  /// ID Client fornito da AWS Cognito.
-  final String _clientId = dotenv.env['COGNITO_CLIENT_ID'] ?? '';
+  /// Identificativo del client recuperato tramite [AppConfig].
+  final String _clientId = AppConfig.clientId;
 
-  /// Segreto Client per lo scambio dei token.
-  final String _clientSecret = dotenv.env['COGNITO_CLIENT_SECRET'] ?? '';
+  /// Segreto del client recuperato tramite [AppConfig].
+  final String _clientSecret = AppConfig.clientSecret;
 
-  /// URI di reindirizzamento dopo il login.
-  final String _redirectUri =
-      'com.bitbybit.appcheproteggeetrasforma://callback';
+  /// URI dove l'utente viene reindirizzato dopo il login.
+  final String _redirectUri = AppConfig.redirectUri;
 
-  /// Scopi (scopes) richiesti per l'autenticazione OAuth2.
+  /// Elenco degli scopi (scopes) richiesti per ottenere i dati dell'utente.
   final List<String> _scopes = const ['profile', 'email', 'openid'];
 
-  /// Avvia il flusso di login OAuth 2.0 con AWS Cognito e Google.
+  /// Avvia il flusso di login OAuth 2.0 tramite browser sicuro.
   ///
-  /// Apre una pagina web sicura utilizzando [_redirectUri], attende che l'utente effettui l'accesso
-  /// e scambia il codice di autorizzazione ottenuto con i token di accesso.
-  /// Restituisce una [Map] contenente i token grezzi in caso di successo.
+  /// Esegue la chiamata all'endpoint di autorizzazione di Google tramite Cognito.
+  /// Se l'utente conferma l'accesso, scambia il codice ottenuto con i token reali.
+  ///
+  /// Restituisce un [Future] che contiene una [Map] con i token grezzi (id_token, access_token, ecc.).
+  /// Solleva un [Exception] in caso di errore nel recupero del codice o dei token.
   Future<Map<String, dynamic>> login() async {
     final authUrl = Uri.https(_cognitoDomain, '/oauth2/authorize', {
       'response_type': 'code',
@@ -41,16 +41,19 @@ class AuthService {
       'prompt': 'select_account',
     });
 
+    // Avvio dell'interfaccia web per l'autenticazione
     final result = await FlutterWebAuth2.authenticate(
       url: authUrl.toString(),
-      callbackUrlScheme: "com.bitbybit.appcheproteggeetrasforma",
+      callbackUrlScheme: AppConfig.callbackScheme,
     );
 
+    // Estrazione del codice di autorizzazione dall'URL di ritorno
     final code = Uri.parse(result).queryParameters['code'];
     if (code == null) {
       throw Exception('Codice di autorizzazione mancante.');
     }
 
+    // Preparazione della richiesta per lo scambio dei token
     final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
 
     final tokenResponse = await http.post(
@@ -68,18 +71,16 @@ class AuthService {
     );
 
     if (tokenResponse.statusCode != 200) {
-      throw Exception(
-        'Errore durante il recupero dei token: ${tokenResponse.body}',
-      );
+      throw Exception('Errore nel recupero dei token: ${tokenResponse.body}');
     }
 
-    return jsonDecode(tokenResponse.body);
+    return jsonDecode(tokenResponse.body) as Map<String, dynamic>;
   }
 
-  /// Avvia il flusso di logout sul server AWS Cognito usando [_clientId].
+  /// Esegue la procedura di logout richiamando l'endpoint dedicato di Cognito.
   ///
-  /// Apre brevemente una connessione web per invalidare la sessione lato server
-  /// reindirizzando l'utente su [_redirectUri].
+  /// Tenta di invalidare la sessione lato server aprendo brevemente l'URL di logout.
+  /// Restituisce un [Future] di tipo [void].
   Future<void> logout() async {
     final url = Uri.https(_cognitoDomain, '/logout', {
       'client_id': _clientId,
@@ -89,9 +90,10 @@ class AuthService {
     try {
       await FlutterWebAuth2.authenticate(
         url: url.toString(),
-        callbackUrlScheme: "com.bitbybit.appcheproteggeetrasforma",
+        callbackUrlScheme: AppConfig.callbackScheme,
       );
     } catch (e) {
+      // In caso di errore durante il redirect, logghiamo per il debug
       debugPrint('Errore durante il logout di rete: $e');
     }
   }

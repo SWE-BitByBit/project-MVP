@@ -1,4 +1,4 @@
-import '../../domain/trusted_contact.dart';
+import '../../domain/models/trusted_contact.dart';
 
 /// Oggetto di trasferimento dati per la serializzazione dei contatti fidati.
 /// Mappa i dati JSON del backend verso il Dominio e viceversa.

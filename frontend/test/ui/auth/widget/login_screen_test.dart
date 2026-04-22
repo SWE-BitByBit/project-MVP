@@ -4,7 +4,7 @@ import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/login_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/header_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/google_login_button_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/logged_in_banner_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
 import '../../../../testing/mocks/mock_auth_repository.dart';
 
 void main() {

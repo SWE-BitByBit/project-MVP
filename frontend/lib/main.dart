@@ -4,6 +4,7 @@ import 'ui/home/widget/home_screen.dart';
 import 'data/services/auth_service.dart';
 import 'data/repositories/auth_repository.dart';
 import 'utils/locator.dart';
+import 'ui/core/themes/app_theme.dart';
 
 /// Punto di ingresso principale dell'applicazione.
 ///
@@ -40,10 +41,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'L\'App che Protegge e Trasforma',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
       home: HomeScreen(authRepository: authRepository),
     );
   }

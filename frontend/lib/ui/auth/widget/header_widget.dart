@@ -4,16 +4,24 @@ import 'package:flutter/material.dart';
 class HeaderWidget extends StatelessWidget {
   const HeaderWidget({super.key});
 
-  /// Costruisce l'interfaccia dell'intestazione.
+  /// Costruisce l'interfaccia dell'intestazione basandosi sul tema corrente.
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
       children: [
-        Icon(Icons.lock_outline, size: 64, color: Colors.teal),
-        SizedBox(height: 16),
+        // Usiamo il colore primario del tema invece di Colors.teal fisso
+        Icon(Icons.lock_outline, size: 64, color: colorScheme.primary),
+        const SizedBox(height: 16),
         Text(
           'Accedi al tuo account',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          // Usiamo la tipografia del tema per mantenere coerenza nei font
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
         ),
       ],
     );

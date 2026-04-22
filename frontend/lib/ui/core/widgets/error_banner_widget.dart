@@ -12,22 +12,24 @@ class ErrorBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      color: Colors.red.shade50,
+      color: colorScheme.errorContainer, // Colore di sfondo tenue per gli errori
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 18),
+          Icon(Icons.error_outline, color: colorScheme.error, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               error,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: colorScheme.error),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.red, size: 18),
+            icon: Icon(Icons.close, color: colorScheme.error, size: 18),
             onPressed: onClose,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

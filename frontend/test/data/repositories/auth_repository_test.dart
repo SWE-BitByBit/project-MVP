@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/auth_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
 import '../../../testing/mocks/mock_auth_service.dart';
 
 void main() {

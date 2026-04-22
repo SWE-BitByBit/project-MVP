@@ -58,8 +58,7 @@ class HomeScreenView extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    LoginScreen(authRepository: authRepository),
+                  builder: (context) => LoginScreen(),
               ),
             );
           },

@@ -1,5 +1,5 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/auth_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
 
 
 /// Implementazione finta (Mock) di [AuthRepository] per i test.

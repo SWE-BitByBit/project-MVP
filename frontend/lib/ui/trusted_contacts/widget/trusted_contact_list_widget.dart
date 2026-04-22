@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/trusted_contact_view_model.dart';
-import '../../../domain/trusted_contact.dart';
+import '../../../domain/models/trusted_contact.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Visualizza l'elenco dei contatti fidati salvati.

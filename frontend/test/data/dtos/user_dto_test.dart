@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/dtos/user_dto.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
 
 void main() {
   group('UserDTO - fromJson', () {

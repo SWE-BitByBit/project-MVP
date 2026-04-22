@@ -1,55 +1,63 @@
 import 'package:flutter/material.dart';
-import '../../../../domain/user.dart';
+import 'package:command_it/command_it.dart'; // O flutter_command a seconda di come l'avete importato
+import '../../../domain/models/user.dart';
 import '../../../../data/repositories/auth_repository.dart';
-import '../../../../utils/command.dart';
 
 /// Gestisce lo stato della UI per l'autenticazione e coordina le azioni dell'utente.
 ///
-/// Utilizza [_authRepository] per eseguire le operazioni di accesso e aggiorna
-/// lo stato di [_isLoading] e [_errorMessage].
+/// Questa classe funge da ponte tra la View e l' [AuthRepository], esponendo
+/// le azioni tramite il pattern [Command].
 class AuthViewModel extends ChangeNotifier {
   /// Repository per l'accesso ai dati di autenticazione.
   final AuthRepository _authRepository;
 
-  /// Comando reattivo per avviare il login
-  late final Command0<void> login;
+  /// Comando per l'esecuzione del login.
+  /// 
+  /// Espone lo stato di esecuzione e gli eventuali errori alla View.
+  late final Command<void, void> login;
 
-  /// Comando reattivo per avviare il logout
-  late final Command0<void> logout;
+  /// Comando per l'esecuzione del logout.
+  late final Command<void, void> logout;
 
-  /// Inizializza il view model associando l'istanza di [_authRepository].
+  /// Inizializza il view model configurando i comandi reattivi.
+  /// 
+  /// Riceve l'istanza di [_authRepository] tramite Dependency Injection.
   AuthViewModel(this._authRepository) {
-    login = Command0<void>(_login);
-    logout = Command0<void>(_logout);
+    // Usiamo una funzione anonima (_) per ignorare il parametro void richiesto.
+    // Passiamo initialValue: null come richiesto dal costruttore.
+    login = Command.createAsyncNoParamNoResult(_login);
+    logout = Command.createAsyncNoParamNoResult(_logout);
   }
 
-  /// Restituisce l'utente corrente recuperandolo direttamente da [_authRepository].
+  /// Restituisce l'utente attualmente autenticato.
   User? get currentUser => _authRepository.getCurrentUser();
 
-  /// Controlla se esiste una sessione utente valida e notifica i listener.
+  /// Verifica se esiste una sessione utente attiva nel repository.
+  /// 
+  /// Notifica i listener se l'utente è presente per aggiornare la navigazione.
   void checkExistingSession() {
-    if (_authRepository.getCurrentUser() != null) {
+    if (_authRepository.isLoggedIn()) {
       notifyListeners();
     }
   }
 
-  /// Avvia la procedura di login tramite [_authRepository].
+  /// Logica interna per la procedura di login.
+  /// 
+  /// Interagisce con [_authRepository] per ottenere l'oggetto [User].
+  /// Solleva un'eccezione in caso di fallimento che verrà catturata dal comando.
   Future<void> _login() async {
-    try {
-      final user = await _authRepository.login();
-      if (user == null) {
-        throw Exception('Autenticazione fallita o annullata.');
-      }
-    } catch (e) {
-      if (e is Exception && e.toString().contains('Autenticazione fallita')) {
-        rethrow;
-      }
-      throw Exception('Si è verificato un errore di connessione.');
+    final user = await _authRepository.login();
+    if (user == null) {
+      throw Exception('Autenticazione fallita o annullata dall\'utente.');
     }
+    // Avvisiamo la UI (ad esempio per far sparire la schermata di login)
+    notifyListeners();
   }
 
-  /// Avvia la procedura di logout richiamando [_authRepository].
+  /// Logica interna per la procedura di logout.
   Future<void> _logout() async {
     await _authRepository.logout();
+    // Avvisiamo la UI che non c'è più l'utente
+    notifyListeners();
   }
 }
