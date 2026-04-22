@@ -10,6 +10,7 @@ def response(status, body):
         }
 
 def get_contact(table, event):
+    """funzione per il fetch di un contatto"""
     contact_id = event["pathParameters"]["contact_id"]
     db_response = table.get_item(
         Key={
@@ -23,6 +24,7 @@ def get_contact(table, event):
     return response(200, item)
 
 def lambda_handler(event, context):
+    """ Handler della lambda"""
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(os.environ["TABLE_NAME"])
 

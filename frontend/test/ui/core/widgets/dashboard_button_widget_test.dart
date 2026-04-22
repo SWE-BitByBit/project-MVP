@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
 
 void main() {
   group('DashboardButton Widget Test', () {

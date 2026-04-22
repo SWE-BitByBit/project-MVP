@@ -15,7 +15,10 @@ class ChatbotModeToggleWidget extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(isDetective ? Icons.psychology : Icons.auto_awesome_motion, size: 20),
+        Icon(
+          isDetective ? Icons.psychology : Icons.auto_awesome_motion,
+          size: 20,
+        ),
         Switch(
           value: isDetective,
           onChanged: (value) {

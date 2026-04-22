@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_dashboard_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/dashboard_button_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/dashboard_button_widget.dart';
 
 void main() {
   group('HomeDashboardWidget Widget Test', () {

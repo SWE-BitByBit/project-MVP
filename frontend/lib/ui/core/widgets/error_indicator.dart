@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../ui/core/themes/colors.dart';
+import '../themes/colors.dart';
 
 class ErrorIndicator extends StatelessWidget {
   const ErrorIndicator({

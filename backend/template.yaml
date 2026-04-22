@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  sam_local_backend
-  Sample SAM Template for sam_local_backend
+  This is the template for the deploy of the lambda used for app: "L'app che protegge e trasforma"
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
+    Runtime: python3.12
     LoggingConfig:
       LogFormat: JSON
 
@@ -17,13 +17,37 @@ Resources:
       CodeUri: src/hello_world/
       Handler: app.lambda_handler
       Runtime: python3.12
+      FunctionName: hello-world
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-trusted-contacts-poc"
       Environment:
         Variables:
           TABLE_NAME: "trusted_contacts_poc"
+
+  TrustedContactsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: trusted-contacts-mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH 
+        - AttributeName: contact_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: contact_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
 
 Outputs:
   HelloWorldFunction:
     Description: Trusted Contacts Lambda Function ARN
     Value: !GetAtt HelloWorldFunction.Arn
 
+  TrustedContactsTable:
+    Description: DynamoDB Table Name
+    Value: !Ref TrustedContactsTable

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/error_indicator.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/services/trusted_contact_service.dart';
