@@ -27,34 +27,22 @@ void main() {
 
   group('MaterialListWidget Widget Test', () {
     testWidgets('Deve mostrare CircularProgressIndicator durante il caricamento', (WidgetTester tester) async {
-      // 1. Arrange
       mockRepository.shouldWait = true;
 
-      // Eseguiamo il comando
       final future = viewModel.loadMaterials.execute();
 
-      // 2. Act: Costruiamo il widget
       await tester.pumpWidget(createWidget());
-
-      // Usiamo pump() senza durata per processare il primo frame in cui running è true
       await tester.pump();
 
-      // 3. Assert
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      // 4. Teardown: Sblocchiamo il mock e aspettiamo la fine del future
-      mockRepository.shouldWait = false;
-      // Invece di pump(duration), usiamo questo per far avanzare il comando
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       await future;
-
-      // Aspettiamo che tutte le animazioni della rotellina finiscano
-      await tester.pumpAndSettle();
     });
 
     testWidgets('Deve mostrare un messaggio d\'errore se il caricamento fallisce', (WidgetTester tester) async {
       mockRepository.shouldThrowError = true;
-      
+
       await viewModel.loadMaterials.execute();
       await tester.pumpWidget(createWidget());
       await tester.pump();
