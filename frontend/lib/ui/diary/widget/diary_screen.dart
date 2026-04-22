@@ -69,7 +69,36 @@ class DiaryScreenView extends StatelessWidget {
         ),
         body: Consumer<DiaryViewmodel>(
           builder: (context, viewModel, child) {
-            return Column(children: [const Expanded(child: NoteListWidget())]);
+            return Column(
+              children: [
+                if (viewModel.error != null)
+                  Container(
+                    width: double.infinity,
+                    color: Colors.red.shade50,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            viewModel.error!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const Expanded(child: NoteListWidget()),
+              ],
+            );
           },
         ),
         floatingActionButton: const NoteActionsWidget(),

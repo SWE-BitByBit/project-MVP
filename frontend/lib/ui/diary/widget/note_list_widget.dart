@@ -45,7 +45,7 @@ class NoteListWidget extends StatelessWidget {
     DiaryViewmodel viewModel,
     String noteTitle,
     DateTime noteDate,
-    int index,
+    String noteId,
   ) {
     final diarySession = DiarySession.session;
     if (diarySession.isDiaryAuth != null) {
@@ -69,7 +69,7 @@ class NoteListWidget extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  viewModel.deleteNote(index, diarySession.loggedDiary!);
+                  viewModel.deleteNote(noteId, diarySession.loggedDiary!);
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text(
@@ -96,35 +96,10 @@ class NoteListWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (viewModel.error != null)
-                Container(
-                  width: double.infinity,
-                  color: Colors.red.shade50,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          viewModel.error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
               const SizedBox(height: 16),
               Text(
-                'Nessun nota presente nel diario',
+                'Nessuna nota presente nel diario',
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.grey.shade600,
@@ -158,7 +133,7 @@ class NoteListWidget extends StatelessWidget {
                 viewModel,
                 note.getTitle(),
                 note.getCreationDate(),
-                index,
+                note.getId(),
               ),
             ),
           );

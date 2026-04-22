@@ -20,9 +20,9 @@ class DiaryAccessViewmodel with ChangeNotifier {
   String? get error => _error;
 
   //Inizializza diarySession se il login ha successo, altrimenti ritorna stringa di errore.
-  String login(String pwd) {
+  Future<String> login(String pwd) async {
     try {
-      switch (_accRepo.clarifyAccessResult(pwd)) {
+      switch (await _accRepo.clarifyAccessResult(pwd)) {
         case DiaryAccessResult.realDiary:
           final diarySession = DiarySession.session;
           diarySession.initSession(DiaryType.realDiary);
@@ -32,9 +32,12 @@ class DiaryAccessViewmodel with ChangeNotifier {
           diarySession.initSession(DiaryType.fakeDiary);
           return '';
         case DiaryAccessResult.error:
-          return 'Errore nel login.';
+          _error = 'Errore nel login.';
+          return _error!;
         case DiaryAccessResult.tooManyAttempts:
-          return 'Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.';
+          _error =
+              'Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.';
+          return _error!;
       }
     } catch (e) {
       return 'Errore nel login.';

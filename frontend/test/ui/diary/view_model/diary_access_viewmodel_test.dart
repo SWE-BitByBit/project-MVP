@@ -26,7 +26,7 @@ void main() {
       "login crea la sessione correttamente se accesso effettuato con successo",
       () async {
         DiarySession session = DiarySession();
-        String result = viewmodel.login("real");
+        String result = await viewmodel.login("real");
         expect(result, "");
         expect(session.isDiaryAuth, true);
         expect(session.loggedDiary, DiaryType.realDiary);

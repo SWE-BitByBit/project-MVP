@@ -22,40 +22,22 @@ class DiaryAccessScreen extends StatelessWidget {
         final viewmodel = DiaryAccessViewmodel(repo);
         return viewmodel;
       },
-      child: DiaryAccess(),
+      child: DiaryAccessScreenView(),
     );
   }
 }
 
 /// Vista pura
 ///
-/// Si occupa della creazione dell'interfaccia di accesso, e ,i n quanto Consumer di [DiaryAccessViewmodel]
+/// Si occupa della creazione dell'interfaccia di accesso, e ,in quanto Consumer di [DiaryAccessViewmodel]
 /// si aggiorna in seguito a cambiamenti di stato del ViewModel
-class DiaryAccess extends StatefulWidget {
-  const DiaryAccess({super.key});
-  @override
-  DiaryAccessScreenView createState() => DiaryAccessScreenView();
-}
+class DiaryAccessScreenView extends StatelessWidget {
+  const DiaryAccessScreenView({super.key});
 
-class DiaryAccessScreenView extends State<DiaryAccess> {
-  final _diaryPassword = TextEditingController();
-  String error = '';
-
-  @override
-  void initState() {
-    super.initState();
-    error = '';
-  }
-
-  @override
-  void dispose() {
-    _diaryPassword.dispose();
-    super.dispose();
-  }
-
-  final diarySession = DiarySession.session;
   @override
   Widget build(BuildContext context) {
+    final diarySession = DiarySession.session;
+    final TextEditingController diaryPassword = TextEditingController();
     final vm = context.watch<DiaryAccessViewmodel>();
     return Scaffold(
       appBar: AppBar(
@@ -70,10 +52,35 @@ class DiaryAccessScreenView extends State<DiaryAccess> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Accedi al diario'),
+              if (vm.error != null)
+                Container(
+                  width: double.infinity,
+                  color: Colors.red.shade50,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          vm.error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Text('Inserire password per accedere al diario'),
               SizedBox(height: 26),
               TextField(
-                controller: _diaryPassword,
+                controller: diaryPassword,
                 decoration: InputDecoration(
                   labelText: 'Password diario',
                   border: OutlineInputBorder(),
@@ -86,10 +93,8 @@ class DiaryAccessScreenView extends State<DiaryAccess> {
                 height: 49,
                 child: ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      error = vm.login(_diaryPassword.text);
-                    });
-
+                    vm.login(diaryPassword.text);
+                    diaryPassword.clear();
                     //Redirect se l'utente ha effettuato il login con successo
                     if (diarySession.isDiaryAuth != null &&
                         diarySession.isDiaryAuth == true) {
@@ -103,11 +108,6 @@ class DiaryAccessScreenView extends State<DiaryAccess> {
                   },
                   child: Text('Accedi'),
                 ),
-              ),
-              SizedBox(height: 26),
-              Text(
-                error,
-                style: TextStyle(color: Color(0xFFAA0000), fontSize: 18),
               ),
             ],
           ),

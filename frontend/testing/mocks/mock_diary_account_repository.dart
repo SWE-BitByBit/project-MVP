@@ -2,8 +2,15 @@ import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_rep
 import 'package:mvp_app_protegge_e_trasforma/data/services/diary_access_result.dart';
 
 class MockDiaryAccountRepository implements DiaryAccountRepository {
+  bool shouldThrowError = false;
+  Duration simulatedDelay = Duration.zero;
+
   @override
-  DiaryAccessResult clarifyAccessResult(String pwd) {
+  Future<DiaryAccessResult> clarifyAccessResult(String pwd) async {
+    if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
+    if (shouldThrowError) {
+      throw Exception('Errore di rete simulato durante clarifyAccessResult');
+    }
     switch (pwd) {
       case "real":
         return DiaryAccessResult.realDiary;

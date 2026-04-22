@@ -67,7 +67,7 @@ void main() {
           expect(viewmodel.getSavedNotes().first.getTitle(), "first");
           expect(viewmodel.getSavedNotes().last.getTitle(), "third");
 
-          await viewmodel.deleteNote(0, DiaryType.realDiary);
+          await viewmodel.deleteNote("0", DiaryType.realDiary);
           expect(viewmodel.getNoteListSize(), 2);
           expect(viewmodel.getSavedNotes().first, isNot("first"));
         },

@@ -1,7 +1,7 @@
 /// Servizio responsabile della comunicazione HTTP/REST con il backend
 /// per l'accesso al diario.
 class DiaryAccountService {
-  int validateDiaryPassword(String pwd) {
+  Future<int> validateDiaryPassword(String pwd) async {
     ///PLACEHOLDER
     //TODO: implementare chiamata reale
     if (pwd == "testpassword") {

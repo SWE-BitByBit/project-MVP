@@ -1,13 +1,12 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 
 class MockNoteRepository implements NoteRepository {
   bool shouldThrowError = false;
   Duration simulatedDelay = Duration.zero;
   List<Note> mockedPreviewsToReturn = [];
-  LocalNote? mockCreatedNote;
+  Note? mockCreatedNote;
 
   @override
   Future<void> deleteNote(DiaryType targetDiary, Note note) async {

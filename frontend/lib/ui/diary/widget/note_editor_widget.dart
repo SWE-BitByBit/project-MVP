@@ -234,7 +234,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             children: [
               const Icon(Icons.textsms),
               const SizedBox(width: 10),
-              const Text("Aggiungi testo"),
+              Expanded(child: const Text("Aggiungi testo")),
             ],
           ),
         ),
@@ -246,7 +246,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             children: [
               const Icon(Icons.photo),
               const SizedBox(width: 10),
-              const Text("Aggiungi immagine"),
+              Expanded(child: const Text("Aggiungi immagine")),
             ],
           ),
         ),
@@ -258,7 +258,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             children: [
               const Icon(Icons.multitrack_audio),
               const SizedBox(width: 10),
-              const Text("Aggiungi traccia audio"),
+              Expanded(child: const Text("Aggiungi traccia audio")),
             ],
           ),
         ),

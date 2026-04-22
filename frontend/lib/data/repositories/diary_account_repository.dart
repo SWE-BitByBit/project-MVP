@@ -9,8 +9,8 @@ class DiaryAccountRepository {
   final DiaryAccountService _service;
 
   DiaryAccountRepository(this._service);
-  DiaryAccessResult clarifyAccessResult(String pwd) {
-    int result = _service.validateDiaryPassword(pwd);
+  Future<DiaryAccessResult> clarifyAccessResult(String pwd) async {
+    int result = await _service.validateDiaryPassword(pwd);
     switch (result) {
       case 0:
         return DiaryAccessResult.error;

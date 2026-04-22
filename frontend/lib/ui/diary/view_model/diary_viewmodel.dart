@@ -171,12 +171,15 @@ class DiaryViewmodel with ChangeNotifier {
   }
 
   //Elimina la nota presente all'indice [index]
-  Future<void> deleteNote(int index, DiaryType diary) async {
+  Future<void> deleteNote(String noteId, DiaryType diary) async {
     try {
       //Eliminazione nel database
-      await _noteRepo.deleteNote(diary, _savedNotes[index]);
+      await _noteRepo.deleteNote(
+        diary,
+        _savedNotes.where((note) => note.getId() == noteId).first,
+      );
       //Eliminazione in locale
-      _savedNotes.removeAt(index);
+      _savedNotes.removeWhere((note) => note.getId() == noteId);
       unloadNote();
     } catch (e) {
       _error = "Errore nell'eliminazione della nota: $e";
