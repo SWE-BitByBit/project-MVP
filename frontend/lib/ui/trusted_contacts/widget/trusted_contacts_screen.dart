@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
 import 'package:provider/provider.dart';
+
 import '../../../data/services/trusted_contact_service.dart';
 import '../../../data/repositories/trusted_contact_repository.dart';
 import '../view_model/trusted_contact_view_model.dart';
@@ -20,9 +22,8 @@ class TrustedContactScreen extends StatelessWidget {
       create: (_) {
         final service = TrustedContactService();
         final repo = TrustedContactRepository(service);
-        final vm = TrustedContactViewModel(repo);
-        vm.loadContacts();
-        return vm;
+        final viewModel = TrustedContactViewModel(repo);
+        return viewModel;
       },
       child: const TrustedContactScreenView(),
     );
@@ -47,41 +48,29 @@ class TrustedContactScreenView extends StatelessWidget {
       ),
       body: Consumer<TrustedContactViewModel>(
         builder: (context, viewModel, child) {
+          if (viewModel.loadContacts.completed) {
+            return const TrustedContactListWidget();
+          }
           return Column(
             children: [
-              if (viewModel.error != null)
-                Container(
-                  width: double.infinity,
-                  color: Colors.red.shade50,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.red, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          viewModel.error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close,
-                            color: Colors.red, size: 18),
-                        onPressed: viewModel.clearError,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+              if (viewModel.loadContacts.running)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              if (viewModel.loadContacts.error != null)
+                Expanded(
+                  child: Center(
+                    child: ErrorIndicator(
+                      title: "Errore nel caricamento",
+                      label: "Prego riprovare",
+                      onPressed: viewModel.loadContacts.execute,
+                    ),
                   ),
                 ),
-              const Expanded(
-                child: TrustedContactListWidget(),
-              ),
             ],
           );
         },
+        child: const TrustedContactListWidget(),
       ),
       floatingActionButton: const TrustedContactActionsWidget(),
     );

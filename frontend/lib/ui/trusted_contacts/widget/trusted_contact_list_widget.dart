@@ -15,11 +15,6 @@ class TrustedContactListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<TrustedContactViewModel>();
-
-    if (viewModel.isLoading && viewModel.contacts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     if (viewModel.contacts.isEmpty) {
       return Center(
         child: Column(
@@ -37,7 +32,7 @@ class TrustedContactListWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Aggiungi una persona di fiducia\ncon il pulsante qui sotto.',
+              'Aggiungi un contatto fidato\ncon il pulsante qui sotto.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
             ),
@@ -66,14 +61,9 @@ class TrustedContactListWidget extends StatelessWidget {
           ),
           title: Text(
             contact.getName(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          subtitle: Text(
-            '${contact.getEmail()}\n${contact.getPhone()}',
-          ),
+          subtitle: Text('${contact.getEmail()}\n${contact.getPhone()}'),
           isThreeLine: true,
           trailing: IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -127,8 +117,7 @@ class TrustedContactListWidget extends StatelessWidget {
         return AlertDialog(
           title: const Text('Elimina Contatto'),
           content: Text(
-            'Sei sicuro di voler rimuovere $contactName dai tuoi contatti fidati? '
-            'Questa azione non può essere annullata.',
+            'Sei sicuro di voler rimuovere $contactName dai tuoi contatti fidati? ',
           ),
           actions: [
             TextButton(
@@ -141,7 +130,7 @@ class TrustedContactListWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                viewModel.deleteContact(contactId);
+                viewModel.deleteContact.execute(contactId);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text(
