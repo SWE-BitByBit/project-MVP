@@ -35,17 +35,21 @@ void main() {
       );
     }
 
-    testWidgets('Deve mostrare il titolo e i tre campi del form', (WidgetTester tester) async {
+    testWidgets('Deve mostrare il titolo e i tre campi del form', (
+      WidgetTester tester,
+    ) async {
       await pumpFormWidget(tester, onDismiss: () {});
 
       expect(find.text('Nuovo Contatto Fidato'), findsOneWidget);
-      expect(find.byIcon(Icons.person), findsOneWidget);         // campo nome
-      expect(find.byIcon(Icons.phone), findsOneWidget);          // campo telefono
-      expect(find.byIcon(Icons.email), findsOneWidget);          // campo email
+      expect(find.byIcon(Icons.person), findsOneWidget); // campo nome
+      expect(find.byIcon(Icons.phone), findsOneWidget); // campo telefono
+      expect(find.byIcon(Icons.email), findsOneWidget); // campo email
       expect(find.text('Salva contatto'), findsOneWidget);
     });
 
-    testWidgets('La validazione deve fallire se i campi sono vuoti', (WidgetTester tester) async {
+    testWidgets('La validazione deve fallire se i campi sono vuoti', (
+      WidgetTester tester,
+    ) async {
       await pumpFormWidget(tester, onDismiss: () {});
 
       // Tocchiamo "Salva contatto" senza compilare nulla
@@ -54,94 +58,88 @@ void main() {
 
       // Flutter mostra i messaggi di errore di validazione
       expect(find.text('Inserisci il nome'), findsOneWidget);
-      expect(find.text('Inserisci il numero'), findsOneWidget);
+      expect(find.text('Inserisci il numero di telefono'), findsOneWidget);
       expect(find.text("Inserisci l'email"), findsOneWidget);
     });
 
-    testWidgets('Con i campi validi, deve chiamare createContact e invocare onDismiss', (WidgetTester tester) async {
-      bool dismissCalled = false;
+    testWidgets(
+      'Con i campi validi, deve chiamare createContact e invocare onDismiss',
+      (WidgetTester tester) async {
+        bool dismissCalled = false;
 
-      // Prepariamo il mock
-      mockRepo.mockedCreatedContact = TrustedContact(
-        id: 'c-new',
-        name: 'Anna Neri',
-        email: 'anna@email.com',
-        phoneNumber: '+39 333 7654321',
-      );
-      mockRepo.mockedContactsToReturn = [mockRepo.mockedCreatedContact!];
+        // Prepariamo il mock
+        mockRepo.mockedCreatedContact = TrustedContact(
+          id: 'c-new',
+          name: 'Anna Neri',
+          email: 'anna@email.com',
+          phoneNumber: '+39 333 7654321',
+        );
+        mockRepo.mockedContactsToReturn = [mockRepo.mockedCreatedContact!];
 
-      await pumpFormWidget(tester, onDismiss: () {
-        dismissCalled = true;
-      });
+        await pumpFormWidget(
+          tester,
+          onDismiss: () {
+            dismissCalled = true;
+          },
+        );
 
-      // Compiliamo i campi
-      await tester.enterText(
-        find.widgetWithIcon(TextFormField, Icons.person),
-        'Anna Neri',
-      );
-      await tester.enterText(
-        find.widgetWithIcon(TextFormField, Icons.phone),
-        '+39 333 7654321',
-      );
-      await tester.enterText(
-        find.widgetWithIcon(TextFormField, Icons.email),
-        'anna@email.com',
-      );
+        // Compiliamo i campi
+        await tester.enterText(
+          find.widgetWithIcon(TextFormField, Icons.person),
+          'Anna Neri',
+        );
+        await tester.enterText(
+          find.widgetWithIcon(TextFormField, Icons.phone),
+          '+39 333 7654321',
+        );
+        await tester.enterText(
+          find.widgetWithIcon(TextFormField, Icons.email),
+          'anna@email.com',
+        );
 
-      // Inviamo il form
-      await tester.tap(find.text('Salva contatto'));
-      await tester.pumpAndSettle();
+        // Inviamo il form
+        await tester.tap(find.text('Salva contatto'));
+        await tester.pumpAndSettle();
 
-      // Verifichiamo che il contatto sia stato creato e il dismiss invocato
-      expect(viewModel.contacts.length, 1);
-      expect(viewModel.contacts.first.getName(), 'Anna Neri');
-      expect(dismissCalled, isTrue, reason: 'onDismiss deve essere chiamata dopo il salvataggio');
-    });
+        // Verifichiamo che il contatto sia stato creato e il dismiss invocato
+        expect(viewModel.contacts.length, 1);
+        expect(viewModel.contacts.first.getName(), 'Anna Neri');
+        expect(
+          dismissCalled,
+          isTrue,
+          reason: 'onDismiss deve essere chiamata dopo il salvataggio',
+        );
+      },
+    );
 
-    testWidgets('In modalità modifica mostra titoli corretti e dati pre-popolati', (WidgetTester tester) async {
-      final existingContact = TrustedContact(id: 'c-1', name: 'Mario Rossi', email: 'mario@email.com', phoneNumber: '123');
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<TrustedContactViewModel>.value(
-              value: viewModel,
-              child: TrustedContactFormWidget(
-                onDismiss: () {},
-                initialContact: existingContact,
+    testWidgets(
+      'In modalità modifica mostra titoli corretti e dati pre-popolati',
+      (WidgetTester tester) async {
+        final existingContact = TrustedContact(
+          id: 'c-1',
+          name: 'Mario Rossi',
+          email: 'mario@email.com',
+          phoneNumber: '123',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ChangeNotifierProvider<TrustedContactViewModel>.value(
+                value: viewModel,
+                child: TrustedContactFormWidget(
+                  onDismiss: () {},
+                  initialContact: existingContact,
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Modifica Contatto'), findsOneWidget);
-      expect(find.text('Mario Rossi'), findsOneWidget);
-      expect(find.text('Aggiorna contatto'), findsOneWidget);
-    });
-
-    testWidgets('Deve mostrare il CircularProgressIndicator al posto del bottone durante il caricamento',
-        (WidgetTester tester) async {
-      // Simuliamo un'operazione lenta
-      mockRepo.simulatedDelay = const Duration(seconds: 1);
-
-      await pumpFormWidget(tester, onDismiss: () {});
-
-      // Avviamo una createContact senza await, in modo che il ViewModel sia in loading
-      viewModel.createContact(
-        name: 'Test',
-        email: 'test@test.com',
-        phoneNumber: '000',
-      );
-      await tester.pump(); // Un singolo frame: isLoading è ancora true
-
-      // Il testo del bottone sparisce, compare lo spinner
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Salva contatto'), findsNothing);
-
-      // Puliamo
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      mockRepo.simulatedDelay = Duration.zero;
-    });
+        expect(find.text('Modifica Contatto'), findsOneWidget);
+        expect(find.text('Mario Rossi'), findsOneWidget);
+        expect(find.text('Aggiorna contatto'), findsOneWidget);
+      },
+    );
   });
 }

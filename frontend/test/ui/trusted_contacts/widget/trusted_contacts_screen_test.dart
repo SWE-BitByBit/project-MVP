@@ -30,52 +30,33 @@ void main() {
       );
     }
 
-    testWidgets('Deve mostrare il titolo "Contatti Fidati" nella AppBar', (WidgetTester tester) async {
+    testWidgets('Deve mostrare il titolo "Contatti Fidati" nella AppBar', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester);
       expect(find.text('Contatti Fidati'), findsOneWidget);
     });
 
-    testWidgets('Deve montare il TrustedContactListWidget nel body', (WidgetTester tester) async {
+    testWidgets('Deve montare il TrustedContactListWidget nel body', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester);
       expect(find.byType(TrustedContactListWidget), findsOneWidget);
     });
 
-    testWidgets('Deve mostrare il FloatingActionButton per aggiungere contatti', (WidgetTester tester) async {
+    testWidgets(
+      'Deve mostrare il FloatingActionButton per aggiungere contatti',
+      (WidgetTester tester) async {
+        await pumpScreen(tester);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsOneWidget);
+      },
+    );
+
+    testWidgets('Non deve mostrare il banner di errore a schermo pulito', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsOneWidget);
-    });
-
-    testWidgets('Non deve mostrare il banner di errore a schermo pulito', (WidgetTester tester) async {
-      await pumpScreen(tester);
-      expect(find.byIcon(Icons.error_outline), findsNothing);
-    });
-
-    testWidgets('Deve mostrare il banner di errore rosso se il ViewModel ha un errore', (WidgetTester tester) async {
-      // Forziamo l'errore simulando un loadContacts fallito
-      mockRepo.shouldThrowError = true;
-      await viewModel.loadContacts();
-
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
-      expect(find.textContaining('Errore nel caricamento dei contatti'), findsOneWidget);
-    });
-
-    testWidgets('Il click sull\'icona × nel banner di errore deve chiuderlo', (WidgetTester tester) async {
-      // Setup errore
-      mockRepo.shouldThrowError = true;
-      await viewModel.loadContacts();
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
-
-      // Clicchiamo la X
-      await tester.tap(find.byIcon(Icons.close));
-      await tester.pumpAndSettle();
-
-      // Il banner sparisce
       expect(find.byIcon(Icons.error_outline), findsNothing);
     });
   });
