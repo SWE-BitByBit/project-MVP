@@ -3,7 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_widget.dart';
@@ -69,7 +68,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     controller: noteTextController,
                     maxLines: null,
                     onChanged: (value) => {
-                      viewModel.updateNoteTextElement(element, value),
+                      viewModel.updateNoteTextElement(
+                        widget.selectedNote,
+                        element,
+                        value,
+                      ),
                       setState(() {
                         _lastUpdated = widget.selectedNote.getUpdateDate();
                       }),

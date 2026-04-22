@@ -18,6 +18,10 @@ void main() {
       viewmodel = DiaryAccessViewmodel(repo);
     });
 
+    test("Stato iniziale", () {
+      expect(viewmodel.error, isNull);
+    });
+
     test(
       "login crea la sessione correttamente se accesso effettuato con successo",
       () async {

@@ -1,7 +1,3 @@
-import 'note_text_element.dart';
-import 'note_image_element.dart';
-import 'note_audio_element.dart';
-
 import 'note.dart';
 import 'note_element.dart';
 

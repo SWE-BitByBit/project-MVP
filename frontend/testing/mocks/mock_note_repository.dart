@@ -2,12 +2,11 @@ import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.d
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
 class MockNoteRepository implements NoteRepository {
   bool shouldThrowError = false;
   Duration simulatedDelay = Duration.zero;
-  List<ProxyNote> mockedPreviewsToReturn = [];
+  List<Note> mockedPreviewsToReturn = [];
   LocalNote? mockCreatedNote;
 
   @override

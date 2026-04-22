@@ -22,120 +22,170 @@ class DiaryViewmodel with ChangeNotifier {
   Note? _currentNote;
   final List<Note> _savedNotes = [];
   bool _loading = false;
+  String? _error;
 
   ///Crea istanza di [DiaryViewmodel] con il [NoteRepository] specificato
   DiaryViewmodel(this._noteRepo);
 
   ///Getters
 
-  //Ritorna la lista di note presenti nel diario
+  /// Ritorna l'ultimo errore, altrimenti ritorna null |
+  String? get error => _error;
+
+  //Ritorna la lista di note presenti nel diario |
   List<Note> getSavedNotes() {
     return _savedNotes;
   }
 
-  //Ritorna il numero di note attualmente presenti nel diario
+  //Ritorna il numero di note attualmente presenti nel diario |
   int getNoteListSize() {
     return _savedNotes.length;
   }
 
-  //Ritorna la nota attualmente selezionata, se presente
+  //Ritorna la nota attualmente selezionata, se presente |
   Note? getCurrentNote() {
     return _currentNote;
   }
 
-  //Ritorna true se si stanno effettuando operazioni di caricamento da memoria
+  //Ritorna true se si stanno effettuando operazioni di caricamento da memoria |
   bool isLoading() {
     return _loading;
   }
 
   ///Metodi gestione note
 
-  //Ordina le note in ordine decrescente,
+  //Ordina le note in ordine decrescente, |
   void sortNotes() {
-    _savedNotes.sort((a, b) => a.getUpdateDate().compareTo(b.getUpdateDate()));
-    notifyListeners();
-  }
-
-  //Aggiunge una nuova [ProxyNote] al diario e la salva in memoria
-  void addNewNote(DiaryType diary) {
-    //Caricamento
     _loading = true;
-    notifyListeners();
-
-    //Creazione nota vuota
-    String noteId = _generateNoteId(15);
-    Note newNote = ProxyNote(noteId, "", DateTime.now(), DateTime.now(), diary);
-    //Salvataggio nota
-    _savedNotes.add(newNote);
-    _noteRepo.saveNote(diary, newNote);
-    _loading = false;
-    notifyListeners();
-  }
-
-  //Aggiorna il titolo della nota selezionata
-  void updateNoteTitle(String title) {
-    _currentNote!.setTitle(title);
-    notifyListeners();
-  }
-
-  //Aggiunge un nuovo elemento alla [Note] passata, nella posizione passata come parametro
-  void addNoteElement(Note note, String text, int pos) {
-    NoteElement elem = NoteTextElement(text);
-    note.addElement(elem, pos);
-    note.updateLastModified();
-    notifyListeners();
-  }
-
-  //Aggiunge un elemento media (immagine/traccia audio) alla [Note] passata, in posizione [pos]
-  void addNoteMediaElement(Note note, File file, String type, int pos) {
-    NoteElement elem;
-    switch (type) {
-      case "image":
-        elem = NoteImageElement(file.path);
-        break;
-      case "audio":
-        elem = NoteAudioElement(file.path);
-        break;
-      default:
-        elem = NoteTextElement("ERROR");
-        break;
-    }
-    note.addElement(elem, pos);
-    note.updateLastModified();
-    notifyListeners();
-  }
-
-  //Rimuove il [NoteElement] passato dalla [Note] passata
-  void removeNoteElement(Note note, NoteElement element) {
-    note.removeElement(element);
-    notifyListeners();
-  }
-
-  /// Aggiorna il contenuto di un [NoteTextElement] appartenente alla [Note] passata
-  void updateNoteTextElement(NoteElement element, String text) {
-    if (_currentNote != null) {
-      _currentNote!.editNoteElement(element, text);
+    try {
+      _savedNotes.sort(
+        (a, b) => b.getUpdateDate().compareTo(a.getUpdateDate()),
+      );
+    } catch (e) {
+      "Errore nel riordino delle note: $e";
+    } finally {
+      _loading = false;
       notifyListeners();
     }
   }
 
-  //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota.
+  //Aggiunge una nuova [ProxyNote] al diario e la salva in memoria |
+  void addNewNote(DiaryType diary) {
+    try {
+      //Caricamento
+      _loading = true;
+      notifyListeners();
+
+      //Creazione nota vuota
+      String noteId = _generateNoteId(15);
+      Note newNote = ProxyNote(
+        noteId,
+        "",
+        DateTime.now(),
+        DateTime.now(),
+        diary,
+      );
+      //Salvataggio nota
+      _savedNotes.add(newNote);
+      _noteRepo.saveNote(diary, newNote);
+      _loading = false;
+      notifyListeners();
+    } catch (e) {
+      "Errore nella creazione della nota: $e";
+    }
+  }
+
+  //Aggiorna il titolo della nota selezionata |
+  void updateNoteTitle(String title) {
+    try {
+      _currentNote!.setTitle(title);
+      notifyListeners();
+    } catch (e) {
+      "Errore nell'aggiornamento del titolo della nota: $e";
+    }
+  }
+
+  //Aggiunge un nuovo elemento alla [Note] passata, nella posizione passata come parametro |
+  void addNoteElement(Note note, String text, int pos) {
+    try {
+      NoteElement elem = NoteTextElement(text);
+      note.addElement(elem, pos);
+      note.updateLastModified();
+      notifyListeners();
+    } catch (e) {
+      "Errore nell'aggiunta dell'elemento: $e";
+    }
+  }
+
+  //Aggiunge un elemento media (immagine/traccia audio) alla [Note] passata, in posizione [pos] |
+  void addNoteMediaElement(Note note, File file, String type, int pos) {
+    try {
+      NoteElement elem;
+      switch (type) {
+        case "image":
+          elem = NoteImageElement(file.path);
+          break;
+        case "audio":
+          elem = NoteAudioElement(file.path);
+          break;
+        default:
+          throw _error = "tipo elemento non riconosciuto";
+      }
+      note.addElement(elem, pos);
+      note.updateLastModified();
+      notifyListeners();
+    } catch (e) {
+      "Errore nell'aggiunta dell'elemento: $e";
+    }
+  }
+
+  //Rimuove il [NoteElement] passato dalla [Note] passata
+  void removeNoteElement(Note note, NoteElement element) {
+    try {
+      note.removeElement(element);
+      notifyListeners();
+    } catch (e) {
+      "Errore nella rimozione dell'elemento: $e";
+    }
+  }
+
+  /// Aggiorna il contenuto di un [NoteTextElement] appartenente alla [Note] passata |
+  void updateNoteTextElement(Note note, NoteElement element, String text) {
+    try {
+      note.editNoteElement(element, text);
+      notifyListeners();
+    } catch (e) {
+      "Errore nell'aggiornamento dell'elemento testuale della nota: $e";
+    }
+  }
+
+  //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota. |
   Future<void> saveNote(Note note, DiaryType diary) async {
-    _noteRepo.saveNote(diary, note);
-    notifyListeners();
+    try {
+      _noteRepo.saveNote(diary, note);
+    } catch (e) {
+      "Errore nel salvataggio della nota: $e";
+    } finally {
+      notifyListeners();
+    }
   }
 
   //Elimina la nota presente all'indice [index]
   Future<void> deleteNote(int index, DiaryType diary) async {
-    //Eliminazione nel database
-    await _noteRepo.deleteNote(diary, _savedNotes[index]);
-    //Eliminazione in locale
-    _savedNotes.removeAt(index);
-    unloadNote();
-    notifyListeners();
+    try {
+      //Eliminazione nel database
+      await _noteRepo.deleteNote(diary, _savedNotes[index]);
+      //Eliminazione in locale
+      _savedNotes.removeAt(index);
+      unloadNote();
+    } catch (e) {
+      _error = "Errore nell'eliminazione della nota: $e";
+    } finally {
+      notifyListeners();
+    }
   }
 
-  //Genera una stringa casuale (non già presente nella lista) da usare come Id per l'inserimento di una nuova nota
+  //Genera una stringa casuale (non già presente nella lista) da usare come Id per l'inserimento di una nuova nota |
   String _generateNoteId(int length) {
     const String allowedChars =
         "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
@@ -161,27 +211,35 @@ class DiaryViewmodel with ChangeNotifier {
 
   ///Metodi caricamento dati
 
-  ///Popola _savedNotes da database con ProxyNote. Se presenti, le note già in memoria vengono rimosse.
-  ///Note ordinate per ultima modifica dalla più recente alla più remota
+  ///Popola _savedNotes da database con ProxyNote. Se presenti, le note già in memoria vengono rimosse. |
   Future<void> loadPreviews(DiaryType diary) async {
     _loading = true;
-    _savedNotes.clear();
-    notifyListeners();
-    List<Note> noteList = await _noteRepo.getNotes(diary);
-    for (int i = 0; i < noteList.length; i++) {
-      _savedNotes.insert(i, noteList[i]);
+    try {
+      _savedNotes.clear();
+      notifyListeners();
+      List<Note> noteList = await _noteRepo.getNotes(diary);
+      for (int i = 0; i < noteList.length; i++) {
+        _savedNotes.insert(i, noteList[i]);
+      }
+      _error = null;
+    } catch (e) {
+      _error = 'Errore nel caricamento delle note: $e';
+    } finally {
+      _loading = false;
+      notifyListeners();
     }
-    sortNotes();
-    _loading = false;
-    notifyListeners();
   }
 
   ///Pre: non è selezionata nessuna nota (_currentNote è vuota)
-  ///Post: _currentNote contiene una LocalNote
+  ///Post: _currentNote contiene una LocalNote |
   void loadNote(int index) {
-    _currentNote = _savedNotes[index];
-    if (_currentNote != null) {
-      _currentNote!.load();
+    try {
+      _currentNote = _savedNotes[index];
+      if (_currentNote != null) {
+        _currentNote!.load();
+      }
+    } catch (e) {
+      _error = 'Errore nel caricamento della nota selezionata: $e';
     }
   }
 

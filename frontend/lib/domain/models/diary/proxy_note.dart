@@ -119,10 +119,8 @@ class ProxyNote implements Note {
   @override
   void editNoteElement(NoteElement element, String newText) {
     load();
-    _realNote!.noteContents
-        .where((listElem) => listElem == element)
-        .first
-        .setContent(newText);
+    _realNote!.editNoteElement(element, newText);
+
     updateLastModified();
   }
 }

@@ -1,5 +1,3 @@
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-
 import 'note_element.dart';
 
 /// Interfaccia che definisce i metodi standard per le note

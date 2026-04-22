@@ -39,6 +39,7 @@ class DiaryScreen extends StatelessWidget {
 
         if (diarySession.isDiaryAuth != null) {
           viewmodel.loadPreviews(diarySession.loggedDiary!);
+          viewmodel.sortNotes();
         }
         return viewmodel;
       },

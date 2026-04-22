@@ -23,6 +23,8 @@ class _NoteAudioPlayerWidget extends State<NoteAudioPlayerWidget> {
   /// Posizione attuale nella traccia audio
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
+
+  /// Variabili necessarie per poter cancellare il listen nel dispose()
   late StreamSubscription<Duration?> positionSub;
   late StreamSubscription<Duration?> durationSub;
   late StreamSubscription<PlayerState> stateSub;

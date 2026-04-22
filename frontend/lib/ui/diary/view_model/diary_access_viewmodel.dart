@@ -13,28 +13,43 @@ class DiaryAccessViewmodel with ChangeNotifier {
   ///Crea istanza di [DiaryAccessViewmodel] con il [DiaryAccountRepository] specificato
   DiaryAccessViewmodel(this._accRepo);
 
+  ///Stato UI
+  String? _error;
+
+  /// Ritorna l'ultimo errore, altrimenti ritorna null
+  String? get error => _error;
+
   //Inizializza diarySession se il login ha successo, altrimenti ritorna stringa di errore.
   String login(String pwd) {
-    switch (_accRepo.clarifyAccessResult(pwd)) {
-      case DiaryAccessResult.realDiary:
-        final diarySession = DiarySession.session;
-        diarySession.initSession(DiaryType.realDiary);
-        return '';
-      case DiaryAccessResult.fakeDiary:
-        final diarySession = DiarySession.session;
-        diarySession.initSession(DiaryType.fakeDiary);
-        return '';
-      case DiaryAccessResult.error:
-        return 'Errore nel login.';
-      case DiaryAccessResult.tooManyAttempts:
-        return 'Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.';
+    try {
+      switch (_accRepo.clarifyAccessResult(pwd)) {
+        case DiaryAccessResult.realDiary:
+          final diarySession = DiarySession.session;
+          diarySession.initSession(DiaryType.realDiary);
+          return '';
+        case DiaryAccessResult.fakeDiary:
+          final diarySession = DiarySession.session;
+          diarySession.initSession(DiaryType.fakeDiary);
+          return '';
+        case DiaryAccessResult.error:
+          return 'Errore nel login.';
+        case DiaryAccessResult.tooManyAttempts:
+          return 'Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.';
+      }
+    } catch (e) {
+      return 'Errore nel login.';
     }
   }
 
   //Termina la sessione
   String logout() {
-    final diarySession = DiarySession.session;
-    diarySession.endSession();
-    return 'Logout effettuato con successo.';
+    try {
+      final diarySession = DiarySession.session;
+      diarySession.endSession();
+      return 'Logout effettuato con successo.';
+    } catch (e) {
+      _error = "Errore nella procedura di logout";
+      return _error!;
+    }
   }
 }

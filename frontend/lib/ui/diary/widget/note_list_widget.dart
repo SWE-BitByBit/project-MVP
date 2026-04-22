@@ -30,6 +30,7 @@ class NoteListWidget extends StatelessWidget {
               () {
                 Navigator.pop(sheetContext);
                 vm.loadPreviews(DiarySession.session.loggedDiary!);
+                vm.sortNotes();
               };
             },
           ),
@@ -95,6 +96,31 @@ class NoteListWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (viewModel.error != null)
+                Container(
+                  width: double.infinity,
+                  color: Colors.red.shade50,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          viewModel.error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
               const SizedBox(height: 16),
               Text(
