@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -94,12 +94,14 @@ class _NoteAudioPlayerWidget extends State<NoteAudioPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    String fileName = basename(widget.trackUrl);
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.ltr,
         children: [
+          Text(fileName),
           Slider(
             min: 0.0,
             max: duration.inSeconds.toDouble(),

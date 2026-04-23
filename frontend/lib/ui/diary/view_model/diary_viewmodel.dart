@@ -16,7 +16,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart
 /// cambiamenti di stato.
 class DiaryViewmodel with ChangeNotifier {
   final NoteRepository _noteRepo;
-  //late AuthRepository authRepo;
 
   ///Stato UI
   Note? _currentNote;
@@ -57,16 +56,11 @@ class DiaryViewmodel with ChangeNotifier {
   //Ordina le note in ordine decrescente, |
   void sortNotes() {
     _loading = true;
-    try {
-      _savedNotes.sort(
-        (a, b) => b.getUpdateDate().compareTo(a.getUpdateDate()),
-      );
-    } catch (e) {
-      "Errore nel riordino delle note: $e";
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
+
+    _savedNotes.sort((a, b) => b.getUpdateDate().compareTo(a.getUpdateDate()));
+
+    _loading = false;
+    //notifyListeners();
   }
 
   //Aggiunge una nuova [ProxyNote] al diario e la salva in memoria |
@@ -78,13 +72,7 @@ class DiaryViewmodel with ChangeNotifier {
 
       //Creazione nota vuota
       String noteId = _generateNoteId(15);
-      Note newNote = ProxyNote(
-        noteId,
-        "",
-        DateTime.now(),
-        DateTime.now(),
-        diary,
-      );
+      Note newNote = ProxyNote(noteId, "", DateTime.now(), DateTime.now());
       //Salvataggio nota
       _savedNotes.add(newNote);
       _noteRepo.saveNote(diary, newNote);
@@ -162,7 +150,7 @@ class DiaryViewmodel with ChangeNotifier {
   //Salva la nota su server. Da chiamare dopo che sono avvenute modifiche alla nota. |
   Future<void> saveNote(Note note, DiaryType diary) async {
     try {
-      _noteRepo.saveNote(diary, note);
+      await _noteRepo.saveNote(diary, note);
     } catch (e) {
       "Errore nel salvataggio della nota: $e";
     } finally {
@@ -175,7 +163,6 @@ class DiaryViewmodel with ChangeNotifier {
     try {
       //Eliminazione nel database
       await _noteRepo.deleteNote(
-        diary,
         _savedNotes.where((note) => note.getId() == noteId).first,
       );
       //Eliminazione in locale
@@ -188,7 +175,7 @@ class DiaryViewmodel with ChangeNotifier {
     }
   }
 
-  //Genera una stringa casuale (non già presente nella lista) da usare come Id per l'inserimento di una nuova nota |
+  //PLACEHOLDER Genera una stringa casuale (non già presente nella lista) da usare come Id per l'inserimento di una nuova nota |
   String _generateNoteId(int length) {
     const String allowedChars =
         "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
@@ -228,6 +215,7 @@ class DiaryViewmodel with ChangeNotifier {
     } catch (e) {
       _error = 'Errore nel caricamento delle note: $e';
     } finally {
+      sortNotes();
       _loading = false;
       notifyListeners();
     }

@@ -22,7 +22,7 @@ class NoteRepository {
     );
     List<Note> noteOut = [];
     for (int i = 0; i < rawNotes.length; i++) {
-      noteOut.add(_noteDTO.fromJson(rawNotes[i], targetDiary));
+      noteOut.add(_noteDTO.fromJson(rawNotes[i]));
     }
     return noteOut;
   }
@@ -30,12 +30,9 @@ class NoteRepository {
   ///Ritorna una nota completa recuperata dal service in base al [noteId] fornito
   ///
   ///Il service fornisce la nota in formato JSON, che quindi viene convertita in Note tramite [NoteDTO]
-  Future<Note> getNoteById(DiaryType targetDiary, String noteId) async {
-    Map<String, dynamic> json = await _noteService.fetchNoteById(
-      targetDiary,
-      noteId,
-    );
-    return _noteDTO.fromJson(json, targetDiary);
+  Future<Note> getNoteById(String noteId) async {
+    Map<String, dynamic> json = await _noteService.fetchNoteById(noteId);
+    return _noteDTO.fromJson(json);
   }
 
   ///Crea una nuova nota nel backend
@@ -43,13 +40,14 @@ class NoteRepository {
   ///Converte [note] in JSON tramite [NoteDTO], e poi lo invia al service
   Future<void> saveNote(DiaryType targetDiary, Note note) async {
     Map<String, dynamic> json = _noteDTO.toJson(note);
-    await _noteService.saveNote(targetDiary, json);
+    json.addAll({"diary_type": targetDiary.toString()});
+    await _noteService.saveNote(json);
   }
 
   ///Elimina una nota dal backend
   ///
   ///Recupera l'[id] della nota e lo invia al service per completare l'eliminazione
-  Future<void> deleteNote(DiaryType targetDiary, Note note) async {
-    await _noteService.deleteNote(targetDiary, note.getId());
+  Future<void> deleteNote(Note note) async {
+    await _noteService.deleteNote(note.getId());
   }
 }

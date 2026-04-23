@@ -37,6 +37,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   DateTime? _lastUpdated;
   final _imagePicker = ImagePicker();
   final _elements = <Card>[];
+  bool showDeleteButton = false;
   bool loading = false;
 
   final String dayFormat = "d/M/y";
@@ -84,6 +85,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                 ),
                 const SizedBox(width: 16),
+
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () {
@@ -105,6 +107,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                 ),
                 const SizedBox(width: 16),
+
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () {
@@ -153,6 +156,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
       text: widget.selectedNote.getTitle(),
     );
     _lastUpdated = widget.selectedNote.getUpdateDate();
+
     loading = true;
     loadNote();
     super.initState();
@@ -315,6 +319,33 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               Text(
                 "Creata il ${DateFormat(dayFormat).format(widget.selectedNote.getCreationDate())} alle ${DateFormat(timeFormat).format(widget.selectedNote.getCreationDate())}",
               ),
+              Padding(
+                padding: const EdgeInsetsGeometry.directional(start: 4, end: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(height: 12),
+                    Ink(
+                      decoration: (ShapeDecoration(
+                        shape: CircleBorder(),
+                        color: showDeleteButton
+                            ? Colors.red
+                            : const Color.fromARGB(0, 255, 255, 255),
+                      )),
+                      child: IconButton(
+                        onPressed: () {},
+
+                        /// Toggle per bottone eliminazione da implementare
+                        icon: const Icon(Icons.menu),
+                        color: showDeleteButton
+                            ? const Color.fromARGB(255, 22, 22, 22)
+                            : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               Expanded(
                 child: Builder(
                   builder: (context) {

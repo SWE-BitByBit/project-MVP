@@ -45,21 +45,18 @@ void main() {
             "first",
             DateTime.parse("2025-04-14 09:00:30"),
             DateTime.parse("2026-04-14 08:00:30"),
-            DiaryType.realDiary,
           );
           Note note2 = ProxyNote(
             "1",
             "second",
             DateTime.parse("2026-01-12 15:00:30"),
             DateTime.parse("2026-02-14 13:00:30"),
-            DiaryType.realDiary,
           );
           Note note3 = ProxyNote(
             "2",
             "third",
             DateTime.parse("2026-03-04 22:10:30"),
             DateTime.parse("2026-04-14 10:00:30"),
-            DiaryType.realDiary,
           );
           repo.mockedPreviewsToReturn = [note1, note2, note3];
           await viewmodel.loadPreviews(DiaryType.realDiary);
@@ -80,21 +77,18 @@ void main() {
             "first",
             DateTime.parse("2025-04-14 09:00:30"),
             DateTime.parse("2026-04-14 08:00:30"),
-            DiaryType.realDiary,
           );
           Note note2 = ProxyNote(
             "1",
             "second",
             DateTime.parse("2026-01-12 15:00:30"),
             DateTime.parse("2026-02-14 13:00:30"),
-            DiaryType.realDiary,
           );
           Note note3 = ProxyNote(
             "2",
             "third",
             DateTime.parse("2026-03-04 22:10:30"),
             DateTime.parse("2026-04-14 10:00:30"),
-            DiaryType.realDiary,
           );
           repo.mockedPreviewsToReturn = [note1, note2, note3];
           await viewmodel.loadPreviews(DiaryType.realDiary);

@@ -88,10 +88,7 @@ void main() {
           ],
         };
 
-        final idNote = await repository.getNoteById(
-          DiaryType.realDiary,
-          "aaaaaaa",
-        );
+        final idNote = await repository.getNoteById("aaaaaaa");
         expect(idNote.getId(), "aaaaaaa");
         expect(idNote.getTitle(), "MockNote");
         expect(idNote.getCreationDate(), DateTime.parse("2026-02-11 10:00:00"));
@@ -110,7 +107,6 @@ void main() {
         "title",
         DateTime.parse("2026-02-11 10:00:00"),
         DateTime.parse("2026-02-11 10:00:00"),
-        DiaryType.realDiary,
       );
       await expectLater(
         repository.saveNote(DiaryType.realDiary, mockNote),
@@ -124,12 +120,8 @@ void main() {
         "title",
         DateTime.parse("2026-02-11 10:00:00"),
         DateTime.parse("2026-02-11 10:00:00"),
-        DiaryType.realDiary,
       );
-      await expectLater(
-        repository.deleteNote(DiaryType.realDiary, mockNote),
-        completes,
-      );
+      await expectLater(repository.deleteNote(mockNote), completes);
     });
   });
 }

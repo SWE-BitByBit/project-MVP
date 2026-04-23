@@ -25,10 +25,7 @@ void main() {
     test(
       "fromJson crea correttamente un oggetto ProxyNote da un json senza chiave elements",
       () {
-        final sampleProxy = NoteDTO().fromJson(
-          sampleJsonIncomplete,
-          DiaryType.realDiary,
-        );
+        final sampleProxy = NoteDTO().fromJson(sampleJsonIncomplete);
         expect(sampleProxy.getId(), "0");
         expect(sampleProxy.getTitle(), "Nota test 1");
         expect(
@@ -44,10 +41,7 @@ void main() {
     test(
       "fromJson crea correttamente un oggetto LocalNote da un json completo",
       () {
-        final sampleLocal = NoteDTO().fromJson(
-          sampleJsonFull,
-          DiaryType.realDiary,
-        );
+        final sampleLocal = NoteDTO().fromJson(sampleJsonFull);
         expect(sampleLocal.getId(), "0");
         expect(sampleLocal.getTitle(), "Nota test 1");
         expect(

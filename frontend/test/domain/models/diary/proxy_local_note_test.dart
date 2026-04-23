@@ -11,7 +11,6 @@ void main() {
     "Nota test 1",
     DateTime.parse("2026-04-14 10:00:30"),
     DateTime.parse("2026-04-14 18:00:30"),
-    DiaryType.realDiary,
   );
   group("ProxyNote e LocalNote", () {
     test("load() carica correttamente la LocalNote associata", () async {

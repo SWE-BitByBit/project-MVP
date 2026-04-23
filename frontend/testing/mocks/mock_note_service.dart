@@ -13,17 +13,14 @@ class MockNoteService implements NoteService {
   Map<String, dynamic> mockedFullNoteJson = {};
 
   @override
-  Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
+  Future<void> deleteNote(String noteId) async {
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante deleteNote');
     }
   }
 
   @override
-  Future<Map<String, dynamic>> fetchNoteById(
-    DiaryType targetDiary,
-    String noteId,
-  ) async {
+  Future<Map<String, dynamic>> fetchNoteById(String noteId) async {
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante fetchNoteById');
     }
@@ -44,10 +41,7 @@ class MockNoteService implements NoteService {
   }
 
   @override
-  Future<void> saveNote(
-    DiaryType targetDiary,
-    Map<String, dynamic> json,
-  ) async {
+  Future<void> saveNote(Map<String, dynamic> json) async {
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante saveNote');
     }

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 
@@ -12,7 +12,6 @@ void main() {
         "such title",
         DateTime.parse("2025-01-01 10:30:00"),
         DateTime.parse("2026-02-03 15:32:00"),
-        DiaryType.realDiary,
       );
       expect(sample.getId(), "random");
       expect(sample.getTitle(), "such title");
@@ -26,7 +25,6 @@ void main() {
         "such title",
         DateTime.parse("2025-01-01 10:30:00"),
         DateTime.parse("2026-02-03 15:32:00"),
-        DiaryType.realDiary,
       );
       sample.setTitle("much title");
       expect(sample.getTitle(), "much title");
@@ -40,7 +38,6 @@ void main() {
           "such title",
           DateTime.parse("2025-01-01 10:30:00"),
           DateTime.parse("2026-02-03 15:32:00"),
-          DiaryType.realDiary,
         );
         sample.updateLastModified();
         expect(

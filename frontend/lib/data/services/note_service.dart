@@ -62,10 +62,7 @@ class NoteService {
     return _placeHolderQuick;
   }
 
-  Future<Map<String, dynamic>> fetchNoteById(
-    DiaryType targetDiary,
-    String noteId,
-  ) async {
+  Future<Map<String, dynamic>> fetchNoteById(String noteId) async {
     //PLACEHOLDER
     //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
@@ -86,16 +83,13 @@ class NoteService {
     return [];
   }*/
 
-  Future<void> saveNote(
-    DiaryType targetDiary,
-    Map<String, dynamic> json,
-  ) async {
+  Future<void> saveNote(Map<String, dynamic> json) async {
     //PLACEHOLDER
     //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
+  Future<void> deleteNote(String noteId) async {
     //PLACEHOLDER
     //TODO: implementare chiamata reale
     await Future.delayed(const Duration(milliseconds: 100));

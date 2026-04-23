@@ -23,10 +23,7 @@ void main() {
     test(
       "fetchNoteById restituisce il JSON predefinito con l'id passato come parametro (placeholder in attesa di backend)",
       () async {
-        final idSampleJSON = await service.fetchNoteById(
-          DiaryType.realDiary,
-          "0",
-        );
+        final idSampleJSON = await service.fetchNoteById("0");
         expect(idSampleJSON["id"], "0");
         expect(idSampleJSON["title"], "Nota test 1");
       },
@@ -35,17 +32,14 @@ void main() {
     test(
       "saveNote completa senza errori (placeholder in attesa di backend)",
       () async {
-        expect(
-          service.saveNote(DiaryType.realDiary, {"id": "randomJson"}),
-          completes,
-        );
+        expect(service.saveNote({"id": "randomJson"}), completes);
       },
     );
 
     test(
       "deleteNote completa senza errori (placeholder in attesa di backend)",
       () async {
-        expect(service.deleteNote(DiaryType.realDiary, "anyId"), completes);
+        expect(service.deleteNote("anyId"), completes);
       },
     );
   });

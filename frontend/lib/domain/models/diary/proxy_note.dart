@@ -14,18 +14,11 @@ class ProxyNote implements Note {
   String _title;
   final DateTime _creationDate;
   DateTime _lastModified;
-  final DiaryType _origin;
 
   ///Nota reale
   LocalNote? _realNote;
 
-  ProxyNote(
-    this._id,
-    this._title,
-    this._creationDate,
-    this._lastModified,
-    this._origin,
-  );
+  ProxyNote(this._id, this._title, this._creationDate, this._lastModified);
 
   /// Getter
 
@@ -76,12 +69,12 @@ class ProxyNote implements Note {
   @override
   Future<void> load() async {
     if (_realNote == null) {
+      /// Se possibile fare refactoring per rimuovere questi costruttori
       NoteService s = NoteService();
       NoteRepository r = NoteRepository(s);
-      final loadedNote = await r.getNoteById(_origin, _id);
+      final loadedNote = await r.getNoteById(_id);
       _realNote = loadedNote as LocalNote;
     }
-    _realNote!.load();
   }
 
   /// Se il parametro [title] è diverso dal titolo attuale di ProxyNote, il titolo viene cambiato in [title] e _lastModified viene aggiornato. Altrimenti non fa nulla.

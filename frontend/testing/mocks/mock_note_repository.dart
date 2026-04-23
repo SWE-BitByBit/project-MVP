@@ -9,7 +9,7 @@ class MockNoteRepository implements NoteRepository {
   Note? mockCreatedNote;
 
   @override
-  Future<void> deleteNote(DiaryType targetDiary, Note note) async {
+  Future<void> deleteNote(Note note) async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante deleteNote');
@@ -18,7 +18,7 @@ class MockNoteRepository implements NoteRepository {
   }
 
   @override
-  Future<Note> getNoteById(DiaryType targetDiary, String noteId) async {
+  Future<Note> getNoteById(String noteId) async {
     if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
     if (shouldThrowError) {
       throw Exception('Errore di rete simulato durante getNoteById');
