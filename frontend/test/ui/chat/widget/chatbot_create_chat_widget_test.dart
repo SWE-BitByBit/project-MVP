@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_create_chat_widget.dart'; // Adatta il nome del file se diverso
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatbotCreateChatWidget Widget Test', () {

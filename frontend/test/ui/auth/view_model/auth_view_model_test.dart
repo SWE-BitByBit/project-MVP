@@ -1,79 +1,92 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/view_model/auth_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
-import '../../../../testing/mocks/mock_auth_repository.dart';
+import '../../../../testing/mocks/auth/mock_auth_repository.dart';
 
 void main() {
   late AuthViewModel viewModel;
   late MockAuthRepository mockRepository;
 
   setUp(() {
+    Command.globalExceptionHandler = (error, stackTrace) {
+      // Non facciamo nulla, gestiamo gli errori localmente nei test
+    };
     mockRepository = MockAuthRepository();
     viewModel = AuthViewModel(mockRepository);
   });
 
   group('AuthViewModel - Stato Iniziale', () {
     test('Lo stato iniziale deve essere corretto', () {
-      expect(viewModel.login.running, isFalse);
-      expect(viewModel.login.error, isNull);
+      // Usiamo .isRunning.value e .errors.value forniti da command_it
+      expect(viewModel.login.isRunning.value, isFalse);
+      expect(viewModel.login.errors.value, isNull);
       expect(viewModel.currentUser, isNull);
     });
   });
 
   group('AuthViewModel - Login', () {
     test('login ha successo e aggiorna l\'utente', () async {
-      // Arrange
-      // Il mock restituisce un utente di default in caso di successo
-      
-      // Act
-      await viewModel.login.execute();
+
+      viewModel.login.run(null);
+
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Assert
       expect(viewModel.currentUser, isNotNull);
       expect(viewModel.currentUser?.email, 'test@example.com');
-      expect(viewModel.login.running, isFalse);
-      expect(viewModel.login.error, isNull);
+      expect(viewModel.login.isRunning.value, isFalse);
+      expect(viewModel.login.errors.value, isNull);
     });
 
-    test('login fallisce e imposta un messaggio di errore', () async {
+    test('login fallisce (annullato) e imposta un messaggio di errore', () async {
       // Arrange
       mockRepository.shouldThrowError = true;
 
       // Act
-      await viewModel.login.execute();
+      viewModel.login.run(null);
+
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.login.error.toString(), contains('Autenticazione fallita'));
-      expect(viewModel.login.running, isFalse);
+      expect(viewModel.login.errors.value?.error.toString(), contains('Autenticazione fallita'));
+      expect(viewModel.login.isRunning.value, isFalse);
     });
 
-    test('login lancia eccezione e imposta errore connessione', () async {
+    test('login lancia eccezione di rete e imposta errore connessione', () async {
       // Arrange
-      mockRepository.shouldThrowException = true;
+      mockRepository.shouldThrowError = true;
 
       // Act
-      await viewModel.login.execute();
+      viewModel.login.run(null);
+
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.login.error.toString(), contains('errore di connessione'));
-      expect(viewModel.login.running, isFalse);
+      expect(viewModel.login.errors.value?.error.toString(), contains('Autenticazione fallita'));
+      expect(viewModel.login.isRunning.value, isFalse);
     });
   });
 
   group('AuthViewModel - Logout', () {
     test('logout rimuove l\'utente corrente', () async {
-      // Arrange
-      await viewModel.login.execute();
+      // Arrange: Prima facciamo login
+      viewModel.login.run(null);
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
       expect(viewModel.currentUser, isNotNull);
 
-      // Act
-      await viewModel.logout.execute();
+      // Act: Eseguiamo il logout
+      viewModel.logout.run(null);
+
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Assert
       expect(viewModel.currentUser, isNull);
-      expect(viewModel.logout.running, isFalse);
+      expect(viewModel.logout.isRunning.value, isFalse);
     });
   });
 
@@ -88,7 +101,7 @@ void main() {
         idToken: 'i',
         accessToken: 'a',
       ));
-      
+
       bool notified = false;
       viewModel.addListener(() => notified = true);
 

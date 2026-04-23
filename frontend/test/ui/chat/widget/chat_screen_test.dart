@@ -8,7 +8,7 @@ import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_mod
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_send_message_widget.dart';
 
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatScreen (Integration UI Test)', () {

@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/services/trusted_contact_service.dart';
-import '../../../data/repositories/trusted_contact_repository.dart';
+// Importiamo il nostro locator!
+import '../../../utils/locator.dart';
+import '../../core/widgets/error_indicator.dart';
 import '../view_model/trusted_contact_view_model.dart';
 import 'trusted_contact_list_widget.dart';
 import 'trusted_contact_actions_widget.dart';
 
 /// Schermata principale dedicata alla gestione dei contatti fidati.
 ///
-/// Funge da compositore: istanzia le dipendenze necessarie, le inietta tramite
-/// [ChangeNotifierProvider] e delega la logica di stato e la costruzione
-/// dell'interfaccia grafica ai widget sottostanti.
+/// Funge da compositore: inietta il [TrustedContactViewModel] tramite il locator
+/// e lo fornisce all'albero dei widget sottostanti.
 class TrustedContactScreen extends StatelessWidget {
   const TrustedContactScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) {
-        final service = TrustedContactService();
-        final repo = TrustedContactRepository(service);
-        final viewModel = TrustedContactViewModel(repo);
-        return viewModel;
-      },
+      create: (_) => getIt<TrustedContactViewModel>(),
       child: const TrustedContactScreenView(),
     );
   }
@@ -32,45 +26,82 @@ class TrustedContactScreen extends StatelessWidget {
 
 /// Vista pura della schermata dei contatti fidati.
 ///
-/// Riceve il [TrustedContactViewModel] dal provider e compone il layout
-/// unendo [TrustedContactListWidget] per la lista e [TrustedContactActionsWidget]
-/// per le azioni disponibili.
-class TrustedContactScreenView extends StatelessWidget {
+/// Ascolta i comandi reattivi del ViewModel per mostrare caricamenti, errori
+/// e notificare all'utente eventuali fallimenti in background (Rollback).
+class TrustedContactScreenView extends StatefulWidget {
   const TrustedContactScreenView({super.key});
 
   @override
+  State<TrustedContactScreenView> createState() => _TrustedContactScreenViewState();
+}
+
+class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = context.read<TrustedContactViewModel>();
+      viewModel.deleteContact.errors.addListener(() {
+        final error = viewModel.deleteContact.errors.value;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Impossibile eliminare il contatto: errore di rete.'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Usiamo read per prendere il viewModel senza ascoltare le notifiche globali qui
+    final viewModel = context.read<TrustedContactViewModel>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Contatti Fidati'),
         centerTitle: true,
-        backgroundColor: Colors.teal.shade200,
+        // Ti suggerisco di usare i colori del Theme per coerenza con l'app_theme!
+        backgroundColor: Theme.of(context).primaryColorLight,
       ),
-      body: Consumer<TrustedContactViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.loadContacts.completed) {
-            return const TrustedContactListWidget();
+      // 3. Reattività Chirurgica: ascoltiamo solo il comando di caricamento
+      body: SafeArea(
+        top: false,
+        child: ValueListenableBuilder<bool>(
+        valueListenable: viewModel.loadContacts.isRunning,
+        builder: (context, isRunning, _) {
+
+          // Se sta caricando la prima volta
+          if (isRunning) {
+            return const Center(child: CircularProgressIndicator());
           }
-          return Column(
-            children: [
-              if (viewModel.loadContacts.running)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              if (viewModel.loadContacts.error != null)
-                Expanded(
-                  child: Center(
-                    child: ErrorIndicator(
-                      title: "Errore nel caricamento",
-                      label: "Prego riprovare",
-                      onPressed: viewModel.loadContacts.execute,
-                    ),
+
+          // Se ha finito, controlliamo se ci sono stati errori
+          return ValueListenableBuilder(
+            valueListenable: viewModel.loadContacts.errors,
+            builder: (context, commandError, _) {
+              if (commandError != null) {
+                return Center(
+                  child: ErrorIndicator(
+                    title: "Errore nel caricamento",
+                    label: "Prego riprovare",
+                    // Passiamo null per rispettare la firma del comando
+                    onPressed: () => viewModel.loadContacts.run(null),
                   ),
-                ),
-            ],
+                );
+              }
+
+              // Se tutto va bene, mostriamo la lista!
+              return const TrustedContactListWidget();
+            },
           );
         },
-        child: const TrustedContactListWidget(),
+        ),
       ),
       floatingActionButton: const TrustedContactActionsWidget(),
     );

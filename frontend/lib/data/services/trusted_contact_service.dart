@@ -1,63 +1,58 @@
-/// Servizio responsabile della comunicazione HTTP/REST con il backend
-/// per la funzionalità dei contatti fidati.
+import '../network/api_client.dart';
+
+/// Servizio responsabile della comunicazione HTTP/REST con il backend AWS
+/// per la gestione dei contatti fidati.
+/// 
+/// Utilizza un [ApiClient] per eseguire le richieste, beneficiando della
+/// gestione automatica dell'AccessToken e della standardizzazione delle eccezioni.
 class TrustedContactService {
-  /// Recupera la lista grezzo dei contatti fidati dal backend.
-  ///
-  /// Restituisce una lista di mappe JSON con i dati di ciascun contatto.
+  /// Il client di rete utilizzato per le chiamate API.
+  final ApiClient _apiClient;
+
+  /// Il percorso base per gli endpoint dei contatti fidati.
+  static const String _basePath = '/contacts';
+
+  /// Inizializza il servizio richiedendo un'istanza di [apiClient].
+  TrustedContactService({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  /// Recupera la lista grezza dei contatti fidati dal database remoto.
+  /// 
+  /// Restituisce un [Future] che emette una [List] di mappe JSON.
+  /// Solleva una [ApiException] in caso di errore di rete o 401/404/500.
   Future<List<Map<String, dynamic>>> getContacts() async {
-    // TODO: Implementare chiamata API reale (GET /trusted-contacts)
-    await Future.delayed(const Duration(milliseconds: 500));
-    return [
-      {
-        'id': 'contact-1',
-        'name': 'Mario Rossi',
-        'email': 'mario.rossi@email.com',
-        'phoneNumber': '+39 333 1234567',
-      },
-      {
-        'id': 'contact-2',
-        'name': 'Laura Bianchi',
-        'email': 'laura.b@email.com',
-        'phoneNumber': '+39 345 9876543',
-      },
-      {
-        'id': 'contact-3',
-        'name': 'Giulia Verdi',
-        'email': 'giulia.verdi@email.com',
-        'phoneNumber': '+39 399 5556667',
-      },
-    ];
+    final response = await _apiClient.get(_basePath);
+
+    // L'ApiClient restituisce dynamic (che è un List<dynamic> in questo caso).
+    // Lo castiamo in modo sicuro per il Repository.
+    if (response is List) {
+      return response.cast<Map<String, dynamic>>();
+    }
+    return [];
   }
 
-  /// Invia al backend la richiesta di creazione di un nuovo contatto fidato.
-  ///
-  /// Accetta una mappa JSON con i dati del contatto da creare e restituisce
-  /// la rappresentazione grezza del contatto appena creato, comprensiva dell'id assegnato.
-  Future<Map<String, dynamic>> addContact(
-    Map<String, dynamic> contactData,
-  ) async {
-    // TODO: Implementare chiamata API reale (POST /trusted-contacts)
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {
-      'id': 'contact-${DateTime.now().millisecondsSinceEpoch}',
-      'name': contactData['name'],
-      'email': contactData['email'],
-      'phoneNumber': contactData['phoneNumber'],
-    };
+  /// Invia al backend la richiesta di creazione di un nuovo contatto.
+  /// 
+  /// Accetta una mappa [contactData] con i dati del contatto.
+  /// Restituisce la mappa JSON del contatto creato, inclusivo dell'ID generato dal server.
+  Future<Map<String, dynamic>> addContact(Map<String, dynamic> contactData) async {
+    final response = await _apiClient.post(_basePath, body: contactData);
+    return response as Map<String, dynamic>;
   }
 
-  /// Invia al backend la richiesta di aggiornamento di un contatto esistente.
-  Future<Map<String, dynamic>> updateContact(
-    Map<String, dynamic> contactData,
-  ) async {
-    // TODO: Implementare chiamata API reale (PUT /trusted-contacts/{id})
-    await Future.delayed(const Duration(milliseconds: 500));
-    return contactData; // Restituisce i dati aggiornati
+  /// Invia al backend la richiesta di aggiornamento per un contatto esistente.
+  /// 
+  /// Riceve [contactData] che deve contenere l'ID del contatto da modificare.
+  /// Restituisce la mappa JSON dei dati aggiornati confermati dal server.
+  Future<Map<String, dynamic>> updateContact(Map<String, dynamic> contactData) async {
+    final String id = contactData['id'];
+    final response = await _apiClient.put('$_basePath/$id', body: contactData);
+    return response as Map<String, dynamic>;
   }
 
-  /// Invia al backend la richiesta di eliminazione del contatto identificato da [contactId].
+  /// Invia al backend la richiesta di eliminazione del contatto tramite il suo [contactId].
+  /// 
+  /// Restituisce un [Future] void al completamento dell'operazione.
   Future<void> deleteContact(String contactId) async {
-    // TODO: Implementare chiamata API reale (DELETE /trusted-contacts/{contactId})
-    await Future.delayed(const Duration(milliseconds: 500));
+    await _apiClient.delete('$_basePath/$contactId');
   }
 }

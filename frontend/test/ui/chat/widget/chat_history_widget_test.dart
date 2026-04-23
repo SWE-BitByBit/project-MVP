@@ -9,7 +9,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 
 // Importiamo la nostra controfigura
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatHistoryWidget Widget Test', () {

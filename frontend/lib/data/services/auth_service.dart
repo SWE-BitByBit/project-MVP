@@ -23,6 +23,8 @@ class AuthService {
   /// Elenco degli scopi (scopes) richiesti per ottenere i dati dell'utente.
   final List<String> _scopes = const ['profile', 'email', 'openid'];
 
+  final http.Client _httpClient;
+  AuthService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
   /// Avvia il flusso di login OAuth 2.0 tramite browser sicuro.
   ///
   /// Esegue la chiamata all'endpoint di autorizzazione di Google tramite Cognito.
@@ -56,7 +58,7 @@ class AuthService {
     // Preparazione della richiesta per lo scambio dei token
     final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
 
-    final tokenResponse = await http.post(
+    final tokenResponse = await _httpClient.post(
       Uri.https(_cognitoDomain, '/oauth2/token'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

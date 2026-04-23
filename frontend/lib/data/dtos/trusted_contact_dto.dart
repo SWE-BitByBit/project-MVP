@@ -1,27 +1,32 @@
 import '../../domain/models/trusted_contact.dart';
 
-/// Oggetto di trasferimento dati per la serializzazione dei contatti fidati.
-/// Mappa i dati JSON del backend verso il Dominio e viceversa.
+/// Mapper responsabile della conversione dei dati tra il formato JSON del backend
+/// e l'oggetto di dominio [TrustedContact].
 class TrustedContactDTO {
-  TrustedContactDTO._(); // Costruttore privato: contiene solo metodi statici.
+  /// Costruttore privato per impedire l'istanziazione, essendo una classe di utility.
+  TrustedContactDTO._();
 
-  /// Converte un JSON ricevuto dal backend in un oggetto di dominio [TrustedContact].
-  static TrustedContact fromJson(Map<String, dynamic> json) {
+  /// Trasforma una mappa JSON [data] proveniente dall'API in un oggetto [TrustedContact].
+  ///
+  /// Gestisce eventuali valori nulli assegnando stringhe vuote come default.
+  static TrustedContact fromJson(Map<String, dynamic> data) {
     return TrustedContact(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String,
+      id: data['id']?.toString() ?? '',
+      name: data['name']?.toString() ?? '',
+      email: data['email']?.toString() ?? '',
+      phoneNumber: data['phoneNumber']?.toString() ?? '',
     );
   }
 
-  /// Converte un oggetto [TrustedContact] in un formato JSON per il backend.
+  /// Converte un oggetto [contact] di tipo [TrustedContact] in una mappa JSON.
+  ///
+  /// Questo formato è quello richiesto dal backend per le operazioni di POST e PUT.
   static Map<String, dynamic> toJson(TrustedContact contact) {
     return {
-      'id': contact.getId(),
-      'name': contact.getName(),
-      'email': contact.getEmail(),
-      'phoneNumber': contact.getPhone(),
+      'id': contact.id,
+      'name': contact.name,
+      'email': contact.email,
+      'phoneNumber': contact.phoneNumber,
     };
   }
 }

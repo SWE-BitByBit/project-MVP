@@ -5,7 +5,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
 
 void main() {
   group('UserDTO - fromJson', () {
-    test('Deve convertire correttamente una stringa JSON valida con JWT in un oggetto User', () {
+    test('Deve convertire correttamente una Map valida con JWT in un oggetto User', () {
       // Arrange
       // payload = {"sub":"123","email":"test@example.com","name":"Test","family_name":"User"}
       final payload = base64Url.encode(utf8.encode(jsonEncode({
@@ -13,16 +13,16 @@ void main() {
         'email': 'test@example.com',
         'name': 'Test',
         'family_name': 'User',
-      }))).replaceAll('=', ''); // Rimuove il padding per simulare un JWT standard
-      
-      final mockJson = jsonEncode({
+      }))).replaceAll('=', '');
+
+      final mockData = {
         'id_token': 'header.$payload.signature',
         'access_token': 'abc',
         'refresh_token': 'def',
-      });
+      };
 
       // Act
-      final user = UserDTO.fromJson(mockJson);
+      final user = UserDTO.fromJson(mockData);
 
       // Assert
       expect(user.sub, '123');
@@ -36,25 +36,26 @@ void main() {
 
     test('Deve lanciare un\'eccezione se l\'id_token non ha 3 parti (JWT non valido)', () {
       // Arrange
-      final mockJson = jsonEncode({
+      final mockData = {
         'id_token': 'test_token_invalido',
-      });
+      };
 
       // Act & Assert
-      expect(() => UserDTO.fromJson(mockJson), throwsException);
+      expect(() => UserDTO.fromJson(mockData), throwsException);
     });
 
     test('Deve gestire campi mancanti nel JWT usando valori di default', () {
       // Arrange: payload vuoto {}
       final payload = base64Url.encode(utf8.encode(jsonEncode({}))).replaceAll('=', '');
-      
-      final mockJson = jsonEncode({
+
+
+      final mockData = {
         'id_token': 'header.$payload.signature',
         'access_token': 'abc',
-      });
+      };
 
       // Act
-      final user = UserDTO.fromJson(mockJson);
+      final user = UserDTO.fromJson(mockData);
 
       // Assert: i campi devono essere stringhe vuote grazie agli operatori ?? nel DTO
       expect(user.sub, '');

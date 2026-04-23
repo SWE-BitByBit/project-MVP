@@ -10,7 +10,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 
 // Importiamo la nostra controfigura
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatbotSendMessageWidget Widget Test', () {

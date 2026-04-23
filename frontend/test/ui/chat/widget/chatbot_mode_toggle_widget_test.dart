@@ -8,7 +8,7 @@ import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_mod
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
 // Importiamo la nostra controfigura
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ChatbotModeToggleWidget Widget Test', () {

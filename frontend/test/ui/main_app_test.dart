@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/main.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../testing/mocks/mock_auth_repository.dart';
+import '../../testing/mocks/auth/mock_auth_repository.dart';
 
 void main() {
   setUpAll(() {

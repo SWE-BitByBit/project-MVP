@@ -4,7 +4,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.da
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
 
-import '../../../testing/mocks/mock_chatbot_service.dart';
+import '../../../testing/mocks/chatbot/mock_chatbot_service.dart';
 
 void main() {
   group('ChatbotRepository', () {

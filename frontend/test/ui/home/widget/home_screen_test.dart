@@ -7,7 +7,7 @@ import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/widget/home_dashboard_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/login_screen.dart';
-import '../../../../testing/mocks/mock_auth_repository.dart';
+import '../../../../testing/mocks/auth/mock_auth_repository.dart';
 
 /// Punto di ingresso per i test di integrazione UI della HomeScreen.
 void main() {

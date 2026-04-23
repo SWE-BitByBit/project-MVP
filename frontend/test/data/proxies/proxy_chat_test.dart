@@ -7,7 +7,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.
 import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_chat.dart'; // Metti il percorso corretto
 
 // Il nostro Mock
-import '../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
 
 void main() {
   group('ProxyChat - Virtual Proxy Pattern', () {

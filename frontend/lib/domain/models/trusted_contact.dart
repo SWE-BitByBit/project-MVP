@@ -1,51 +1,44 @@
-/// Rappresenta un singolo contatto fidato nel formato consumato dal layer UI.
+/// Rappresenta un contatto fidato nel dominio dell'applicazione.
 ///
-/// Questa classe è indipendente da qualsiasi sorgente dati e
-/// contiene le informazioni anagrafiche e di recapito del contatto.
+/// Contiene le informazioni anagrafiche essenziali per identificare e
+/// contattare una persona di fiducia in caso di emergenza.
 class TrustedContact {
-  final String _id;
-  String _name;
-  String _email;
-  String _phoneNumber;
+  /// L'identificativo univoco del contatto (generato dal backend).
+  final String id;
 
-  /// Crea un'istanza di [TrustedContact] con i dati identificativi del contatto.
+  /// Il nome completo o l'etichetta assegnata al contatto.
+  String name;
+
+  /// L'indirizzo email del contatto.
+  String email;
+
+  /// Il numero di telefono comprensivo di prefisso internazionale.
+  String phoneNumber;
+
+  /// Crea un'istanza di [TrustedContact].
   ///
-  /// Tutti i parametri sono obbligatori e rappresentano rispettivamente
-  /// l'identificativo univoco, il nome completo, l'email e il numero di telefono.
+  /// Richiede [id], [name], [email] e [phoneNumber] come parametri obbligatori.
   TrustedContact({
-    required String id,
-    required String name,
-    required String email,
-    required String phoneNumber,
-  }) : _id = id,
-       _name = name,
-       _email = email,
-       _phoneNumber = phoneNumber;
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.phoneNumber,
+  });
 
-  /// Restituisce l'identificativo univoco del contatto.
-  String getId() => _id;
-
-  /// Restituisce il nome completo del contatto.
-  String getName() => _name;
-
-  /// Restituisce l'indirizzo email del contatto.
-  String getEmail() => _email;
-
-  /// Restituisce il numero di telefono del contatto.
-  String getPhone() => _phoneNumber;
-
-  /// Aggiorna il nome completo del contatto.
-  void setName(String name) {
-    _name = name;
-  }
-
-  /// Aggiorna l'indirizzo email del contatto.
-  void setEmail(String email) {
-    _email = email;
-  }
-
-  /// Aggiorna il numero di telefono del contatto.
-  void setPhone(String phoneNumber) {
-    _phoneNumber = phoneNumber;
+  /// Crea una copia di questo contatto con alcuni campi sostituiti.
+  ///
+  /// Metodo utile per aggiornare il contatto in modo immutabile se necessario.
+  TrustedContact copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phoneNumber,
+  }) {
+    return TrustedContact(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+    );
   }
 }

@@ -5,11 +5,10 @@ import '../../../domain/models/trusted_contact.dart';
 
 /// Gestisce i campi di input per l'inserimento o la modifica di un contatto fidato.
 ///
-/// In quanto Consumer di [TrustedContactViewModel], si aggiorna in base allo
-/// stato del ViewModel. Può essere inizializzato con un [initialContact]
-/// per operare in modalità modifica.
+/// Implementa un form validato e reagisce agli stati di caricamento dei comandi
+/// [createContact] o [updateContact] del ViewModel.
 class TrustedContactFormWidget extends StatefulWidget {
-  /// Callback invocata quando il form viene chiuso (annullato o salvato).
+  /// Callback invocata quando il form viene salvato con successo o annullato.
   final VoidCallback onDismiss;
 
   /// Contatto opzionale da modificare. Se null, il form opera in modalità creazione.
@@ -35,16 +34,10 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
   @override
   void initState() {
     super.initState();
-    // Inizializza i controller con i dati del contatto esistente o vuoti
-    _nameController = TextEditingController(
-      text: widget.initialContact?.getName(),
-    );
-    _emailController = TextEditingController(
-      text: widget.initialContact?.getEmail(),
-    );
-    _phoneController = TextEditingController(
-      text: widget.initialContact?.getPhone(),
-    );
+    // Inizializza i controller con i dati pubblici del contatto esistente
+    _nameController = TextEditingController(text: widget.initialContact?.name);
+    _emailController = TextEditingController(text: widget.initialContact?.email);
+    _phoneController = TextEditingController(text: widget.initialContact?.phoneNumber);
   }
 
   @override
@@ -57,16 +50,15 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<TrustedContactViewModel>();
+    // Usiamo read invece di watch, perché la reattività al caricamento
+    // la gestiremo chirurgicamente sul bottone con ValueListenableBuilder
+    final viewModel = context.read<TrustedContactViewModel>();
     final isEditing = widget.initialContact != null;
+    final theme = Theme.of(context);
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
+      // Abbiamo rimosso viewInsets.bottom perché lo gestisce già il ListWidget padre!
+      padding: const EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
         child: Column(
@@ -77,14 +69,13 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
               children: [
                 Icon(
                   isEditing ? Icons.edit_note : Icons.person_add_alt_1,
-                  color: Colors.teal.shade400,
+                  color: theme.colorScheme.primary,
                   size: 28,
                 ),
                 const SizedBox(width: 12),
                 Text(
                   isEditing ? 'Modifica Contatto' : 'Nuovo Contatto Fidato',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -135,36 +126,67 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                   : null,
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed:
-                  viewModel.createContact.running ||
-                      viewModel.updateContact.running
-                  ? null
-                  : () {
-                      if (_formKey.currentState!.validate()) {
-                        final contact = TrustedContact(
-                          id: widget.initialContact?.getId() ?? '',
-                          name: _nameController.text.trim(),
-                          email: _emailController.text.trim(),
-                          phoneNumber: _phoneController.text.trim(),
-                        );
 
-                        if (isEditing) {
-                          viewModel.updateContact.execute(contact);
-                        } else {
-                          viewModel.createContact.execute(contact);
+            // Reattività chirurgica: ascoltiamo solo il comando in uso
+            ValueListenableBuilder<bool>(
+              valueListenable: isEditing
+                  ? viewModel.updateContact.isRunning
+                  : viewModel.createContact.isRunning,
+              builder: (context, isRunning, child) {
+
+                return ElevatedButton(
+                  // Se sta caricando, disabilitiamo il bottone
+                  onPressed: isRunning ? null : () async {
+                    if (_formKey.currentState!.validate()) {
+                      // Chiudiamo la tastiera
+                      FocusScope.of(context).unfocus();
+
+                      final contact = TrustedContact(
+                        id: widget.initialContact?.id ?? '', // ID pubblico
+                        name: _nameController.text.trim(),
+                        email: _emailController.text.trim(),
+                        phoneNumber: _phoneController.text.trim(),
+                      );
+
+                      // Await ci permette di aspettare la risposta del backend
+                      if (isEditing) {
+                        await viewModel.updateContact.runAsync(contact);
+
+                        if (viewModel.updateContact.errors.value == null && context.mounted) {
+                          widget.onDismiss();
                         }
-                        widget.onDismiss();
+                      } else {
+                        await viewModel.createContact.runAsync(contact);
+
+                        if (viewModel.createContact.errors.value == null && context.mounted) {
+                          widget.onDismiss();
+                        }
                       }
-                    },
-              child: Text(
-                isEditing ? 'Aggiorna contatto' : 'Salva contatto',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+
+                      // NOTA: Se c'è un errore (errors.value != null), il form NON si chiude,
+                      // permettendo all'utente di riprovare senza riscrivere tutto!
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: isRunning
+                      ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.onPrimary),
+                  )
+                      : Text(
+                    isEditing ? 'Aggiorna contatto' : 'Salva contatto',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                );
+              },
             ),
           ],
         ),
