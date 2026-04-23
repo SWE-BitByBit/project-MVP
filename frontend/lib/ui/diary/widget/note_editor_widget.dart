@@ -293,7 +293,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return Center(child: const CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     } else {
       return PopScope(
         child: Scaffold(
@@ -324,10 +324,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Ink(
                       decoration: (ShapeDecoration(
-                        shape: CircleBorder(),
+                        shape: const CircleBorder(),
                         color: showDeleteButton
                             ? Colors.red
                             : const Color.fromARGB(0, 255, 255, 255),

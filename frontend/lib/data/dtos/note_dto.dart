@@ -1,4 +1,3 @@
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';

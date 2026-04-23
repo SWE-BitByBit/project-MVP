@@ -1,6 +1,5 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
