@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 /// aggiornare l'interfaccia in seguito a notifiche tramite notifyListeners().
 class NoteListWidget extends StatelessWidget {
   const NoteListWidget({super.key});
+  final String dayFormat = "d/M/y";
+  final String timeFormat = "H:mm";
   //Apre la schermata [NoteEditorWidget] per la nota cliccata nella ListView
   void _openNoteEditor(BuildContext context, DiaryViewmodel vm, int index) {
     vm.loadNote(index);
@@ -53,9 +55,9 @@ class NoteListWidget extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Elimina nota"),
+            title: const Text("Elimina nota"),
             content: Text(
-              "Eliminare definitivamente la nota $noteTitle creata il ${DateFormat("d/M/y").format(noteDate)} alle ${DateFormat("H:mm").format(noteDate)}?\n"
+              "Eliminare definitivamente la nota $noteTitle creata il ${DateFormat(dayFormat).format(noteDate)} alle ${DateFormat(timeFormat).format(noteDate)}?\n"
               "Una volta confermata l'eliminazione la nota non potrà più essere recuperata.",
             ),
             actions: [
@@ -123,7 +125,7 @@ class NoteListWidget extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             subtitle: Text(
-              "Ultima modifica: ${DateFormat("d/M/y").format(note.getUpdateDate())} alle ${DateFormat("H:mm").format(note.getUpdateDate())}\nData di creazione: ${DateFormat("d/M/y").format(note.getCreationDate())} alle ${DateFormat("H:mm").format(note.getCreationDate())}",
+              "Ultima modifica: ${DateFormat(dayFormat).format(note.getUpdateDate())} alle ${DateFormat(timeFormat).format(note.getUpdateDate())}\nData di creazione: ${DateFormat(dayFormat).format(note.getCreationDate())} alle ${DateFormat(timeFormat).format(note.getCreationDate())}",
             ),
             isThreeLine: true,
             trailing: IconButton(

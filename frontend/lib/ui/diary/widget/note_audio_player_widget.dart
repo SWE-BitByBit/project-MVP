@@ -114,7 +114,7 @@ class _NoteAudioPlayerWidget extends State<NoteAudioPlayerWidget> {
                 onPressed: () => _handlePlayer(),
               ),
               IconButton(
-                icon: Icon(Icons.stop),
+                icon: const Icon(Icons.stop),
                 onPressed: () => _stopPlayer(),
               ),
               Expanded(

@@ -39,6 +39,9 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   final _elements = <Card>[];
   bool loading = false;
 
+  final String dayFormat = "d/M/y";
+  final String timeFormat = "H:mm";
+
   //Rimuove l'elemento [noteElement] sia da [_elements] che dalla lista dei contenuti della nota aperta nell'editor
   void _removeNoteElement(NoteElement element, Card card) {
     final viewModel = context.read<DiaryViewmodel>();
@@ -52,6 +55,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   //Crea una [Card] rappresentante il [NoteElement] passato come parametro
   Card _createCard(NoteElement? element) {
     final viewModel = context.read<DiaryViewmodel>();
+    Card card = const Card();
     if (element != null) {
       switch (element.getType()) {
         case "text":
@@ -59,7 +63,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             text: element.getContent(),
           );
           _textControllers.add(noteTextController);
-          Card card = Card();
+
           card = Card(
             child: Row(
               children: [
@@ -79,7 +83,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     },
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () {
@@ -91,7 +95,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           );
           return card;
         case "image":
-          Card card = Card();
           card = Card(
             child: Row(
               children: [
@@ -101,7 +104,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     child: Image.file(File(element.getContent())),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () {
@@ -113,7 +116,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           );
           return card;
         case "audio":
-          Card card = Card();
           card = Card(
             child: Row(
               children: [
@@ -140,7 +142,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
         default:
       }
     }
-    return Card(
+    return const Card(
       child: Column(mainAxisSize: MainAxisSize.min, children: []),
     );
   }
@@ -217,7 +219,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   void _showOptions(BuildContext context, Note note) async {
     final viewModel = context.read<DiaryViewmodel>();
     showMenu(
-      position: RelativeRect.fromLTRB(100, 1000, 0, 0),
+      position: const RelativeRect.fromLTRB(100, 1000, 0, 0),
       context: context,
       items: [
         PopupMenuItem(
@@ -230,11 +232,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               _lastUpdated = widget.selectedNote.getUpdateDate();
             });
           },
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.textsms),
-              const SizedBox(width: 10),
-              Expanded(child: const Text("Aggiungi testo")),
+              Icon(Icons.textsms),
+              SizedBox(width: 10),
+              Expanded(child: Text("Aggiungi testo")),
             ],
           ),
         ),
@@ -242,11 +244,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           onTap: () {
             _addImageElement(note);
           },
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.photo),
-              const SizedBox(width: 10),
-              Expanded(child: const Text("Aggiungi immagine")),
+              Icon(Icons.photo),
+              SizedBox(width: 10),
+              Expanded(child: Text("Aggiungi immagine")),
             ],
           ),
         ),
@@ -254,11 +256,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           onTap: () {
             _addAudioElement(note);
           },
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.multitrack_audio),
-              const SizedBox(width: 10),
-              Expanded(child: const Text("Aggiungi traccia audio")),
+              Icon(Icons.multitrack_audio),
+              SizedBox(width: 10),
+              Expanded(child: Text("Aggiungi traccia audio")),
             ],
           ),
         ),
@@ -270,7 +272,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   Future loadNote() async {
     List<NoteElement> elems = widget.selectedNote.getNoteElements();
     await Future.delayed(
-      Duration(milliseconds: 200),
+      const Duration(milliseconds: 200),
       () => {
         setState(() {
           //Necessario risettare elems perchè altrimenti rimane vuoto per qualche ragione
@@ -298,17 +300,20 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                 controller: _titleController,
                 maxLines: 1,
                 maxLength: 24,
-                decoration: InputDecoration(labelText: 'Titolo nota'),
+                decoration: const InputDecoration(labelText: 'Titolo nota'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
                 onChanged: (value) => {_updateNoteTitle(value)},
               ),
 
               Text(
-                "Ultima modifica: ${DateFormat("d/M/y").format(_lastUpdated!)} alle ${DateFormat("H:mm").format(_lastUpdated!)}",
+                "Ultima modifica: ${DateFormat(dayFormat).format(_lastUpdated!)} alle ${DateFormat(timeFormat).format(_lastUpdated!)}",
               ),
               Text(
-                "Creata il ${DateFormat("d/M/y").format(widget.selectedNote.getCreationDate())} alle ${DateFormat("H:mm").format(widget.selectedNote.getCreationDate())}",
+                "Creata il ${DateFormat(dayFormat).format(widget.selectedNote.getCreationDate())} alle ${DateFormat(timeFormat).format(widget.selectedNote.getCreationDate())}",
               ),
               Expanded(
                 child: Builder(

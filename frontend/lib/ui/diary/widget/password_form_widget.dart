@@ -31,7 +31,7 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
     if (vm.accessStatus && diarySession.isDiaryAuth == true) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DiaryScreen()),
+        MaterialPageRoute(builder: (context) => const DiaryScreen()),
       );
     }
   }
@@ -47,17 +47,17 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Accedi al diario'),
-              SizedBox(height: 26),
+              const Text('Accedi al diario'),
+              const SizedBox(height: 26),
               TextField(
                 controller: _passwordController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Password diario',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
               ),
-              SizedBox(height: 26),
+              const SizedBox(height: 26),
               SizedBox(
                 width: double.infinity,
                 height: 49,
@@ -69,7 +69,7 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
                       _redirect();
                     });
                   },
-                  child: Text('Accedi'),
+                  child: const Text('Accedi'),
                 ),
               ),
             ],

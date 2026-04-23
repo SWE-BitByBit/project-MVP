@@ -44,8 +44,6 @@ void main() {
       );
     }
 
-    /// Test visualizzazione nota, elementi, eliminazione elementi e funzionamento bottone aggiunta
-
     testWidgets("Il widget visualizza correttamente la nota selezionata", (
       WidgetTester tester,
     ) async {

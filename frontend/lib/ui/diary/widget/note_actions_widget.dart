@@ -19,7 +19,7 @@ class NoteActionsWidget extends StatelessWidget {
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       );
     } else {
-      return Scaffold();
+      return const Scaffold();
     }
   }
 }
