@@ -10,10 +10,14 @@ void main() {
 
     test(
       "validateDiaryPassword restituisce i valori corretti in base alla password passata (placeholder in attesa di backend)",
-      () {
-        expect(service.validateDiaryPassword("testpassword"), 1);
-        expect(service.validateDiaryPassword("fakepassword"), 2);
-        expect(service.validateDiaryPassword("tasddsaddsad"), 0);
+      () async {
+        final res1 = await service.validateDiaryPassword("testpassword");
+        final res2 = await service.validateDiaryPassword("fakepassword");
+        final res3 = await service.validateDiaryPassword("tasddsaddsad");
+
+        expect(res1, 1);
+        expect(res2, 2);
+        expect(res3, 0);
       },
     );
   });

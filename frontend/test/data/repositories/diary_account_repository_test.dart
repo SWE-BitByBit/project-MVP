@@ -15,18 +15,19 @@ void main() {
 
     test(
       "clarifyAccessResult mappa correttamente i risultati di validateDiaryPassword in valori di DiaryAccessResult",
-      () {
+      () async {
         mockService.returnValue = 0;
-        expect(repository.clarifyAccessResult(""), DiaryAccessResult.error);
+        final res0 = await repository.clarifyAccessResult("");
+        expect(res0, DiaryAccessResult.error);
         mockService.returnValue = 1;
-        expect(repository.clarifyAccessResult(""), DiaryAccessResult.realDiary);
+        final res1 = await repository.clarifyAccessResult("");
+        expect(res1, DiaryAccessResult.realDiary);
         mockService.returnValue = 2;
-        expect(repository.clarifyAccessResult(""), DiaryAccessResult.fakeDiary);
+        final res2 = await repository.clarifyAccessResult("");
+        expect(res2, DiaryAccessResult.fakeDiary);
         mockService.returnValue = 3;
-        expect(
-          repository.clarifyAccessResult(""),
-          DiaryAccessResult.tooManyAttempts,
-        );
+        final res3 = await repository.clarifyAccessResult("");
+        expect(res3, DiaryAccessResult.tooManyAttempts);
       },
     );
   });
