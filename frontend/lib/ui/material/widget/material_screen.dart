@@ -21,7 +21,8 @@ class MaterialScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
-        final effectiveRepository = repository ?? MaterialRepository(MaterialService());
+        final effectiveRepository =
+            repository ?? MaterialRepository(MaterialService());
         final viewModel = MaterialViewModel(effectiveRepository);
 
         viewModel.loadMaterials.execute();
@@ -102,4 +103,3 @@ class _MaterialScreenView extends StatelessWidget {
     );
   }
 }
-
