@@ -60,13 +60,15 @@ void main() {
           );
           repo.mockedPreviewsToReturn = [note1, note2, note3];
           await viewmodel.loadPreviews(DiaryType.realDiary);
+          viewmodel.sortNotes();
+
           expect(viewmodel.getNoteListSize(), 3);
-          expect(viewmodel.getSavedNotes().first.getTitle(), "first");
-          expect(viewmodel.getSavedNotes().last.getTitle(), "third");
+          expect(viewmodel.getSavedNotes().first.getTitle(), "third");
+          expect(viewmodel.getSavedNotes().last.getTitle(), "second");
 
           await viewmodel.deleteNote("0", DiaryType.realDiary);
           expect(viewmodel.getNoteListSize(), 2);
-          expect(viewmodel.getSavedNotes().first, isNot("first"));
+          expect(viewmodel.getSavedNotes().first, isNot("third"));
         },
       );
       test(
