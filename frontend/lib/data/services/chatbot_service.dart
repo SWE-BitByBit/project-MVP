@@ -1,23 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/dtos/chat_dto.dart';
 
 /// Servizio responsabile della comunicazione HTTP/REST con il backend AWS
 /// per la funzionalità del Chatbot.
+// DA IMPLEMENTARE
 class ChatbotService {
-  final String baseUrl;
-  final http.Client client;
-  final String Function()? authTokenProvider;
-
-  ChatbotService({
-    required this.baseUrl,
-    http.Client? client,
-    this.authTokenProvider,
-  }) : client = client ?? http.Client();
+  final String baseUrl = dotenv.env['API_GATEWAY_URL'] ?? '';
+  final http.Client client = http.Client();
 
   Map<String, String> _headers() {
-    final token = authTokenProvider?.call();
+    final token = "";
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
