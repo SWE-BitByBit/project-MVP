@@ -23,13 +23,35 @@ void main() {
     });
 
     test(
-      "login crea la sessione correttamente se accesso effettuato con successo",
+      "login crea la sessione correttamente se accesso effettuato con successo, altrimenti no",
       () async {
         DiarySession session = DiarySession();
-        String result = await viewmodel.login("real");
-        expect(result, "");
+        String res1 = await viewmodel.login("real");
+        expect(res1, "");
         expect(session.isDiaryAuth, true);
         expect(session.loggedDiary, DiaryType.realDiary);
+        session.endSession();
+
+        String res2 = await viewmodel.login("fake");
+        expect(res2, "");
+        expect(session.isDiaryAuth, true);
+        expect(session.loggedDiary, DiaryType.fakeDiary);
+        session.endSession();
+
+        String res3 = await viewmodel.login("error");
+        expect(res3, "Errore nel login.");
+        expect(session.isDiaryAuth, false);
+        expect(session.loggedDiary, isNull);
+        session.endSession();
+
+        String res4 = await viewmodel.login("tooMany");
+        expect(
+          res4,
+          "Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.",
+        );
+        expect(session.isDiaryAuth, false);
+        expect(session.loggedDiary, isNull);
+        session.endSession();
       },
     );
     test("logout termina la sessione correttamente", () async {

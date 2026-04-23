@@ -289,7 +289,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return Center(child: CircularProgressIndicator());
+      return Center(child: const CircularProgressIndicator());
     } else {
       return PopScope(
         child: Scaffold(

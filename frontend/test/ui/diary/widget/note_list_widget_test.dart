@@ -197,5 +197,15 @@ void main() {
 
       session.endSession();
     });
+
+    testWidgets("Dismiss rimuove correttamente il widget", (
+      WidgetTester tester,
+    ) async {
+      final session = DiarySession.session;
+      session.initSession(DiaryType.realDiary);
+      await viewmodel.loadPreviews(DiaryType.realDiary);
+      await pumpListWidget(tester);
+      await tester.pumpAndSettle();
+    });
   });
 }

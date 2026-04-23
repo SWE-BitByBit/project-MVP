@@ -22,9 +22,6 @@ class DiaryAccessViewmodel with ChangeNotifier {
   String? get error => _error;
 
   bool get accessStatus => _accessStatus;
-  void toggleAccessStatus() {
-    _accessStatus = !_accessStatus;
-  }
 
   //Inizializza diarySession se il login ha successo, altrimenti ritorna stringa di errore.
   Future<String> login(String pwd) async {
@@ -65,15 +62,9 @@ class DiaryAccessViewmodel with ChangeNotifier {
 
   //Termina la sessione
   String logout() {
-    try {
-      final diarySession = DiarySession.session;
-      diarySession.endSession();
-      return 'Logout effettuato con successo.';
-    } catch (e) {
-      "Errore nella procedura di logout: $e";
-      return _error!;
-    } finally {
-      notifyListeners();
-    }
+    final diarySession = DiarySession.session;
+    diarySession.endSession();
+    notifyListeners();
+    return 'Logout effettuato con successo.';
   }
 }
