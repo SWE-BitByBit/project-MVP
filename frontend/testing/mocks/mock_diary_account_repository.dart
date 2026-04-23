@@ -20,7 +20,8 @@ class MockDiaryAccountRepository implements DiaryAccountRepository {
         return DiaryAccessResult.error;
       case "tooMany":
         return DiaryAccessResult.tooManyAttempts;
+      default:
+        return DiaryAccessResult.error;
     }
-    return DiaryAccessResult.error;
   }
 }

@@ -16,32 +16,51 @@ class DiaryAccessViewmodel with ChangeNotifier {
   ///Stato UI
   String? _error;
 
+  bool _accessStatus = false;
+
   /// Ritorna l'ultimo errore, altrimenti ritorna null
   String? get error => _error;
+
+  bool get accessStatus => _accessStatus;
+  void toggleAccessStatus() {
+    _accessStatus = !_accessStatus;
+  }
 
   //Inizializza diarySession se il login ha successo, altrimenti ritorna stringa di errore.
   Future<String> login(String pwd) async {
     try {
-      switch (await _accRepo.clarifyAccessResult(pwd)) {
+      notifyListeners();
+      DiaryAccessResult res = await _accRepo.clarifyAccessResult(pwd);
+      switch (res) {
         case DiaryAccessResult.realDiary:
           final diarySession = DiarySession.session;
           diarySession.initSession(DiaryType.realDiary);
-          return '';
+          _accessStatus = true;
+
         case DiaryAccessResult.fakeDiary:
           final diarySession = DiarySession.session;
           diarySession.initSession(DiaryType.fakeDiary);
-          return '';
+          _accessStatus = true;
+
         case DiaryAccessResult.error:
           _error = 'Errore nel login.';
-          return _error!;
+          _accessStatus = false;
+
         case DiaryAccessResult.tooManyAttempts:
           _error =
               'Troppi tentativi di login effettuati. Si è pregati di riprovare più tardi.';
-          return _error!;
+          _accessStatus = false;
       }
     } catch (e) {
-      return 'Errore nel login.';
+      _accessStatus = false;
+      notifyListeners();
+      _error = "Errore: $e";
+      //return 'Errore nel login: $e';
+    } finally {
+      notifyListeners();
     }
+    String err = _error != null ? _error! : '';
+    return err;
   }
 
   //Termina la sessione
@@ -51,8 +70,10 @@ class DiaryAccessViewmodel with ChangeNotifier {
       diarySession.endSession();
       return 'Logout effettuato con successo.';
     } catch (e) {
-      _error = "Errore nella procedura di logout";
+      "Errore nella procedura di logout: $e";
       return _error!;
+    } finally {
+      notifyListeners();
     }
   }
 }

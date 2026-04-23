@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_viewmodel.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/password_form_widget.dart';
 import 'package:provider/provider.dart';
 
 /// Pagina per l'accesso al diario.
@@ -22,7 +21,7 @@ class DiaryAccessScreen extends StatelessWidget {
         final viewmodel = DiaryAccessViewmodel(repo);
         return viewmodel;
       },
-      child: DiaryAccessScreenView(),
+      child: const DiaryAccessScreenView(),
     );
   }
 }
@@ -36,8 +35,6 @@ class DiaryAccessScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final diarySession = DiarySession.session;
-    final TextEditingController diaryPassword = TextEditingController();
     final vm = context.watch<DiaryAccessViewmodel>();
     return Scaffold(
       appBar: AppBar(
@@ -77,38 +74,7 @@ class DiaryAccessScreenView extends StatelessWidget {
                     ],
                   ),
                 ),
-              Text('Inserire password per accedere al diario'),
-              SizedBox(height: 26),
-              TextField(
-                controller: diaryPassword,
-                decoration: InputDecoration(
-                  labelText: 'Password diario',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 26),
-              SizedBox(
-                width: double.infinity,
-                height: 49,
-                child: ElevatedButton(
-                  onPressed: () {
-                    vm.login(diaryPassword.text);
-                    diaryPassword.clear();
-                    //Redirect se l'utente ha effettuato il login con successo
-                    if (diarySession.isDiaryAuth != null &&
-                        diarySession.isDiaryAuth == true) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DiaryScreen(),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text('Accedi'),
-                ),
-              ),
+              Expanded(child: PasswordFormWidget(onDismiss: () {})),
             ],
           ),
         ),
