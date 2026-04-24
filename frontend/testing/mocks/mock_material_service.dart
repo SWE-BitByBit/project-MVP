@@ -4,18 +4,18 @@ class MockMaterialService implements MaterialService {
   bool shouldThrowError = false;
   List<Map<String, dynamic>> mockedData = [
     {
-      'id': '1',
+      'resource_id': '1',
       'title': 'Test Law',
       'content': 'Test Content',
       'url': null,
-      'type': 'law',
+      'type': 'LAW',
     },
     {
-      'id': '2',
+      'resource_id': '2',
       'title': 'Test Community',
       'content': 'Test Community Content',
       'url': 'https://test.com',
-      'type': 'community',
+      'type': 'COMMUNITY',
     },
   ];
 
