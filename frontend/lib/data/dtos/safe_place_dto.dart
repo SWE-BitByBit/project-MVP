@@ -6,7 +6,7 @@ class SafePlaceDTO {
   /// Converte un payload JSON in un'istanza del dominio [SafePlace].
   static SafePlace fromJson(Map<String, dynamic> json) {
     return SafePlace(
-      id: json['id'] as String,
+      id: json['marker_id'] as String,
       name: json['name'] as String,
       address: json['address'] as String,
       // Usiamo 'num' e poi '.toDouble()' per evitare errori a runtime

@@ -36,8 +36,11 @@ class S3SafePlacesRepository(SafePlacesRepositoryPort):
         return [
             Marker(
                 marker_id=item["marker_id"],
+                name=item["name"],
+                address=item["address"],
                 latitude=item["latitude"],
                 longitude=item["longitude"],
+                category=item["category"],
             )
             for item in items
         ]
