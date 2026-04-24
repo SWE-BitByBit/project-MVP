@@ -1,24 +1,17 @@
+import boto3
+import os
+
 from adapters.dynamo_note_adapter import DynamoNoteAdapter
 from adapters.s3_note_adapter import S3NoteAdapter
-from note_service import NoteService
+from application.note_service import NoteService
 from adapters.diary_note_controller import DiaryNoteController
 
 def lambda_handler(event, context):
 
-    # Dependency Injection
-    repo = DynamoNoteAdapter("NotesTable")
-    storage = S3NoteAdapter("notes-bucket")
+    repo = DynamoNoteAdapter()
+    storage = S3NoteAdapter(boto3.client("s3"), region_name=os.environ["REGION"])
 
     service = NoteService(repo, storage)
     controller = DiaryNoteController(service)
 
-    path = event["path"]
-    method = event["httpMethod"]
-
-    if path == "/notes" and method == "PUT":
-        return controller.create_note(event)
-
-    return {
-        "statusCode": 404,
-        "body": "Not found"
-    }
+    return controller.handle_response(event, context)

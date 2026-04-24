@@ -1,10 +1,12 @@
-class NoteElement:
+class SetNoteElementCmd:
     def __init__(
         self,
-        note_element_id: str,
+        user_id: str,
+        note_id: str,
         type: str,
         content: str
     ):
-        self.note_element_id = note_element_id
+        self.user_id = user_id
+        self.note_id = note_id
         self.type = type
         self.content = content
