@@ -45,6 +45,17 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  GetMaterialsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: materials/lambda_handler.lambda_handler
+      FunctionName: fetch-materials-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Environment:
+        Variables:
+          PYTHONPATH: "/var/task"
+
   GetSafePlacesFunction:
     Type: AWS::Serverless::Function
     Properties:

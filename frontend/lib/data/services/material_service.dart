@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 /// Gestisce le richieste HTTP verso l'endpoint AWS Lambda configurato.
 class MaterialService {
   final String _apiUrl =
-      'https://6zkvgiq4k4.execute-api.eu-south-1.amazonaws.com/dev/materials';
+      'https://xm4wjxrmn1.execute-api.eu-south-1.amazonaws.com/mvp/materials';
 
   /// Effettua una richiesta GET per recuperare la lista dei materiali.
   ///
