@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 // Sostituisci i percorsi in base al tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_send_message_widget.dart';

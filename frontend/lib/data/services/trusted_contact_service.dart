@@ -22,8 +22,6 @@ class TrustedContactService {
   Future<List<Map<String, dynamic>>> getContacts() async {
     final response = await _apiClient.get(_basePath);
 
-    // L'ApiClient restituisce dynamic (che è un List<dynamic> in questo caso).
-    // Lo castiamo in modo sicuro per il Repository.
     if (response is List) {
       return response.cast<Map<String, dynamic>>();
     }

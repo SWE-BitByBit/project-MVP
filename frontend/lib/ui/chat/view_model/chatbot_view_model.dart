@@ -1,154 +1,163 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:command_it/command_it.dart';
 
 import '../../../domain/models/chatbot/chat.dart';
+import '../../../data/proxies/proxy_chat.dart';
 import '../../../domain/models/chatbot/chat_enums.dart';
 import '../../../domain/models/chatbot/chat_message.dart';
-import '../../../domain/models/chatbot/chat_preview.dart';
 import '../../../data/repositories/chatbot_repository.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../domain/models/chatbot/local_chat.dart';
 
-/// Gestisce lo stato della UI e la logica di business per l'intera funzionalità Chatbot.
+/// ViewModel che gestisce lo stato e la logica di presentazione del Chatbot.
 class ChatbotViewModel extends ChangeNotifier {
   final ChatbotRepository _repository;
+  final AuthRepository _authRepository;
 
   // --- STATO DELLA UI ---
 
-  List<ChatPreview> _chatPreviews = [];
+  List<Chat> get chats => _repository.cachedChats;
+
   Chat? _currentChat;
-  ChatMode _selectedMode = ChatMode.DETECTIVE; // Modalità di default
-
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  // --- GETTERS (Per permettere alla View di leggere i dati in modo sicuro) ---
-
-  List<ChatPreview> get chatPreviews => List.unmodifiable(_chatPreviews);
   Chat? get currentChat => _currentChat;
-  ChatMode get selectedMode => _selectedMode;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
 
-  /// Costruttore: richiede il repository per poter comunicare con i dati.
-  ChatbotViewModel(this._repository);
+  ChatMode _mode = ChatMode.mirror;
+  ChatMode get mode => _mode;
 
-  // --- METODI DI BUSINESS LOGIC ---
+  // --- COMANDI REATTIVI ---
 
-  /// Cambia la modalità del chatbot (Specchio / Detective)
-  void setMode(ChatMode mode) {
-    _selectedMode = mode;
+  late final Command<void, void> loadChatPreviews;
+  late final Command<void, void> createChat;
+  late final Command<String, void> openChat;
+  late final Command<String, void> deleteChat;
+  late final Command<({Chat chat, String content, ChatMode mode}), void> sendMessage;
+
+  /// Costruttore: inizializza il ViewModel e configura le dipendenze.
+  ChatbotViewModel(
+      this._repository, {
+        required AuthRepository authRepository,
+      }) : _authRepository = authRepository {
+
+    // Inizializzazione dei comandi
+    loadChatPreviews = Command.createAsyncNoParam<void>(
+      _loadChatPreviews,
+      initialValue: null,
+    );
+
+    createChat = Command.createAsyncNoParam<void>(
+      _createChat,
+      initialValue: null,
+    );
+
+    openChat = Command.createAsync<String, void>(
+      _openChat,
+      initialValue: null,
+    );
+
+    deleteChat = Command.createAsync<String, void>(
+      _deleteChat,
+      initialValue: null,
+    );
+
+    sendMessage = Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(
+      _sendMessage,
+      initialValue: null,
+    );
+
+    // Caricamento automatico all'avvio
+    loadChatPreviews.run();
+  }
+
+  // --- LOGICA DI SINCRONIZZAZIONE LOCALE ---
+
+  void setMode(ChatMode newMode) {
+    if (_mode != newMode) {
+      _mode = newMode;
+      notifyListeners();
+    }
+  }
+
+  // --- IMPLEMENTAZIONE DEI COMANDI ---
+
+  Future<void> _loadChatPreviews() async {
+    // Se fallisce, l'eccezione sale al comando e la UI mostra l'ErrorIndicator
+    await _repository.getChatPreviews();
+
+    // Se la lista è vuota (ma la chiamata è riuscita), creiamo la chat locale
+    if (chats.isEmpty && _currentChat == null) {
+      _startNewVirtualChat();
+    } else _currentChat ??= chats.first;
     notifyListeners();
   }
 
-  /// Carica la cronologia delle chat (le anteprime).
-  Future<void> loadChatPreviews() async {
-    _setLoading(true);
-    try {
-      _chatPreviews = await _repository.getChatPreviews();
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = "Errore nel caricamento della cronologia: $e";
-    } finally {
-      _setLoading(false);
-    }
+  Future<void> _createChat() async {
+    final newChat = await _repository.createChat();
+    _currentChat = newChat;
+    notifyListeners();
   }
 
-  /// Crea una nuova chat vuota sul server e la imposta come chat corrente.
-  Future<void> createChat() async {
-    _setLoading(true);
-    try {
-      _currentChat = await _repository.createChat();
-      // Ricarichiamo le anteprime per mostrare la nuova chat in cima alla lista
-      await loadChatPreviews();
-    } catch (e) {
-      _errorMessage = "Impossibile creare una nuova chat: $e";
-    } finally {
-      _setLoading(false);
+  Future<void> _deleteChat(String chatId) async {
+    await _repository.deleteChat(chatId);
+
+    if (_currentChat?.id == chatId) {
+      _currentChat = null;
     }
+    notifyListeners();
   }
 
-  /// Apre una chat specifica recuperandola tramite il suo ID.
-  Future<void> openChat(String chatId) async {
-    _setLoading(true);
-    try {
-      _currentChat = await _repository.getChatById(chatId);
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = "Errore nell'apertura della chat: $e";
-    } finally {
-      _setLoading(false);
+  Future<void> _openChat(String chatId) async {
+    final chat = chats.firstWhere((c) => c.id == chatId);
+
+    if (chat is ProxyChat) {
+      await chat.load();
     }
+
+    _currentChat = chat;
+    notifyListeners();
   }
 
-  /// Elimina una chat specifica.
-  Future<void> deleteChat(String chatId) async {
-    _setLoading(true);
-    try {
-      await _repository.deleteChat(chatId);
-
-      // Se abbiamo appena eliminato la chat che stavamo guardando, la chiudiamo
-      if (_currentChat?.getId() == chatId) {
-        _currentChat = null;
-      }
-
-      await loadChatPreviews(); // Aggiorna la lista
-    } catch (e) {
-      _errorMessage = "Impossibile eliminare la chat: $e";
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// Invia un messaggio dall'utente e attende la risposta dell'AI.
-  Future<void> sendChatMessage(String content) async {
-    // Sicurezze: il testo non deve essere vuoto e deve esserci una chat aperta
-    if (content.trim().isEmpty) return;
-    if (_currentChat == null) {
-      _errorMessage = "Nessuna chat attiva.";
-      notifyListeners();
-      return;
-    }
-
-    // 1. Creiamo e aggiungiamo istantaneamente il messaggio dell'utente alla UI
-    final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch
-          .toString(), // ID temporaneo locale
-      content: content.trim(),
-      type: MessageType.USER,
+  Future<void> _sendMessage(({Chat chat, String content, ChatMode mode}) args) async {
+    final optimisticMsg = ChatMessage(
+      id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+      content: args.content.trim(),
+      type: MessageType.user,
       timestamp: DateTime.now(),
     );
-    _currentChat!.addMessage(userMessage);
-
-    // Mostriamo subito il messaggio dell'utente e avviamo il caricamento per l'AI
-    _isLoading = true;
-    _errorMessage = null;
+    args.chat.addMessage(optimisticMsg);
     notifyListeners();
 
-    try {
-      // 2. Chiamiamo il repository per inviare il messaggio ad AWS
-      final response = await _repository.sendMessage(
-        _currentChat!,
-        content.trim(),
-        _selectedMode,
-      );
+    final response = await _repository.sendMessage(
+        args.chat,
+        args.content.trim(),
+        args.mode
+    );
 
-      // 3. Aggiungiamo la risposta dell'AI alla chat
-      _currentChat!.addMessage(response.getResponse());
+    args.chat.addMessage(response.response);
 
-      // 4. Se l'AI ha suggerito un nuovo titolo (es. al primo messaggio), lo aggiorniamo
-      if (response.getUpdatedTitle() != null) {
-        _currentChat!.setTitle(response.getUpdatedTitle()!);
-        await loadChatPreviews(); // Aggiorna la lista nel menu laterale
-      }
-    } catch (e) {
-      _errorMessage = "Errore di connessione con l'AI. Riprova.";
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+    if (response.updatedTitle != null) {
+      args.chat.title = response.updatedTitle!;
     }
+
+    notifyListeners();
   }
 
-  /// Helper privato per gestire lo stato di caricamento.
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+  void _startNewVirtualChat() {
+    _currentChat = LocalChat(
+      id: 'virtual_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Nuova conversazione',
+      creationDate: DateTime.now(),
+      updateDate: DateTime.now(),
+      messages: [],
+    );
+  }
+
+  @override
+  void dispose() {
+    loadChatPreviews.dispose();
+    createChat.dispose();
+    openChat.dispose();
+    deleteChat.dispose();
+    sendMessage.dispose();
+    super.dispose();
   }
 }

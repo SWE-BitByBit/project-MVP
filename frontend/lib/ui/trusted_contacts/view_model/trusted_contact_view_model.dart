@@ -27,15 +27,26 @@ class TrustedContactViewModel extends ChangeNotifier {
 
   /// Inizializza il ViewModel e configura i comandi reattivi.
   TrustedContactViewModel(
-      this._repository, {
-        required AuthRepository authRepository,
-      }) : _authRepository = authRepository {
-
+    this._repository, {
+    required AuthRepository authRepository,
+  }) : _authRepository = authRepository {
     // Inizializzazione comandi
-    loadContacts = Command.createAsyncNoParam<void>(_loadContacts, initialValue: null);
-    createContact = Command.createAsync<TrustedContact, void>(_createContact, initialValue: null);
-    updateContact = Command.createAsync<TrustedContact, void>(_updateContact, initialValue: null);
-    deleteContact = Command.createAsync<String, void>(_deleteContact, initialValue: null);
+    loadContacts = Command.createAsyncNoParam<void>(
+      _loadContacts,
+      initialValue: null,
+    );
+    createContact = Command.createAsync<TrustedContact, void>(
+      _createContact,
+      initialValue: null,
+    );
+    updateContact = Command.createAsync<TrustedContact, void>(
+      _updateContact,
+      initialValue: null,
+    );
+    deleteContact = Command.createAsync<String, void>(
+      _deleteContact,
+      initialValue: null,
+    );
 
     // Caricamento iniziale al boot del ViewModel
     loadContacts.run();

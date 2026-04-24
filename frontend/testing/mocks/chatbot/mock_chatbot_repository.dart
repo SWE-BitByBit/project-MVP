@@ -1,7 +1,7 @@
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/proxy_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/chatbot_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 

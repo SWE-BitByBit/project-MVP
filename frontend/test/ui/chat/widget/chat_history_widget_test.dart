@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 // Sostituisci i percorsi con quelli del tuo progetto
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_history_widget.dart'; // Nome del tuo file
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/proxy_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 
 // Importiamo la nostra controfigura

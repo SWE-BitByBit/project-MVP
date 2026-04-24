@@ -1,5 +1,5 @@
 /// Definisce l'autore del messaggio.
-enum MessageType { USER, AI }
+enum MessageType { user, ai }
 
 /// Definisce la modalità di funzionamento del Chatbot.
-enum ChatMode { MIRROR, DETECTIVE }
+enum ChatMode { mirror, detective }

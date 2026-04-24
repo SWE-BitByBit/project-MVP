@@ -1,18 +1,11 @@
 import 'chat_enums.dart';
 
-/// Rappresenta un singolo messaggio all'interno della sessione di chat.
-/// È un'entità di Dominio pura, senza logica di serializzazione o chiamate di rete.
+/// Rappresenta un singolo messaggio all'interno della chat.
+/// Essendo un DTO/Value Object, i suoi campi sono finali (immutabili).
 class ChatMessage {
-  /// Identificativo univoco del messaggio.
   final String id;
-
-  /// Il contenuto testuale del messaggio.
   final String content;
-
-  /// Specifica se il mittente è l'utente o l'AI.
   final MessageType type;
-
-  /// La data e l'ora esatta in cui il messaggio è stato generato.
   final DateTime timestamp;
 
   ChatMessage({
@@ -22,13 +15,9 @@ class ChatMessage {
     required this.timestamp,
   });
 
-  /// Verifica se il messaggio corrente è stato inviato dall'utente.
-  bool isUserMessage() {
-    return type == MessageType.USER;
-  }
+  /// Restituisce true se il messaggio è stato inviato dall'utente.
+  bool get isUserMessage => type == MessageType.user;
 
-  /// Verifica se il messaggio corrente è stato generato dal Chatbot (AI).
-  bool isAiMessage() {
-    return type == MessageType.AI;
-  }
+  /// Restituisce true se il messaggio è stato generato dall'AI.
+  bool get isAiMessage => type == MessageType.ai;
 }
