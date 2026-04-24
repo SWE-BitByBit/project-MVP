@@ -4,7 +4,7 @@ import '../dtos/safe_place_dto.dart';
 
 /// Repository per la gestione dei dati relativi ai luoghi sicuri.
 ///
-/// Rappresenta la fonte di verità e orchestra l'accesso al [SafePlaceService][cite: 323].
+/// Rappresenta la fonte di verità e orchestra l'accesso al [SafePlaceService].
 class SafePlaceRepository {
   /// Il servizio utilizzato per le chiamate di rete.
   final SafePlaceService _service;
@@ -18,10 +18,8 @@ class SafePlaceRepository {
   /// la risposta in una lista di oggetti di dominio [SafePlace].
   Future<List<SafePlace>> getPlaces() async {
     try {
-      // 1. Recupera la lista grezza di mappe JSON dal Service
       final List<Map<String, dynamic>> rawList = await _service.fetchSafePlaces();
 
-      // 2. Converte ogni elemento in un oggetto di dominio tramite il DTO
       return rawList.map((jsonItem) {
         return SafePlaceDTO.fromJson(jsonItem);
       }).toList();

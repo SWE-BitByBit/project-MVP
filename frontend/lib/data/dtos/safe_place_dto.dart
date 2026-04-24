@@ -20,7 +20,7 @@ class SafePlaceDTO {
   /// Converte un'istanza del dominio [SafePlace] in una mappa JSON.
   static Map<String, dynamic> toJson(SafePlace place) {
     return {
-      'id': place.id,
+      'marker_id': place.id,
       'name': place.name,
       'address': place.address,
       'latitude': place.latitude,

@@ -27,12 +27,10 @@ class S3SafePlacesRepository(SafePlacesRepositoryPort):
         :return: Lista di oggetti Marker.
         :raises Exception: Se il file non è raggiungibile o malformato.
         """
-        # Lettura del file JSON dal bucket S3
         response = self._s3.get_object(Bucket=self._bucket_name, Key=self._file_key)
         raw_content = response["Body"].read().decode("utf-8")
         items = json.loads(raw_content)
 
-        # Conversione di ogni elemento nel modello Marker
         return [
             Marker(
                 marker_id=item["marker_id"],

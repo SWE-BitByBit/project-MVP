@@ -15,7 +15,6 @@ class TestLambdaHandlerSafePlaces:
              patch("src.safe_places.lambda_handler.SafePlacesService") as mock_service, \
              patch("src.safe_places.lambda_handler.SafePlacesController") as mock_controller:
         
-            # Configuriamo il mock del controller per restituire una risposta simulata
             mock_controller_instance = MagicMock()
             mock_controller_instance.marker_get.return_value = {
                 "statusCode": 200,
@@ -37,7 +36,6 @@ class TestLambdaHandlerSafePlaces:
 
         response = lambda_handler(event, context)
 
-        # Verifichiamo che i componenti siano stati istanziati
         mock_dependencies["repository"].assert_called_once_with(
             "app-protegge-trasforma-luoghi-sicuri-mvp", "luoghi-sicuri.json"
         )
@@ -48,9 +46,7 @@ class TestLambdaHandlerSafePlaces:
             mock_dependencies["service"].return_value
         )
 
-        # Verifichiamo che il metodo del controller sia stato invocato con l'evento
         mock_dependencies["controller_instance"].marker_get.assert_called_once_with(event)
 
-        # Verifichiamo che la risposta sia quella del controller
         assert response["statusCode"] == 200
         assert response["body"] == "[]"
