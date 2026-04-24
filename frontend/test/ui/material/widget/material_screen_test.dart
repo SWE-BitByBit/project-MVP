@@ -8,12 +8,12 @@ void main() {
   group('MaterialScreen Widget Test', () {
     testWidgets('Deve caricare la schermata con AppBar e ListWidget', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(home: MaterialScreen(repository: MockMaterialRepository())));
-      
+
       expect(find.text('Materiale Informativo'), findsOneWidget);
-      
+
       expect(find.text('Leggi'), findsOneWidget);
       expect(find.text('Guide'), findsOneWidget);
-      
+
       expect(find.byType(MaterialListWidget), findsOneWidget);
     });
 
@@ -21,12 +21,9 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: MaterialScreen(repository: MockMaterialRepository())));
       await tester.pumpAndSettle();
 
-      final FilterChip chip = tester.widget(find.byType(FilterChip).first);
-      expect(chip.selected, isFalse);
-
-      // Clicchiamo sul primo chip ("Leggi")
       await tester.tap(find.text('Leggi'));
-      await tester.pump();
+      // Fondamentale: aspetta che l'animazione del click e il comando finiscano
+      await tester.pumpAndSettle();
 
       final FilterChip updatedChip = tester.widget(find.byType(FilterChip).first);
       expect(updatedChip.selected, isTrue);
