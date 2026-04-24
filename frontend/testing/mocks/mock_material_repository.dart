@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/material_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
 
 class MockMaterialRepository implements MaterialRepository {
   bool shouldThrowError = false;
-  bool shouldWait = false;
+  Completer<List<Resource>>? completer;
   List<Resource> mockedMaterials = [
     Resource(
       id: '1',
@@ -29,12 +30,10 @@ class MockMaterialRepository implements MaterialRepository {
 
   @override
   Future<List<Resource>> getMaterials() async {
-    if (shouldWait) {
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-    if (shouldThrowError) {
-      throw Exception('Repository error');
-    }
-    return mockedMaterials;
+    if (completer != null) return completer!.future;
+
+    if (shouldThrowError) throw Exception('Repository error');
+
+    return mockedMaterials; // mockedMaterials è la tua lista esistente
   }
 }
