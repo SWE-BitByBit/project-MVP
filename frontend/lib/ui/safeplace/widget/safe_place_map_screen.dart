@@ -89,7 +89,19 @@ class _SafePlaceMapScreenState extends State<SafePlaceMapScreen> {
                     heroTag: "btn_details",
                     onPressed: () => _showPlaceDetails(context, viewModel.selectedPlace!),
                     icon: const Icon(Icons.info_outline),
-                    label: Text(viewModel.selectedPlace!.name),
+                    label: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          viewModel.selectedPlace!.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const Text(
+                          'Clicca per maggiori informazioni',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             );

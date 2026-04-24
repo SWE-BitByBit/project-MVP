@@ -9,10 +9,10 @@ class SafePlaceDTO {
       id: json['marker_id'] as String,
       name: json['name'] as String,
       address: json['address'] as String,
-      // Usiamo 'num' e poi '.toDouble()' per evitare errori a runtime
-      // se l'API invia un intero (es. 45) invece di un decimale (es. 45.0)
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      // Usiamo double.parse(toString()) per gestire sia stringhe che numeri
+      // Il file S3 attuale ha le coordinate come stringhe (es. "45.3978")
+      latitude: double.parse(json['latitude'].toString()),
+      longitude: double.parse(json['longitude'].toString()),
       category: json['category'] as String,
     );
   }
