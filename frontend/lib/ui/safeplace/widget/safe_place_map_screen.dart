@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_map/flutter_map.dart'; // <--- Aggiungi questo import per il MapController
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-// Modifica questi import in base alla struttura reale del tuo progetto
 import '../view_model/safe_place_view_model.dart';
 import 'safe_place_map_widget.dart';
-import '../../../data/repositories/safe_place_repository.dart';
-import '../../../data/services/safe_place_service.dart';
-import '../../../utils/app_config.dart';
 import '../../../utils/locator.dart';
 
 
