@@ -1,13 +1,14 @@
 import '../../domain/models/trusted_contact.dart';
 import '../dtos/trusted_contact_dto.dart';
 import '../services/trusted_contact_service.dart';
+import 'cacheable_repository.dart';
 
 /// Intermediario tra il ViewModel e il livello dati (Service).
 ///
 /// Gestisce la logica di business relativa ai contatti fidati, occupandosi della
 /// conversione tra DTO e modelli di dominio e mantenendo una cache locale
 /// dei dati per ottimizzare le prestazioni dell'interfaccia utente.
-class TrustedContactRepository {
+class TrustedContactRepository implements CacheableRepository {
   /// Il servizio per le chiamate API verso il backend.
   final TrustedContactService _trustedContactService;
 
@@ -84,6 +85,7 @@ class TrustedContactRepository {
   }
 
   /// Svuota la cache locale (utile ad esempio durante il logout).
+  @override
   void clearCache() {
     _cachedContacts.clear();
   }

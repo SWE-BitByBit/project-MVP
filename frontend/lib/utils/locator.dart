@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'app_config.dart';
+import 'cache_manager.dart';
 import '../data/network/api_client.dart';
 import '../data/network/http_api_client.dart';
 import '../data/services/auth_service.dart';
@@ -46,6 +47,11 @@ void _setupCore() {
       },
     ),
   );
+
+  getIt.registerLazySingleton<CacheManager>(() => CacheManager([
+    getIt<TrustedContactRepository>(),
+    // In futuro aggiungerai qui: getIt<SafePlaceRepository>(), ecc.
+  ]));
 }
 
 void _setupAuth() {

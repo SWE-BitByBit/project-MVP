@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:command_it/command_it.dart'; // O flutter_command a seconda di come l'avete importato
+import 'package:command_it/command_it.dart';
+import '../../../utils/cache_manager.dart';
+import '../../../utils/locator.dart';
 import '../../../domain/models/user.dart';
 import '../../../../data/repositories/auth_repository.dart';
 
@@ -57,7 +59,9 @@ class AuthViewModel extends ChangeNotifier {
   /// Logica interna per la procedura di logout.
   Future<void> _logout() async {
     await _authRepository.logout();
-    // Avvisiamo la UI che non c'è più l'utente
+
+    getIt<CacheManager>().clearAllCaches();
+
     notifyListeners();
   }
 }

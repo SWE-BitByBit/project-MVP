@@ -11,7 +11,7 @@ class TrustedContactDTO {
   /// Gestisce eventuali valori nulli assegnando stringhe vuote come default.
   static TrustedContact fromJson(Map<String, dynamic> data) {
     return TrustedContact(
-      id: data['id']?.toString() ?? '',
+      id: data['contactId']?.toString() ?? '',
       name: data['name']?.toString() ?? '',
       email: data['email']?.toString() ?? '',
       phoneNumber: data['phoneNumber']?.toString() ?? '',
@@ -23,7 +23,7 @@ class TrustedContactDTO {
   /// Questo formato è quello richiesto dal backend per le operazioni di POST e PUT.
   static Map<String, dynamic> toJson(TrustedContact contact) {
     return {
-      'id': contact.id,
+      'contactId': contact.id,
       'name': contact.name,
       'email': contact.email,
       'phoneNumber': contact.phoneNumber,

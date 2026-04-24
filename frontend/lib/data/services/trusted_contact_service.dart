@@ -44,7 +44,7 @@ class TrustedContactService {
   /// Riceve [contactData] che deve contenere l'ID del contatto da modificare.
   /// Restituisce la mappa JSON dei dati aggiornati confermati dal server.
   Future<Map<String, dynamic>> updateContact(Map<String, dynamic> contactData) async {
-    final String id = contactData['id'];
+    final String id = contactData['contactId'];
     final response = await _apiClient.put('$_basePath/$id', body: contactData);
     return response as Map<String, dynamic>;
   }

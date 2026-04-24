@@ -46,6 +46,7 @@ class AuthRepository {
       await _authService.logout();
     } finally {
       // Resettiamo sempre l'utente locale anche se la chiamata di rete fallisce
+
       _currentUser = null;
     }
   }
