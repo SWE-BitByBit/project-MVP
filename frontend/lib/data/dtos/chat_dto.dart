@@ -14,25 +14,25 @@ class ChatDTO {
 
     final List<ChatMessage> parsedMessages = rawMessages.map((msgJson) {
       return ChatMessage(
-        id: msgJson['messageId']?.toString() ?? '',
-        content: msgJson['content']?.toString() ?? '',
+        id: msgJson['message_id']?.toString() ?? '',
+        content: msgJson['text']?.toString() ?? '',
 
-        type: (msgJson['type']?.toString().toUpperCase() == 'USER')
+        type: (msgJson['sender']?.toString() == 'user')
             ? MessageType.user
             : MessageType.ai,
-        timestamp: DateTime.tryParse(msgJson['timestamp']?.toString() ?? '') ?? DateTime.now(),
+        timestamp: DateTime.tryParse(msgJson['created_at']?.toString() ?? '') ?? DateTime.now(),
       );
     }).toList();
 
 
-    final creationStr = json['creationDate']?.toString();
-    final updateStr = json['updateDate']?.toString();
+    final creationStr = json['created_at']?.toString();
+    final updateStr = json['updated_at']?.toString();
 
     final creationDate = DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
     final updateDate = DateTime.tryParse(updateStr ?? '') ?? creationDate;
 
     return LocalChat(
-      id: json['chatId']?.toString() ?? '',
+      id: json['chat_id']?.toString() ?? '',
       title: json['title']?.toString() ?? 'Nuova conversazione',
       creationDate: creationDate,
       updateDate: updateDate,
@@ -44,18 +44,19 @@ class ChatDTO {
   static Map<String, dynamic> toJson(Chat chat) {
     final List<Map<String, dynamic>> messagesJson = chat.messages.map((msg) {
       return {
-        'messageId': msg.id,
-        'content': msg.content,
-        'type': msg.type == MessageType.user ? 'USER' : 'AI',
-        'timestamp': msg.timestamp.toIso8601String(),
+        'chat_id':chat.id,
+        'message_id': msg.id,
+        'text': msg.content,
+        'sender': msg.type == MessageType.user ? 'user' : 'ai',
+        'created_at': msg.timestamp.toIso8601String(),
       };
     }).toList();
 
     return {
-      'chatId': chat.id,
       'title': chat.title,
-      'creationDate': chat.creationDate.toIso8601String(),
-      'updateDate': chat.updateDate.toIso8601String(),
+      'chat_id': chat.id,
+      'created_at': chat.creationDate.toIso8601String(),
+      'updated_at': chat.updateDate.toIso8601String(),
       'messages': messagesJson,
     };
   }

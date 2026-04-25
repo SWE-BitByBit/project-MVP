@@ -20,13 +20,9 @@ class ChatbotService {
   /// Corrisponde all'endpoint [GET /chats/]. Restituisce solo i metadati
   /// e la sintesi per ottimizzare il carico di rete.
   /// [return] Una lista di mappe contenenti le anteprime delle chat.
-  Future<List<Map<String, dynamic>>> fetchChatPreviews() async {
+  Future<Map<String, dynamic>> fetchChatPreviews() async {
     final response = await _apiClient.get(_basePath);
-
-    if (response is List) {
-      return response.cast<Map<String, dynamic>>();
-    }
-    return [];
+    return response as Map<String, dynamic>;
   }
 
   /// Recupera il contenuto completo di una chat, inclusi tutti i messaggi.
@@ -74,8 +70,8 @@ class ChatbotService {
       String mode,
       ) async {
     final body = {
-      'content': content,
-      'mode': mode,
+      'message': content,
+      'response_mode': mode,
     };
 
     // La specifica indica che questo metodo ritorna risposta + titolo aggiornato.

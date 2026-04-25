@@ -48,8 +48,12 @@ class HttpApiClient implements ApiClient {
 
   @override
   Future<dynamic> get(String path, {Map<String, String>? headers, bool requiresAuth = true}) async {
+
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
+
+    print('[*] CHIAMATA GET A: $uri'); //ELIMINARE IN PRODUZIONE
+    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
 
     final response = await _httpClient.get(uri, headers: mergedHeaders);
     return _handleResponse(response);
@@ -59,6 +63,9 @@ class HttpApiClient implements ApiClient {
   Future<dynamic> post(String path, {Map<String, String>? headers, dynamic body, bool requiresAuth = true}) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
+
+    print('[*] CHIAMATA POST A: $uri'); //ELIMINARE IN PRODUZIONE
+    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
 
     final response = await _httpClient.post(
       uri,
@@ -73,6 +80,9 @@ class HttpApiClient implements ApiClient {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
 
+    print('[*] CHIAMATA PUT A: $uri'); //ELIMINARE IN PRODUZIONE
+    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
+
     final response = await _httpClient.put(
       uri,
       headers: mergedHeaders,
@@ -85,6 +95,9 @@ class HttpApiClient implements ApiClient {
   Future<dynamic> delete(String path, {Map<String, String>? headers, bool requiresAuth = true}) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
+
+    print('[*] CHIAMATA DELETE A: $uri'); //ELIMINARE IN PRODUZIONE
+    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
 
     final response = await _httpClient.delete(uri, headers: mergedHeaders);
     return _handleResponse(response);

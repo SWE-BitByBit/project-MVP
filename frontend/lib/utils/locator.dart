@@ -70,7 +70,7 @@ void _setupAuth() {
 
 /// Registra le dipendenze relative al modulo dei Luoghi Sicuri
 void _setupSafePlace() {
-  getIt.registerLazySingleton<SafePlaceService>(() => SafePlaceService(baseUrl: AppConfig.apiBaseUrl)); // Refactored to use ApiClient
+  getIt.registerLazySingleton<SafePlaceService>(() => SafePlaceService(apiClient: getIt<ApiClient>())); // Refactored to use ApiClient
 
   getIt.registerLazySingleton<SafePlaceRepository>(() => SafePlaceRepository(getIt<SafePlaceService>()));
 
@@ -83,10 +83,10 @@ void _setupSafePlace() {
 /// Registra le dipendenze relative al modulo dei Contatti Fidati.
 void _setupTrustedContact() {
   // Service: richiede l'ApiClient per le chiamate REST
-  getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()),);
+  getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
 
   // Repository: gestisce la logica dei dati e la conversione DTO
-  getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>()),);
+  getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>()));
 
   // ViewModel: iniettiamo sia il repo dei contatti che quello auth (per dati utente)
   // Usiamo registerFactory per avere uno stato pulito ogni volta che si apre la schermata
@@ -102,7 +102,7 @@ void _setupChatbot() {
   // Registriamo il Service passando l'ApiClient già presente nel locator
   getIt.registerLazySingleton<ChatbotService>(() => ChatbotService(apiClient: getIt<ApiClient>()));
 
-  getIt.registerLazySingleton<ChatbotRepository>(() => ChatbotRepository(getIt<ChatbotService>()),);
+  getIt.registerLazySingleton<ChatbotRepository>(() => ChatbotRepository(getIt<ChatbotService>()));
 
   getIt.registerFactory<ChatbotViewModel>(() => ChatbotViewModel(
     getIt<ChatbotRepository>(),

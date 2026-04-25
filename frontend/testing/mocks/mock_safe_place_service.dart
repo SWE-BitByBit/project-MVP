@@ -7,9 +7,9 @@ import 'package:http/http.dart' as http;
 class MockSafePlaceService implements SafePlaceService {
 
   @override
-  final String baseUrl = 'http://mock-url.com'; // Un URL finto qualsiasi
+  final String _basePath = 'http://mock-url.com'; // Un URL finto qualsiasi
   @override
-  final http.Client client = http.Client(); // Un client finto
+  final http.Client _apiClient = http.Client(); // Un client finto
 
   bool shouldFail = false;
 

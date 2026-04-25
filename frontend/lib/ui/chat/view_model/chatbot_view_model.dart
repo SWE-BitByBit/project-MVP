@@ -82,20 +82,28 @@ class ChatbotViewModel extends ChangeNotifier {
   // --- IMPLEMENTAZIONE DEI COMANDI ---
 
   Future<void> _loadChatPreviews() async {
-    // Se fallisce, l'eccezione sale al comando e la UI mostra l'ErrorIndicator
+    // 1. Scarichiamo i dati
     await _repository.getChatPreviews();
 
-    // Se la lista è vuota (ma la chiamata è riuscita), creiamo la chat locale
-    if (chats.isEmpty && _currentChat == null) {
-      _startNewVirtualChat();
-    } final savedId = _repository.lastViewedChatId;
+    // 2. Se non c'è NESSUNA chat nel database
+    if (chats.isEmpty) {
+      if (_currentChat == null) {
+        _startNewVirtualChat();
+      }
+      notifyListeners();
+      return;
+    }
+
+    final savedId = _repository.lastViewedChatId;
 
     if (savedId != null && chats.any((c) => c.id == savedId)) {
+
       _openChat(savedId);
     } else {
       _currentChat = chats.first;
       _repository.lastViewedChatId = _currentChat?.id;
     }
+
     notifyListeners();
   }
 
@@ -136,7 +144,15 @@ class ChatbotViewModel extends ChangeNotifier {
   }
 
   Future<void> _openChat(String chatId) async {
-    final chat = chats.firstWhere((c) => c.id == chatId);
+    print('ID CERCATO: $chatId');
+    final index = chats.indexWhere((c) => c.id == chatId);
+
+    if (index == -1) {
+      print("Vaffanculo");
+      return;
+    }
+
+    final chat = chats[index];
 
     if (chat is ProxyChat) {
       await chat.load();

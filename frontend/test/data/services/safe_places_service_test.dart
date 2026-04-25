@@ -34,7 +34,7 @@ void main() {
       // Inizializziamo il service passandogli il finto client!
       final service = SafePlaceService(
         baseUrl: testBaseUrl,
-        client: mockClient,
+        _apiClient: mockClient,
       );
 
       // 2. ACT: Eseguiamo il metodo
@@ -54,7 +54,7 @@ void main() {
 
       final service = SafePlaceService(
         baseUrl: testBaseUrl,
-        client: mockClient,
+        _apiClient: mockClient,
       );
 
       // 2 & 3. ACT & ASSERT: Verifichiamo che lanci l'eccezione prevista
