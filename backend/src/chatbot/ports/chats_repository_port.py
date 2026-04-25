@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from chat import Chat
-from chat_message import Message
+from domain.chat import Chat
+from domain.chat_message import Message
 
 class ChatsRepositoryPort(ABC):
     @abstractmethod
-    def create_chat(self, user_id: str) -> Chat:
+    def create_chat(self, user_id: str, first_message: str) -> Chat:
         pass
 
     @abstractmethod

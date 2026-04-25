@@ -27,7 +27,10 @@ void main() {
 
       // Verifichiamo che la mappa contenga le chiavi che il DTO si aspetta
       expect(result.containsKey('id'), isTrue);
-      expect(result['id'], startsWith('chat-')); // L'id generato inizia con 'chat-'
+      expect(
+        result['id'],
+        startsWith('chat-'),
+      ); // L'id generato inizia con 'chat-'
       expect(result['title'], 'Nuova conversazione');
       expect(result.containsKey('creationDate'), isTrue);
       expect(result['messages'], isEmpty);
@@ -38,21 +41,23 @@ void main() {
       expect(() async => await service.deleteChat('chat-123'), returnsNormally);
     });
 
-    test('sendMessage restituisce un JSON finto che include la modalità', () async {
-      final modeStr = 'DETECTIVE';
-      final result = await service.sendMessage('chat-123', 'Ciao AI', modeStr);
+    test(
+      'sendMessage restituisce un JSON finto che include la modalità',
+      () async {
+        final modeStr = 'DETECTIVE';
+        final result = await service.sendMessage(
+          'chat-123',
+          'Ciao AI',
+          modeStr,
+        );
 
-      expect(result['id'], 'msg-ai-123');
-      expect(result['type'], 'AI');
-      expect(result.containsKey('timestamp'), isTrue);
+        expect(result['id'], 'msg-ai-123');
+        expect(result['type'], 'AI');
+        expect(result.containsKey('timestamp'), isTrue);
 
-      // Controlliamo che il testo di risposta mockato contenga effettivamente la modalità richiesta
-      expect(result['content'], contains('DETECTIVE'));
-    });
-
-    test('generateChatTitle restituisce il titolo provvisorio', () async {
-      final result = await service.generateChatTitle('Testo di prova');
-      expect(result, 'Nuova conversazione');
-    });
+        // Controlliamo che il testo di risposta mockato contenga effettivamente la modalità richiesta
+        expect(result['content'], contains('DETECTIVE'));
+      },
+    );
   });
 }

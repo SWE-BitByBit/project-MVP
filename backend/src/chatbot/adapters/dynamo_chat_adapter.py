@@ -6,9 +6,9 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from ulid import ULID
 
-from chats_repository_port import ChatsRepositoryPort
-from chat import Chat
-from chat_message import Message
+from ports.chats_repository_port import ChatsRepositoryPort
+from domain.chat import Chat
+from domain.chat_message import Message
 
 class DynamoChatAdapter(ChatsRepositoryPort):
     def __init__(self):
@@ -28,10 +28,9 @@ class DynamoChatAdapter(ChatsRepositoryPort):
     def _new_message_id() -> str:
         return str(ULID())
 
-    def create_chat(self, user_id: str) -> Chat:
+    def create_chat(self, user_id: str, title: str) -> Chat:
         chat_id = self._new_chat_id()
         created_at = self._now_iso()
-        title = "Nuova chat"
 
         try:
             self._chats_table.put_item(
@@ -47,13 +46,13 @@ class DynamoChatAdapter(ChatsRepositoryPort):
             raise RuntimeError(f"Error in creating a new chat: {e.response['Error']['Message']}") 
 
         return Chat(
-            title = title,
-            chat_id = chat_id,
-            user_id = user_id,
-            created_at = created_at,
-            updated_at = created_at,
-            messages = []
-        )
+                title = title,
+                chat_id = chat_id,
+                user_id = user_id,
+                created_at = created_at,
+                updated_at = created_at,
+                messages = []
+            )
 
     def get_chat(self, user_id: str, chat_id: str) -> Optional[Chat]:
 
@@ -77,6 +76,7 @@ class DynamoChatAdapter(ChatsRepositoryPort):
             for item in messages_response.get("Items", []):
                 messages.append(
                     Message(
+                        chat_id = item["chat_id"],
                         message_id = item["message_id"],
                         text = item.get("text"),
                         sender = item.get("sender"),
@@ -95,6 +95,40 @@ class DynamoChatAdapter(ChatsRepositoryPort):
         
         except ClientError as e:
             raise RuntimeError(f"Error in fetching the chat: {e.response['Error']['Message']}")
+
+    def update_chat(self, user_id: str, chat_id: str, title: str) -> Chat:
+        try:
+            chat_response = self._chats_table.get_item(
+                Key={"chat_id": chat_id},
+                ConsistentRead=True
+            )
+
+            chat_item = chat_response.get("Item")
+            if not chat_item or chat_item.get("user_id") != user_id:
+                raise ValueError("Chat not found or with missing authorization")
+
+            updated_at = self._now_iso()
+
+            self._chats_table.update_item(
+                Key={"chat_id": chat_id},
+                UpdateExpression="SET title = :title, updated_at = :updated_at",
+                ExpressionAttributeValues={
+                    ":title": title,
+                    ":updated_at": updated_at
+                }
+            )
+
+            return Chat(
+                title=title,
+                chat_id=chat_id,
+                user_id=user_id,
+                created_at=chat_item.get("created_at"),
+                updated_at=updated_at,
+                messages=[]
+            )
+
+        except ClientError as e:
+            raise RuntimeError(f"Error updating chat: {e.response['Error']['Message']}")
 
     def delete_chat(self, user_id: str, chat_id: str) -> bool:
         try:
