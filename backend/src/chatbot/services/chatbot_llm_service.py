@@ -45,7 +45,7 @@ class ChatbotLLMService:
         return path.read_text(encoding="utf-8")
 
     def _build_prompt(self, chat: Chat, message: str, response_mode: str):
-        # System prompt, made of a base prompt + mode_prompt
+        # Prompt di sistema = prompt base + prompt modalità chatbot
         mode_prompt = ""
         if response_mode == "detective":
             mode_prompt = self._detective_prompt
@@ -56,13 +56,13 @@ class ChatbotLLMService:
 
         relevant_messages = self._retrieve_relevant_messages(chat, message)
 
-        # Context block, containing relevant messages to the user input
+        # Blocco di contesto, con i messaggi più rilevanti inviati dall'utente
         context_block = ""
         if relevant_messages:
             context_block = "\n".join(relevant_messages)
             context_block = f"RELEVANT CONVERSATION CONTEXT:\n{context_block}\n"
 
-        # Final prompt
+        # Prompt finale
         return f"""{system_prompt}
 
         {context_block}
