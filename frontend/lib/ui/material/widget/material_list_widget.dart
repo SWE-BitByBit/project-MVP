@@ -17,38 +17,43 @@ class MaterialListWidget extends StatelessWidget {
   /// Costruisce la porzione di UI deputata alla lista e gestisce gli stati di caricamento ed errore.
   @override
   Widget build(BuildContext context) {
-        // Gestione errore di rete
-        if (viewModel.loadMaterials.error != null) {
-          return Center(
-            child: Text(
-              'Si è verificato un errore durante il recupero dei dati.',
-              style: const TextStyle(color: Colors.red, fontSize: 16),
-            ),
+    return ListenableBuilder(
+        listenable: viewModel,
+        builder: (context, child) {
+          // Gestione errore di rete
+          if (viewModel.loadMaterials.error != null) {
+            return Center(
+              child: Text(
+                'Si è verificato un errore durante il recupero dei dati.',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            );
+          }
+
+          // Gestione caricamento dati
+          if (viewModel.loadMaterials.running) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final materials = viewModel.materials;
+
+          // Gestione stato vuoto
+          if (materials.isEmpty) {
+            return const Center(
+              child: Text('Nessun materiale trovato per questa categoria.'),
+            );
+          }
+
+          // Lista finale
+          return ListView.builder(
+            itemCount: materials.length,
+            itemBuilder: (context, index) {
+              final resource = materials[index];
+              return _ResourceCardWidget(resource: resource);
+            },
           );
-        }
-
-        // Gestione caricamento dati
-        if (viewModel.loadMaterials.running) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final materials = viewModel.materials;
-
-        // Gestione stato vuoto
-        if (materials.isEmpty) {
-          return const Center(
-            child: Text('Nessun materiale trovato per questa categoria.'),
-          );
-        }
-
-        // Lista finale
-        return ListView.builder(
-          itemCount: materials.length,
-          itemBuilder: (context, index) {
-            final resource = materials[index];
-            return _ResourceCardWidget(resource: resource);
-          },
-        );
+        },
+    );
   }
 }
 
