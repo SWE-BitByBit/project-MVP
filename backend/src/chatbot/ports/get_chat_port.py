@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from domain.chat import Chat
-from commands.get_chat_cmd import GetChatCmd
-from commands.get_chat_list_cmd import GetChatListCmd
+from chatbot.domain.chat import Chat
+from chatbot.commands.get_chat_cmd import GetChatCmd
+from chatbot.commands.get_chat_list_cmd import GetChatListCmd
 
 
 class GetChatPort(ABC):

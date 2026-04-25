@@ -25,5 +25,5 @@ class ChatMessageDTO:
             message_id=getattr(message, "message_id", None),
             text=getattr(message, "text", None),
             sender=getattr(message, "sender", None),
-            created_at=getattr(message, "created_at", None)
+            created_at=str(getattr(message, "created_at", None))
         )

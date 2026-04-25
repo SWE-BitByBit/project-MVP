@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from domain.chat import Chat
 from typing import List, Optional
-from commands.update_chat_cmd import UpdateChatCmd
+from chatbot.domain.chat import Chat
+from chatbot.commands.update_chat_cmd import UpdateChatCmd
 
 
 class UpdateChatPort(ABC):

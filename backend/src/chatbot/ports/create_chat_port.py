@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from domain.chat import Chat
-from commands.create_chat_cmd import CreateChatCmd
+from chatbot.domain.chat import Chat
+from chatbot.commands.create_chat_cmd import CreateChatCmd
 
 
 class CreateChatPort(ABC):

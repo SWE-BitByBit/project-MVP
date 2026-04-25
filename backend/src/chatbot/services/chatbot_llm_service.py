@@ -1,5 +1,5 @@
-from ports.chatbot_llm_port import ChatbotLLMPort
-from domain.chat import Chat
+from chatbot.ports.chatbot_llm_port import ChatbotLLMPort
+from chatbot.domain.chat import Chat
 from rank_bm25 import BM25Okapi
 from pathlib import Path
 import re
@@ -40,7 +40,8 @@ class ChatbotLLMService:
         return [raw_messages[i] for i in top_indices]
 
     def _load_prompt(self, filename: str, base_path: str = "prompts") -> str:
-        path = Path(base_path) / filename
+        base_dir = Path(__file__).resolve().parents[1]
+        path = base_dir / base_path / filename
         return path.read_text(encoding="utf-8")
 
     def _build_prompt(self, chat: Chat, message: str, response_mode: str):

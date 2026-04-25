@@ -1,5 +1,5 @@
-from ports.chatbot_llm_port import ChatbotLLMPort
-from domain.chat import Chat
+from chatbot.ports.chatbot_llm_port import ChatbotLLMPort
+from chatbot.domain.chat import Chat
 import random
 import string
 

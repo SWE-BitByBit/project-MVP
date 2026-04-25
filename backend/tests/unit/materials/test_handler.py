@@ -3,7 +3,7 @@ import json
 import pytest
 from moto import mock_aws
 from uuid import uuid4
-from src.hello_world.app import get_contact, lambda_handler
+from hello_world.app import get_contact, lambda_handler
 
 TABLE_NAME = "test-table"
 TEST_CONTACT_ID = str(uuid4())
@@ -13,6 +13,8 @@ TEST_USER_ID = str(uuid4())
 @pytest.fixture
 def setUp_mock_dynamo(monkeypatch):
     monkeypatch.setenv("TABLE_NAME", TABLE_NAME)
+    monkeypatch.setenv("AWS_REGION", "eu-south-1")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-south-1")
     with mock_aws():
         dynamodb = boto3.resource("dynamodb", region_name="eu-south-1")
         dynamodb.create_table(
@@ -49,7 +51,8 @@ def _make_event(contact_id=TEST_CONTACT_ID, sub=TEST_USER_ID):
                     "claims": {"sub": sub}
                 }
             }
-        }
+        },
+        "region": "eu-south-1"
     }
 
 

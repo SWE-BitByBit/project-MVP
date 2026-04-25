@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from domain.chat import Chat
-from domain.chat_message import Message
+from chatbot.domain.chat import Chat
+from chatbot.domain.chat_message import Message
 
 class ChatsRepositoryPort(ABC):
     @abstractmethod

@@ -6,13 +6,16 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from ulid import ULID
 
-from ports.chats_repository_port import ChatsRepositoryPort
-from domain.chat import Chat
-from domain.chat_message import Message
+from chatbot.ports.chats_repository_port import ChatsRepositoryPort
+from chatbot.domain.chat import Chat
+from chatbot.domain.chat_message import Message
 
 class DynamoChatAdapter(ChatsRepositoryPort):
-    def __init__(self):
-        self._dynamodb = boto3.resource("dynamodb", region_name = "eu-south-1")
+    def __init__(self, dynamodb=None):
+        self._dynamodb = dynamodb or boto3.resource(
+            "dynamodb",
+            region_name="eu-south-1"
+        )
         self._chats_table = self._dynamodb.Table("chats_mvp")
         self._messages_table = self._dynamodb.Table("chats_messages_mvp")
 

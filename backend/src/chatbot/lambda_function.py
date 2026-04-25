@@ -1,18 +1,34 @@
 import json
 
-from services.chatbot_crud_service import ChatbotCRUDService
-from services.chatbot_llm_service import ChatbotLLMService
-from adapters.dynamo_chat_adapter import DynamoChatAdapter
-from adapters.bedrock_llm_adapter import BedrockLLMAdapter
-from domain.dtos.chat_dto import ChatDTO
+from chatbot.services.chatbot_crud_service import ChatbotCRUDService
+from chatbot.services.chatbot_llm_service import ChatbotLLMService
+from chatbot.adapters.dynamo_chat_adapter import DynamoChatAdapter
+from chatbot.adapters.bedrock_llm_adapter import BedrockLLMAdapter
+from chatbot.domain.dtos.chat_dto import ChatDTO
 
-from commands.create_chat_cmd import CreateChatCmd
-from commands.update_chat_cmd import UpdateChatCmd
-from commands.get_chat_cmd import GetChatCmd
-from commands.get_chat_list_cmd import GetChatListCmd
-from commands.delete_chat_cmd import DeleteChatCmd
-from commands.add_chat_message_cmd import AddChatMessageCmd
+from chatbot.commands.create_chat_cmd import CreateChatCmd
+from chatbot.commands.update_chat_cmd import UpdateChatCmd
+from chatbot.commands.get_chat_cmd import GetChatCmd
+from chatbot.commands.get_chat_list_cmd import GetChatListCmd
+from chatbot.commands.delete_chat_cmd import DeleteChatCmd
+from chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
 
+_crud_service = None
+_llm_service = None
+
+def get_crud_service():
+    global _crud_service
+    if _crud_service is None:
+        chat_repo = DynamoChatAdapter()
+        _crud_service = ChatbotCRUDService(chat_repo)
+    return _crud_service
+
+def get_llm_service():
+    global _llm_service
+    if _llm_service is None:
+        chat_model = BedrockLLMAdapter()
+        _llm_service = ChatbotLLMService(chat_model)
+    return _llm_service
 
 def response(status_code, body):
     if status_code == 204:
@@ -72,29 +88,23 @@ def get_user_id(event):
     return claims.get("sub")
 
 
-chat_repo = DynamoChatAdapter()
-chat_model = BedrockLLMAdapter()
-crud_service = ChatbotCRUDService(chat_repo)
-llm_service = ChatbotLLMService(chat_model)
-
-
 def handle_chats_get(user_id):
     cmd = GetChatListCmd(user_id = user_id)
-    chats = crud_service.get_chat_list(cmd)
+    chats = get_crud_service().get_chat_list(cmd)
     return response(200, {"chats": [c.__dict__ for c in chats]})
 
 
 def handle_chats_post(user_id, body):
     chat_title = body.get("title")
     cmd = CreateChatCmd(user_id = user_id, title = chat_title) if chat_title else CreateChatCmd(user_id = user_id)
-    chat = crud_service.create_chat(cmd)
+    chat = get_crud_service().create_chat(cmd)
     chat_dto = ChatDTO.from_domain(chat)
     return response(201, chat_dto.to_dict())
 
 
 def handle_chat_get(user_id, chat_id):
     cmd = GetChatCmd(user_id = user_id, chat_id = chat_id)
-    chat = crud_service.get_chat(cmd)
+    chat = get_crud_service().get_chat(cmd)
     if not chat:
         return response(404, {"message": "Chat not found"})
 
@@ -104,13 +114,13 @@ def handle_chat_get(user_id, chat_id):
 
 def handle_chat_delete(user_id, chat_id):
     cmd = DeleteChatCmd(user_id = user_id, chat_id = chat_id)
-    crud_service.delete_chat(cmd)
+    get_crud_service().delete_chat(cmd)
     return response(204, {})
 
 
 def handle_chat_put(user_id, chat_id, body):
     cmd = GetChatCmd(user_id=user_id, chat_id=chat_id)
-    chat = crud_service.get_chat(cmd)
+    chat = get_crud_service().get_chat(cmd)
     if not chat:
         return response(404, {"message": "Chat not found"})
 
@@ -120,7 +130,7 @@ def handle_chat_put(user_id, chat_id, body):
         title = body.get("title", chat.title),
     )
 
-    updated_chat = crud_service.update_chat(update_cmd)
+    updated_chat = get_crud_service().update_chat(update_cmd)
     chat_dto = ChatDTO.from_domain(updated_chat)
 
     return response(200, chat_dto.to_dict())
@@ -128,14 +138,14 @@ def handle_chat_put(user_id, chat_id, body):
 
 def handle_messages_post(user_id, chat_id, body):
     get_cmd = GetChatCmd(user_id = user_id, chat_id = chat_id)
-    chat = crud_service.get_chat(get_cmd)
+    chat = get_crud_service().get_chat(get_cmd)
     if not chat:
         return response(404, {"message": "Chat not found"})
 
     message = body.get("message")
     response_mode = body.get("response_mode", "default")
 
-    llm_response = llm_service.get_message_response(chat, message, response_mode)
+    llm_response = get_llm_service().get_message_response(chat, message, response_mode)
     if not llm_response:
         return response(500, {"message": "Couldn't generate an answer"})
 
@@ -152,8 +162,8 @@ def handle_messages_post(user_id, chat_id, body):
         sender = "ai",
     )
 
-    crud_service.add_chat_message(user_msg_cmd)
-    crud_service.add_chat_message(ai_msg_cmd)
+    get_crud_service().add_chat_message(user_msg_cmd)
+    get_crud_service().add_chat_message(ai_msg_cmd)
 
     return response(
         200,
