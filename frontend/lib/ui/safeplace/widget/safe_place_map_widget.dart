@@ -68,9 +68,17 @@ class SafePlaceMapWidget extends StatelessWidget {
 
         // Il centro iniziale: prima priorità la posizione utente,
         // seconda priorità il primo luogo sicuro, fallback su Padova.
-        final initialCenter = viewModel.currentPosition != null
-            ? LatLng(viewModel.currentPosition!.latitude, viewModel.currentPosition!.longitude)
-            : (markers.isNotEmpty ? markers.first.point : const LatLng(45.4064, 11.8768));
+        final LatLng initialCenter;
+        if (viewModel.currentPosition != null) {
+          initialCenter = LatLng(
+            viewModel.currentPosition!.latitude,
+            viewModel.currentPosition!.longitude,
+          );
+        } else if (markers.isNotEmpty) {
+          initialCenter = markers.first.point;
+        } else {
+          initialCenter = const LatLng(45.4064, 11.8768);
+        }
 
         return FlutterMap(
           mapController: mapController, // <--- AGGIUNGIAMO IL CONTROLLER QUI

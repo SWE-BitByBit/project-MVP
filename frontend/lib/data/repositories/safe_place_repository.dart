@@ -1,7 +1,7 @@
 import '../../domain/models/safeplace/safe_place.dart';
 import '../services/safe_place_service.dart';
 import '../dtos/safe_place_dto.dart';
-import '../../../utils/app_config.dart';
+
 
 /// Repository per la gestione dei dati relativi ai luoghi sicuri.
 ///
