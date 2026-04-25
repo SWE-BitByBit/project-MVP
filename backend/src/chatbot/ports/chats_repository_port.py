@@ -17,7 +17,7 @@ class ChatsRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def add_chat_message(self, user_id: str, chat_id: str, text: str, sender: str) -> None:
+    def add_chat_message(self, user_id: str, chat_id: str, text: str, sender: str) -> str:
         pass
 
     @abstractmethod

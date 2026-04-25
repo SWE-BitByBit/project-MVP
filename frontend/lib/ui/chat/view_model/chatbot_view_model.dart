@@ -132,12 +132,6 @@ class ChatbotViewModel extends ChangeNotifier {
 
       // 3. Aggiungiamo la risposta dell'AI alla chat
       _currentChat!.addMessage(response.getResponse());
-
-      // 4. Se l'AI ha suggerito un nuovo titolo (es. al primo messaggio), lo aggiorniamo
-      if (response.getUpdatedTitle() != null) {
-        _currentChat!.setTitle(response.getUpdatedTitle()!);
-        await loadChatPreviews(); // Aggiorna la lista nel menu laterale
-      }
     } catch (e) {
       _errorMessage = "Errore di connessione con l'AI. Riprova.";
     } finally {

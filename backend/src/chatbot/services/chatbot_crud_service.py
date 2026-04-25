@@ -57,8 +57,8 @@ class ChatbotCRUDService(
             chat_id = cmd.chat_id,
         )
 
-    def add_chat_message(self, cmd: AddChatMessageCmd) -> None:
-        self._repo.add_chat_message(
+    def add_chat_message(self, cmd: AddChatMessageCmd) -> str:
+        return self._repo.add_chat_message(
             user_id = cmd.user_id,
             chat_id = cmd.chat_id,
             text = cmd.text,

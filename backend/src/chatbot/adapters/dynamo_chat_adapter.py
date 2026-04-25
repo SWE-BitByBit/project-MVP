@@ -179,7 +179,7 @@ class DynamoChatAdapter(ChatsRepositoryPort):
         except ClientError as e:
             raise RuntimeError(f"Error in deleting chat: {e.response['Error']['Message']}")
 
-    def add_chat_message(self, user_id: str, chat_id: str, text: str, sender: str) -> None:
+    def add_chat_message(self, user_id: str, chat_id: str, text: str, sender: str) -> str:
         try:
             if sender != "user" and sender != "ai":
                 raise ValueError("Message sender must be 'user' or 'ai'")
@@ -205,6 +205,8 @@ class DynamoChatAdapter(ChatsRepositoryPort):
                     "created_at": created_at
                 }
             )
+
+            return message_id
 
         except ClientError as e:
             raise RuntimeError(f"Error adding new chat message: {e.response['Error']['Message']}")

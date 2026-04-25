@@ -3,171 +3,145 @@ import boto3
 from moto import mock_aws
 from uuid import uuid4
 from datetime import datetime, timezone
-from unittest.mock import patch
 
 from src.chatbot.adapters.dynamo_chat_adapter import DynamoChatAdapter
+from src.chatbot.services.chatbot_crud_service import ChatbotCRUDService
+from src.chatbot.services.chatbot_llm_service import ChatbotLLMService
+from src.chatbot.commands.create_chat_cmd import CreateChatCmd
+from src.chatbot.commands.get_chat_cmd import GetChatCmd
+from src.chatbot.commands.get_chat_list_cmd import GetChatListCmd
+from src.chatbot.commands.delete_chat_cmd import DeleteChatCmd
+from src.chatbot.commands.update_chat_cmd import UpdateChatCmd
+from src.chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
 from src.chatbot.domain.chat import Chat
 from src.chatbot.domain.chat_message import Message
+from mock_llm import MockLLM
 
-# Costanti per i test
+
+# -------------------------
+# CONSTANTS
+# -------------------------
+
 CHATS_TABLE_NAME = "chats_mvp"
 MESSAGES_TABLE_NAME = "chats_messages_mvp"
-TEST_USER_ID = str(uuid4())
-TEST_CHAT_ID = str(uuid4())
 
+
+# -------------------------
+# AWS MOCK FIXTURE
+# -------------------------
 
 @pytest.fixture(scope="function")
-def mock_dynamodb():
-    """Fixture per creare le tabelle DynamoDB mockate"""
+def aws_mock():
     with mock_aws():
-        dynamodb = boto3.resource("dynamodb", region_name="eu-south-1")
-        
-        # Tabella chats
-        chats_table = dynamodb.create_table(
-            TableName=CHATS_TABLE_NAME,
-            KeySchema=[
-                {"AttributeName": "chat_id", "KeyType": "HASH"}
-            ],
-            AttributeDefinitions=[
-                {"AttributeName": "chat_id", "AttributeType": "S"},
-                {"AttributeName": "user_id", "AttributeType": "S"}
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    "IndexName": "user_index",
-                    "KeySchema": [
-                        {"AttributeName": "user_id", "KeyType": "HASH"}
-                    ],
-                    "Projection": {"ProjectionType": "ALL"}
-                }
-            ],
-            BillingMode="PAY_PER_REQUEST"
-        )
-        
-        # Tabella messages
-        messages_table = dynamodb.create_table(
-            TableName=MESSAGES_TABLE_NAME,
-            KeySchema=[
-                {"AttributeName": "chat_id", "KeyType": "HASH"},
-                {"AttributeName": "message_id", "KeyType": "RANGE"}
-            ],
-            AttributeDefinitions=[
-                {"AttributeName": "chat_id", "AttributeType": "S"},
-                {"AttributeName": "message_id", "AttributeType": "S"}
-            ],
-            BillingMode="PAY_PER_REQUEST"
-        )
-        
-        yield {
-            "chats": chats_table,
-            "messages": messages_table,
-            "dynamodb": dynamodb
-        }
+        yield
 
+
+# -------------------------
+# DYNAMODB FIXTURE
+# -------------------------
 
 @pytest.fixture(scope="function")
-def chat_adapter(mock_dynamodb):
-    """Fixture per il DynamoChatAdapter"""
-    return DynamoChatAdapter(dynamodb=mock_dynamodb["dynamodb"])
+def dynamodb(aws_mock):
+    return boto3.resource("dynamodb", region_name="eu-south-1")
 
 
-@pytest.fixture(scope="function")
-def test_user_id():
-    """Fixture per ID utente di test"""
-    return TEST_USER_ID
-
+# -------------------------
+# TABLES SETUP
+# -------------------------
 
 @pytest.fixture(scope="function")
-def test_chat_id():
-    """Fixture per ID chat di test"""
-    return TEST_CHAT_ID
-
-
-@pytest.fixture(scope="function")
-def sample_chat_data(mock_dynamodb, test_user_id, test_chat_id):
-    """Fixture per inserire dati di test nelle tabelle"""
-    chats_table = mock_dynamodb["chats"]
-    messages_table = mock_dynamodb["messages"]
-    
-    # Inserisci una chat di esempio
-    created_at = datetime.now(timezone.utc).isoformat()
-    chats_table.put_item(
-        Item={
-            "chat_id": test_chat_id,
-            "user_id": test_user_id,
-            "title": "Test Chat",
-            "created_at": created_at,
-            "updated_at": created_at
-        }
+def tables(dynamodb):
+    chats_table = dynamodb.create_table(
+        TableName=CHATS_TABLE_NAME,
+        KeySchema=[
+            {"AttributeName": "chat_id", "KeyType": "HASH"}
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "chat_id", "AttributeType": "S"},
+            {"AttributeName": "user_id", "AttributeType": "S"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "user_index",
+                "KeySchema": [
+                    {"AttributeName": "user_id", "KeyType": "HASH"}
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            }
+        ],
+        BillingMode="PAY_PER_REQUEST",
     )
-    
-    # Inserisci alcuni messaggi di esempio
-    message_id_1 = str(uuid4())
-    message_id_2 = str(uuid4())
-    
-    messages_table.put_item(
-        Item={
-            "chat_id": test_chat_id,
-            "message_id": message_id_1,
-            "text": "Hello, how are you?",
-            "sender": "user",
-            "created_at": created_at
-        }
+
+    messages_table = dynamodb.create_table(
+        TableName=MESSAGES_TABLE_NAME,
+        KeySchema=[
+            {"AttributeName": "chat_id", "KeyType": "HASH"},
+            {"AttributeName": "message_id", "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "chat_id", "AttributeType": "S"},
+            {"AttributeName": "message_id", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
     )
-    
-    messages_table.put_item(
-        Item={
-            "chat_id": test_chat_id,
-            "message_id": message_id_2,
-            "text": "I'm doing great, thanks!",
-            "sender": "ai",
-            "created_at": created_at
-        }
+
+    return chats_table, messages_table
+
+
+# -------------------------
+# REPOSITORY FIXTURE
+# -------------------------
+
+@pytest.fixture(scope="function")
+def chat_repository(dynamodb, tables):
+    """
+    Concrete implementation of ChatsRepositoryPort
+    """
+    return DynamoChatAdapter(dynamodb=dynamodb)
+
+
+# -------------------------
+# CRUD SERVICE FIXTURE
+# -------------------------
+
+@pytest.fixture(scope="function")
+def crud_service(chat_repository):
+    """
+    ChatbotCRUDService (command-based)
+    """
+    return ChatbotCRUDService(repo=chat_repository)
+
+
+# -------------------------
+# SAMPLE DATA FIXTURE
+# -------------------------
+
+@pytest.fixture(scope="function")
+def sample_chat(crud_service):
+    """
+    Creates a real chat using the command layer (NO mocking)
+    """
+    user_id = str(uuid4())
+
+    cmd = CreateChatCmd(
+        user_id=user_id,
+        title="Test Chat",
     )
-    
+
+    chat = crud_service.create_chat(cmd)
+
     return {
-        "chat_id": test_chat_id,
-        "user_id": test_user_id,
-        "message_ids": [message_id_1, message_id_2],
-        "created_at": created_at
+        "user_id": user_id,
+        "chat_id": chat.chat_id,
+        "chat": chat,
     }
 
 
-@pytest.fixture(scope="function")
-def sample_chat_object(sample_chat_data):
-    """Fixture che restituisce un oggetto Chat per i test"""
-    messages = [
-        Message(
-            chat_id=sample_chat_data["chat_id"],
-            message_id=msg_id,
-            sender="user" if i == 0 else "ai",
-            text=text,
-            created_at=datetime.now(timezone.utc)
-        )
-        for i, (msg_id, text) in enumerate(zip(
-            sample_chat_data["message_ids"],
-            ["Hello, how are you?", "I'm doing great, thanks!"]
-        ))
-    ]
-    
-    return Chat(
-        user_id=sample_chat_data["user_id"],
-        chat_id=sample_chat_data["chat_id"],
-        title="Test Chat",
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
-        messages=messages
-    )
+# -------------------------
+# LAMBDA EVENT BUILDER
+# -------------------------
 
-
-def make_event(
-    method="GET",
-    path="/chats",
-    body=None,
-    user_id=TEST_USER_ID,
-    stage="mvp"
-):
-    """Helper per creare eventi Lambda di test"""
+def make_event(method="GET", path="/chats", body=None, user_id=None, stage="mvp"):
     event = {
         "requestContext": {
             "http": {"method": method},
@@ -177,10 +151,63 @@ def make_event(
                 }
             }
         },
-        "rawPath": f"/{stage}{path}" if stage else path
+        "rawPath": f"/{stage}{path}",
     }
-    
-    if body:
-        event["body"] = __import__('json').dumps(body)
-    
+
+    if body is not None:
+        import json
+        event["body"] = json.dumps(body)
+
     return event
+
+# -------------------------
+# LLM SERVICE FIXTURE
+# -------------------------
+
+@pytest.fixture(scope="function")
+def llm_service():
+    model = MockLLM()
+
+    service = ChatbotLLMService(
+        model=model,
+        top_k=5
+    )
+
+    return service
+
+# -------------------------
+# LLM CHAT FIXTURE
+# -------------------------
+
+@pytest.fixture
+def sample_chat_llm():
+    return Chat(
+        chat_id=str(uuid4()),
+        user_id=str(uuid4()),
+        title="Test Chat",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+        messages=[
+            Message(
+                chat_id="1",
+                message_id="m1",
+                text="I like machine learning",
+                sender="user",
+                created_at=datetime.now(timezone.utc),
+            ),
+            Message(
+                chat_id="1",
+                message_id="m2",
+                text="machine learning is a subset of ML",
+                sender="ai",
+                created_at=datetime.now(timezone.utc),
+            ),
+            Message(
+                chat_id="1",
+                message_id="m3",
+                text="I like pizza",
+                sender="user",
+                created_at=datetime.now(timezone.utc),
+            ),
+        ],
+    )

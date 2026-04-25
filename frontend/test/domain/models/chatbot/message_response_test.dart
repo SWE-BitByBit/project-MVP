@@ -5,7 +5,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_respo
 
 void main() {
   group('MessageResponse - Entità di Dominio', () {
-
     // Prepariamo un messaggio standard da usare nei test
     final dummyAiMessage = ChatMessage(
       id: 'msg-ai-1',
@@ -14,26 +13,23 @@ void main() {
       timestamp: DateTime.now(),
     );
 
-    test('Deve restituire il messaggio e un titolo nullo se non viene fornito un nuovo titolo', () {
-      // Arrange: Creiamo la risposta solo con il parametro obbligatorio
-      final response = MessageResponse(response: dummyAiMessage);
+    test(
+      'Deve restituire il messaggio e un titolo nullo se non viene fornito un nuovo titolo',
+      () {
+        // Arrange: Creiamo la risposta solo con il parametro obbligatorio
+        final response = MessageResponse(response: dummyAiMessage);
 
-      // Assert: Il messaggio c'è, ma il titolo deve essere null
-      expect(response.getResponse(), equals(dummyAiMessage));
-      expect(response.getUpdatedTitle(), isNull);
-    });
+        // Assert: Il messaggio c'è, ma il titolo deve essere null
+        expect(response.getResponse(), equals(dummyAiMessage));
+      },
+    );
 
-    test('Deve restituire sia il messaggio che il titolo aggiornato se forniti entrambi', () {
+    test('Deve restituire sia il messaggio aggiornato', () {
       // Arrange: Creiamo la risposta passando anche il parametro opzionale
-      final response = MessageResponse(
-        response: dummyAiMessage,
-        updatedTitle: 'Nuova Indagine',
-      );
+      final response = MessageResponse(response: dummyAiMessage);
 
       // Assert
       expect(response.getResponse(), equals(dummyAiMessage));
-      expect(response.getUpdatedTitle(), 'Nuova Indagine');
     });
-
   });
 }

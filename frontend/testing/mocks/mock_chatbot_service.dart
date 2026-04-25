@@ -117,10 +117,7 @@ class MockChatbotService implements ChatbotService {
     String mode,
   ) async {
     if (shouldThrowError) throw Exception('Errore di rete durante l\'invio');
-    mockedMessageResponseJson = {
-      "response": "Questo è un mock di risposta generata dall'AI",
-      "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
-    };
+    mockedMessageResponseJson = {"response": "Questa è la mia risposta"};
     return mockedMessageResponseJson;
   }
 }

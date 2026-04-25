@@ -162,14 +162,15 @@ def handle_messages_post(user_id, chat_id, body):
         sender = "ai",
     )
 
-    get_crud_service().add_chat_message(user_msg_cmd)
-    get_crud_service().add_chat_message(ai_msg_cmd)
+    input_message_id = get_crud_service().add_chat_message(user_msg_cmd)
+    response_message_id = get_crud_service().add_chat_message(ai_msg_cmd)
 
     return response(
         200,
         {
             "response": llm_response,
-            "chat_id": chat_id,
+            "input_message_id":input_message_id,
+            "response_message_id":response_message_id,
         },
     )
 

@@ -5,6 +5,6 @@ requests
 coverage
 pytest-cov
 pysonar
-ulid
+python-ulid
 rank_bm25
 typing_extensions

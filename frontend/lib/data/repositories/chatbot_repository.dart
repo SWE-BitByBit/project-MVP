@@ -64,16 +64,10 @@ class ChatbotRepository {
     final ChatMessage responseMessage = ChatMessage(
       id: responseJson['id'] as String,
       content: responseJson['content'] as String,
-      type: responseJson['type'] == 'USER' ? MessageType.USER : MessageType.AI,
-      timestamp: DateTime.parse(responseJson['timestamp'] as String),
+      type: MessageType.USER,
+      timestamp: DateTime.now(),
     );
 
-    // Recupera l'eventuale titolo aggiornato dal JSON
-    final String? updatedTitle = responseJson['updatedTitle'] as String?;
-
-    return MessageResponse(
-      response: responseMessage,
-      updatedTitle: updatedTitle,
-    );
+    return MessageResponse(response: responseMessage);
   }
 }
