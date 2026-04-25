@@ -13,8 +13,9 @@ class ChatbotRepository implements CacheableRepository {
   final ChatbotService _chatbotService;
 
   final List<Chat> _cachedChats = [];
-
   List<Chat> get cachedChats => List.unmodifiable(_cachedChats);
+
+  String? lastViewedChatId;
 
   ChatbotRepository(this._chatbotService);
 
@@ -22,13 +23,20 @@ class ChatbotRepository implements CacheableRepository {
   @override
   void clearCache() {
     _cachedChats.clear();
+    lastViewedChatId = null;
+  }
+
+  void _sortCache() {
+    _cachedChats.sort((a, b) => b.updateDate.compareTo(a.updateDate));
   }
 
   /// Recupera le anteprime e le istanzia come [ProxyChat].
   /// Restituisce una lista di [Chat] polimorfa per la UI.
   Future<List<Chat>> getChatPreviews() async {
-    if (_cachedChats.isNotEmpty) return _cachedChats;
-
+    if (_cachedChats.isNotEmpty) {
+      _sortCache();
+      return _cachedChats;
+    }
     final List<Map<String, dynamic>> rawData = await _chatbotService.fetchChatPreviews();
 
     _cachedChats.clear();
@@ -48,8 +56,9 @@ class ChatbotRepository implements CacheableRepository {
 
       _cachedChats.add(proxy);
     }
-
+    _sortCache();
     return cachedChats;
+
   }
 
   /// Usato dalla [ProxyChat] per scaricare effettivamente i messaggi
@@ -106,6 +115,8 @@ class ChatbotRepository implements CacheableRepository {
     );
 
     final String? updatedTitle = responseJson['title']?.toString();
+
+    _sortCache();
 
     return MessageResponse(
       response: responseMessage,

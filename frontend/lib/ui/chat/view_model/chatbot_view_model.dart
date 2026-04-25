@@ -24,6 +24,8 @@ class ChatbotViewModel extends ChangeNotifier {
   ChatMode _mode = ChatMode.mirror;
   ChatMode get mode => _mode;
 
+  final ValueNotifier<String?> asyncError = ValueNotifier(null);
+
   // --- COMANDI REATTIVI ---
 
   late final Command<void, void> loadChatPreviews;
@@ -86,23 +88,51 @@ class ChatbotViewModel extends ChangeNotifier {
     // Se la lista è vuota (ma la chiamata è riuscita), creiamo la chat locale
     if (chats.isEmpty && _currentChat == null) {
       _startNewVirtualChat();
-    } else _currentChat ??= chats.first;
+    } final savedId = _repository.lastViewedChatId;
+
+    if (savedId != null && chats.any((c) => c.id == savedId)) {
+      _openChat(savedId);
+    } else {
+      _currentChat = chats.first;
+      _repository.lastViewedChatId = _currentChat?.id;
+    }
     notifyListeners();
   }
 
   Future<void> _createChat() async {
-    final newChat = await _repository.createChat();
-    _currentChat = newChat;
+    _startNewVirtualChat();
     notifyListeners();
   }
 
   Future<void> _deleteChat(String chatId) async {
-    await _repository.deleteChat(chatId);
+    // 1. Memorizziamo SE stiamo cancellando proprio la chat che stiamo guardando
+    final wasCurrentChat = _currentChat?.id == chatId;
 
-    if (_currentChat?.id == chatId) {
-      _currentChat = null;
+    // 2. FIRE AND FORGET: Diciamo al repo di cancellare.
+    // IMPORTANTE: Anche se è un Future, la prima riga nel repo fa "_cachedChats.removeAt()",
+    // quindi la rimozione dalla lista 'chats' avviene in modo ISTANTANEO e sincrono!
+    final deleteFuture = _repository.deleteChat(chatId);
+
+    // 3. ORA sistemiamo lo schermo. La lista 'chats' è già aggiornata
+    // e NON contiene più la chat che abbiamo appena "sparato".
+    if (wasCurrentChat) {
+      if (chats.isNotEmpty) {
+        _currentChat = chats.first; // C'è ancora qualcosa? Apriamo la prima disponibile.
+      } else {
+        _startNewVirtualChat(); // Era l'ultima? Creiamo subito la bozza vuota!
+      }
     }
+
+    // 4. Diciamo alla UI di ridisegnarsi con la nuova situazione
     notifyListeners();
+
+    // 5. Gestione errori in background (Il Rollback)
+    deleteFuture.catchError((e) {
+      asyncError.value = "Impossibile eliminare la chat.";
+      // Se fallisce, il repo ha già reinserito la chat vecchia nella sua lista.
+      // Chiamiamo notifyListeners per farla "riapparire" magicamente a schermo.
+      notifyListeners();
+    });
   }
 
   Future<void> _openChat(String chatId) async {
@@ -113,32 +143,51 @@ class ChatbotViewModel extends ChangeNotifier {
     }
 
     _currentChat = chat;
+    _repository.lastViewedChatId = chatId;
     notifyListeners();
   }
 
   Future<void> _sendMessage(({Chat chat, String content, ChatMode mode}) args) async {
+    Chat activeChat = args.chat;
+    String userContent = args.content.trim();
+
     final optimisticMsg = ChatMessage(
       id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
-      content: args.content.trim(),
+      content: userContent,
       type: MessageType.user,
       timestamp: DateTime.now(),
     );
-    args.chat.addMessage(optimisticMsg);
+    activeChat.addMessage(optimisticMsg);
     notifyListeners();
 
-    final response = await _repository.sendMessage(
-        args.chat,
-        args.content.trim(),
-        args.mode
-    );
+    try {
+      if (activeChat is LocalChat && activeChat.id.startsWith('virtual_')) {
+        final realChat = await _repository.createChat();
 
-    args.chat.addMessage(response.response);
+        realChat.addMessage(optimisticMsg);
 
-    if (response.updatedTitle != null) {
-      args.chat.title = response.updatedTitle!;
+        activeChat = realChat;
+        _currentChat = realChat;
+
+        await _repository.getChatPreviews();
+      }
+
+      final response = await _repository.sendMessage(
+          activeChat,
+          userContent,
+          args.mode
+      );
+
+      activeChat.addMessage(response.response);
+
+      if (response.updatedTitle != null) {
+        activeChat.title = response.updatedTitle!;
+      }
+
+      notifyListeners();
+    } catch (e) {
+      rethrow;
     }
-
-    notifyListeners();
   }
 
   void _startNewVirtualChat() {

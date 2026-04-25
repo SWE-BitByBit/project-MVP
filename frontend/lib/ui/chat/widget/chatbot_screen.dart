@@ -36,7 +36,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
   void initState() {
     super.initState();
 
-    // Ascoltiamo gli errori dei comandi per mostrare la SnackBar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<ChatbotViewModel>();
 
@@ -46,12 +45,68 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
         }
       });
 
-      vm.deleteChat.errors.addListener(() {
-        if (vm.deleteChat.errors.value != null) {
-          _showFloatingSnackBar("Impossibile eliminare la chat.");
+      vm.asyncError.addListener(() {
+        if (vm.asyncError.value != null) {
+          _showFloatingSnackBar(vm.asyncError.value!);
+
+          vm.asyncError.value = null;
         }
       });
     });
+  }
+  /// Helper per mostrare il popup informativo sulle modalità
+  void _showModeInfoDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.info_outline, color: colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text('Modalità Chatbot'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome_motion, size: 18, color: colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Text('Mirror', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.primary)),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 4.0, bottom: 16.0),
+                child: Text('Risponde in modo diretto e conciso, agendo come uno specchio per le tue richieste senza fare domande aggiuntive.'),
+              ),
+              Row(
+                children: [
+                  Icon(Icons.psychology, size: 18, color: colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Text('Detective', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.primary)),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: Text('Analizza a fondo il contesto, fa domande di chiarimento e cerca di risolvere problemi complessi esplorando ogni dettaglio.'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Ho capito'),
+            ),
+          ],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        );
+      },
+    );
   }
 
   /// Helper per creare una SnackBar che non copra la barra dei messaggi
@@ -81,11 +136,17 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        // 1. APP BAR: Navigazione generale
         appBar: AppBar(
-          leading: const BackButton(), // Forza la freccia indietro
+          leading: const BackButton(),
           title: const Text('Assistente AI'),
           centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              tooltip: 'Info Modalità',
+              onPressed: () => _showModeInfoDialog(context),
+            ),
+          ],
         ),
         drawer: const ChatHistoryWidget(),
         body: SafeArea(

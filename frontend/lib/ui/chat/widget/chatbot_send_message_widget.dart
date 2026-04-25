@@ -82,8 +82,7 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
                       enabled: hasActiveChat,
                       maxLines: 5,
                       minLines: 1,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(vm),
+                      textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
                         hintText: hasActiveChat
                             ? 'Scrivi un messaggio...'
