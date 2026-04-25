@@ -1,30 +1,28 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../network/api_client.dart';
 
-/// Servizio responsabile del recupero dei materiali informativi tramite chiamata API.
+/// Servizio responsabile del recupero dei materiali informativi.
 ///
-/// Gestisce le richieste HTTP verso l'endpoint AWS Lambda configurato.
+/// Comunica con il backend tramite l'astrazione [ApiClient], delegando a quest'ultimo
+/// la gestione degli header, dell'autenticazione, della rete e del parsing JSON.
 class MaterialService {
-  final String _apiUrl =
-      'https://xm4wjxrmn1.execute-api.eu-south-1.amazonaws.com/mvp/materials';
+
+  static const String _basePath = '/materials';
+
+  final ApiClient _apiClient;
+
+  /// Costruttore con iniezione obbligatoria del client di rete.
+  MaterialService({required ApiClient apiClient}) : _apiClient = apiClient;
 
   /// Effettua una richiesta GET per recuperare la lista dei materiali.
   ///
-  /// Restituisce una lista di mappe JSON decodificate dal corpo della risposta.
-  /// Solleva un'eccezione in caso di errore di rete o risposta non valida dal server.
-  Future<List<Map<String, dynamic>>> fetchMaterials() async {
-    try {
-      final response = await http.get(Uri.parse(_apiUrl));
+  /// Restituisce i dati incapsulati in una mappa con chiave 'data' per
+  /// mantenere l'uniformità del Data Contract con gli altri moduli.
+  Future<Map<String, dynamic>> fetchMaterials() async {
+    final dynamic decodedBody = await _apiClient.get(_basePath);
 
-      if (response.statusCode == 200) {
-        final List<dynamic> decodedData = jsonDecode(response.body);
-
-        return decodedData.map((item) => item as Map<String, dynamic>).toList();
-      } else {
-        throw Exception('Errore del server: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Impossibile connettersi ad AWS: $e');
+    if (decodedBody is List) {
+      return {'data': decodedBody};
     }
+    return {'data': []};
   }
 }

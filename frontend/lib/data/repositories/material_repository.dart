@@ -1,35 +1,48 @@
+import 'dart:collection';
 import '../../domain/models/material/resource.dart';
 import '../services/material_service.dart';
 import '../dtos/resource_dto.dart';
+import 'cacheable_repository.dart';
 
 /// Repository responsabile della gestione dei materiali informativi.
 ///
-/// Agisce come singola fonte di verità per l'interfaccia utente. Preleva i dati
-/// grezzi tramite [_service], li converte in oggetti di dominio utilizzando
-/// [ResourceDTO] e li mantiene in una cache locale [_materials].
-class MaterialRepository {
-  /// Il servizio utilizzato per recuperare i dati dal backend.
+/// Implementa [CacheableRepository] e funge da Single Source of Truth (SSOT).
+class MaterialRepository implements CacheableRepository {
   final MaterialService _service;
 
-  /// Cache interna dei materiali già scaricati e tradotti.
-  List<Resource> _materials = [];
+  /// Cache privata: l'unica vera "fonte di verità" dei dati.
+  final List<Resource> _cachedResources = [];
 
-  /// Inizializza il repository associando il [MaterialService] necessario.
-  MaterialRepository(this._service);
+  MaterialRepository({required MaterialService service}) : _service = service;
 
-  /// Recupera la lista dei materiali informativi.
-  ///
-  /// Se la lista [_materials] non è vuota, restituisce immediatamente i dati in
-  /// memoria. Altrimenti, richiede i dati al servizio, li mappa e li salva.
-  Future<List<Resource>> getMaterials() async {
-    if (_materials.isNotEmpty) {
-      return _materials;
+
+  /// Espone la cache in sola lettura.
+  /// Impedisce a chiunque (es. il ViewModel) di fare .add() o .remove() accidentalmente.
+  List<Resource> get cachedResources => UnmodifiableListView(_cachedResources);
+
+  // --- METODI DI RETE ---
+
+  /// Recupera i materiali.
+  /// Se [forceRefresh] è true, ignora la cache e scarica dati freschi.
+  Future<List<Resource>> fetchMaterials({bool forceRefresh = false}) async {
+    if (_cachedResources.isEmpty || forceRefresh) {
+
+      final Map<String, dynamic> rawData = await _service.fetchMaterials();
+      final List<dynamic> rawList = rawData['data'] ?? [];
+
+      final fetchedResources = rawList
+          .map((json) => ResourceDTO.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      _cachedResources.clear();
+      _cachedResources.addAll(fetchedResources);
     }
+    return cachedResources;
+  }
 
-    final rawData = await _service.fetchMaterials();
 
-    _materials = rawData.map((json) => ResourceDTO.fromJson(json)).toList();
-
-    return _materials;
+  @override
+  void clearCache() {
+    _cachedResources.clear();
   }
 }

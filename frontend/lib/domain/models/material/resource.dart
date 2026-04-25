@@ -25,7 +25,7 @@ class Resource {
   ///
   /// I parametri [content] e [url] sono opzionali per consentire
   /// risorse puramente testuali o puramente basate su link.
-  Resource({
+  const Resource({
     required this.id,
     required this.title,
     this.content,

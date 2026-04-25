@@ -2,9 +2,8 @@ import '../../domain/models/trusted_contact.dart';
 
 /// Mapper responsabile della conversione dei dati tra il formato JSON del backend
 /// e l'oggetto di dominio [TrustedContact].
-class TrustedContactDTO {
+abstract class TrustedContactDTO {
   /// Costruttore privato per impedire l'istanziazione, essendo una classe di utility.
-  TrustedContactDTO._();
 
   /// Trasforma una mappa JSON [data] proveniente dall'API in un oggetto [TrustedContact].
   ///

@@ -1,6 +1,5 @@
-import 'dart:convert';
 import '../network/api_client.dart';
-import '../network/api_exception.dart';
+
 
 
 /// Servizio responsabile della comunicazione con il backend per i luoghi sicuri.

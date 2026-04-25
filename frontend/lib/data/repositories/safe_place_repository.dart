@@ -24,15 +24,16 @@ class SafePlaceRepository implements CacheableRepository {
 
   Future<List<SafePlace>> getPlaces({bool forceRefresh = false}) async {
     if (_cachedPlaces.isEmpty || forceRefresh) {
+
       final Map<String, dynamic> rawData = await _safePlaceService.fetchSafePlaces();
       final List<dynamic> rawList = rawData['data'] ?? [];
 
-      final newPlaces = rawList
+      final fetchedPlaces = rawList
           .map((json) => SafePlaceDTO.fromJson(json as Map<String, dynamic>))
           .toList();
 
       _cachedPlaces.clear();
-      _cachedPlaces.addAll(newPlaces);
+      _cachedPlaces.addAll(fetchedPlaces);
     }
 
     return cachedPlaces;

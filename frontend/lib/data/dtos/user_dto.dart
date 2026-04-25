@@ -5,7 +5,7 @@ import '../../domain/models/user.dart';
 ///
 /// Traduce i dati grezzi provenienti da AWS Cognito in oggetti [User] e viceversa,
 /// gestendo la decodifica dei token JWT.
-class UserDTO {
+abstract class UserDTO {
 
   /// Converte una [Map] di dati grezzi in un oggetto [User].
   static User fromJson(Map<String, dynamic> data) {

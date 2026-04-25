@@ -2,10 +2,50 @@
 enum ResourceType {
   /// Rappresenta un collegamento a gruppi o associazioni esterne utili.
   community,
-
   /// Rappresenta testi di legge, normative o decreti.
   law,
-
   /// Rappresenta mini guide, paragrafi informativi o articoli.
-  article,
+  article;
+
+  // --- GETTER PER LA UI ---
+
+  /// Utility per ottenere una stringa leggibile nella lingua dell'utente.
+  String get displayName {
+    switch (this) {
+      case ResourceType.community:
+        return 'Community e Associazioni';
+      case ResourceType.law:
+        return 'Normative';
+      case ResourceType.article:
+        return 'Articoli e Guide';
+    }
+  }
+
+  // --- LOGICA DI SERIALIZZAZIONE (Dal/Per il Backend) ---
+
+  /// Converte la stringa [value] proveniente dal DB nell'enumerativo corrispondente.
+  /// Gestisce in modo robusto diverse variazioni di stringhe.
+  static ResourceType fromString(String? value) {
+    final normalized = value?.toLowerCase().trim();
+    switch (normalized) {
+      case 'community':
+      case 'associazione':
+      case 'gruppo':
+        return ResourceType.community;
+      case 'law':
+      case 'legge':
+      case 'normativa':
+        return ResourceType.law;
+      case 'article':
+      case 'articolo':
+      case 'guida':
+        return ResourceType.article;
+      default:
+      // Se il backend manda qualcosa di sconosciuto, fallback sul tipo più generico
+        return ResourceType.article;
+    }
+  }
+
+  /// Restituisce la rappresentazione stringa dell'Enum per l'invio al server (se necessario).
+  String toJson() => name;
 }

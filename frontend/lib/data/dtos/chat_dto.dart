@@ -5,8 +5,7 @@ import '../../domain/models/chatbot/chat_enums.dart';
 
 /// Oggetto di trasferimento dati per la serializzazione delle Chat.
 /// Mappa in modo sicuro i dati JSON del backend verso il Dominio e viceversa.
-class ChatDTO {
-  ChatDTO._();
+abstract class ChatDTO {
 
   /// Converte un JSON in un oggetto di Dominio [LocalChat].
   static Chat fromJson(Map<String, dynamic> json) {
