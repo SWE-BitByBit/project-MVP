@@ -2,63 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-
-// Modifica questi import in base alla struttura reale del tuo progetto
+import '../utils/safe_place_category_ui.dart';
 import '../view_model/safe_place_view_model.dart';
 
-
-/// Widget che funge da wrapper per la mappa interattiva.
-///
-/// Si occupa di ascoltare lo stato del [SafePlaceViewModel] tramite un [Consumer]
-/// e di convertire le coordinate dei luoghi sicuri in [Marker] visivi sulla mappa.
 class SafePlaceMapWidget extends StatelessWidget {
-  /// Il controller per muovere la mappa dinamicamente
   final MapController mapController;
 
-  /// Modifichiamo il costruttore per richiedere il controller
   const SafePlaceMapWidget({super.key, required this.mapController});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Il Consumer ascolta la lista dei luoghi dal ViewModel.
+    // Nessun if/else per il caricamento, siamo certi che i dati ci siano!
     return Consumer<SafePlaceViewModel>(
       builder: (context, viewModel, child) {
 
-        if (viewModel.fetchSafePlacesCommand.running) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        // --- MARKER DEI LUOGHI SICURI ---
         final markers = viewModel.safePlaces.map((place) {
           return Marker(
             point: LatLng(place.latitude, place.longitude),
-            width: 40.0,
-            height: 40.0,
-            rotate:true,
+            width: 45.0,
+            height: 45.0,
+            rotate: true, // <-- IMPORTANTE: Mantiene il pin sempre dritto!
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => viewModel.selectPlace(place),
-              child: const Icon(Icons.location_on, color: Colors.redAccent, size: 40.0),
+              child: Icon(
+                place.category.icon, // Usa l'icona specifica!
+                color: place.category.getColor(theme.colorScheme), // Usa il colore del tema!
+                size: 40.0,
+              ),
             ),
           );
         }).toList();
 
-        // --- MARKER DELL'UTENTE (PALLINO BLU) ---
-        if (viewModel.currentPosition != null) {
+        if (viewModel.userPosition != null) {
           markers.add(
             Marker(
-              point: LatLng(
-                  viewModel.currentPosition!.latitude,
-                  viewModel.currentPosition!.longitude
-              ),
+              point: LatLng(viewModel.userPosition!.latitude, viewModel.userPosition!.longitude),
               width: 20.0,
               height: 20.0,
-              rotate:true,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3.0),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 4, spreadRadius: 1)
+                  border: Border.all(color: theme.colorScheme.onPrimary, width: 3.0),
+                  boxShadow: [
+                    BoxShadow(color: theme.colorScheme.shadow.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1)
                   ],
                 ),
               ),
@@ -66,25 +57,39 @@ class SafePlaceMapWidget extends StatelessWidget {
           );
         }
 
-        // Il centro iniziale: prima priorità la posizione utente,
-        // seconda priorità il primo luogo sicuro, fallback su Padova.
-        final LatLng initialCenter;
-        if (viewModel.currentPosition != null) {
-          initialCenter = LatLng(
-            viewModel.currentPosition!.latitude,
-            viewModel.currentPosition!.longitude,
-          );
+        final mapState = viewModel.cachedMapState;
+        late final LatLng initialCenter;
+        late final double initialZoom;
+
+        if (mapState != null) {
+          initialCenter = LatLng(mapState.latitude, mapState.longitude);
+          initialZoom = mapState.zoom;
+        } else if (viewModel.userPosition != null) {
+          initialCenter = LatLng(viewModel.userPosition!.latitude, viewModel.userPosition!.longitude);
+          initialZoom = 14.0;
         } else if (markers.isNotEmpty) {
           initialCenter = markers.first.point;
+          initialZoom = 12.0;
         } else {
           initialCenter = const LatLng(45.4064, 11.8768);
+          initialZoom = 10.0;
         }
 
         return FlutterMap(
-          mapController: mapController, // <--- AGGIUNGIAMO IL CONTROLLER QUI
+          mapController: mapController,
           options: MapOptions(
             initialCenter: initialCenter,
-            initialZoom: 14.0,
+            initialZoom: initialZoom,
+            onPositionChanged: (MapPosition position, bool hasGesture) {
+              // Aggiungiamo il controllo "position.zoom != null"
+              if (hasGesture && position.center != null && position.zoom != null) {
+                viewModel.saveMapSessionState(
+                  position.center!.latitude,
+                  position.center!.longitude,
+                  position.zoom!,
+                );
+              }
+            },
           ),
           children: [
             TileLayer(
