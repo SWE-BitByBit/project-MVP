@@ -48,7 +48,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         controller = SafePlacesController(service)
 
         return controller.marker_get(event)
-    except Exception as e:
+    except Exception:
         import traceback
         return {
             "statusCode": 500,
