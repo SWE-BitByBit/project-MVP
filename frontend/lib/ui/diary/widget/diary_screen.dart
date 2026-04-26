@@ -117,11 +117,11 @@ class DiaryScreenView extends StatelessWidget {
                         ),
                         context: context,
                         builder: (context) {
-                          return DiaryPasswordSetting();
+                          return const DiaryPasswordSetting();
                         },
                       );
                     },
-                    child: Text("Impostazione password diario fittizio"),
+                    child: const Text("Impostazione password diario fittizio"),
                   ),
                 const Expanded(child: NoteListWidget()),
               ],
