@@ -9,15 +9,18 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_eleme
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 
+import '../../../../testing/mocks/mock_diary_account_repository.dart';
 import '../../../../testing/mocks/mock_note_repository.dart';
 
 void main() {
   group("DiaryViewmodel", () {
     late DiaryViewmodel viewmodel;
-    late MockNoteRepository repo;
+    late MockNoteRepository noteRepo;
+    late MockDiaryAccountRepository accRepo;
     setUp(() {
-      repo = MockNoteRepository();
-      viewmodel = DiaryViewmodel(repo);
+      noteRepo = MockNoteRepository();
+      accRepo = MockDiaryAccountRepository();
+      viewmodel = DiaryViewmodel(noteRepo, accRepo);
     });
     group("DiaryViewmodel - Stato iniziale viewmodel", () {
       test("Stato iniziale del viewmodel deve essere pulito", () {
@@ -25,6 +28,9 @@ void main() {
         expect(viewmodel.getNoteListSize(), 0);
         expect(viewmodel.isLoading(), false);
         expect(viewmodel.error, isNull);
+        expect(viewmodel.fakePwdSet, false);
+        expect(viewmodel.passwordError, '');
+        expect(viewmodel.passwordMatch, isNull);
       });
     });
 
@@ -58,7 +64,7 @@ void main() {
             DateTime.parse("2026-03-04 22:10:30"),
             DateTime.parse("2026-04-14 10:00:30"),
           );
-          repo.mockedPreviewsToReturn = [note1, note2, note3];
+          noteRepo.mockedPreviewsToReturn = [note1, note2, note3];
           await viewmodel.loadPreviews(DiaryType.realDiary);
           viewmodel.sortNotes();
 
@@ -92,7 +98,7 @@ void main() {
             DateTime.parse("2026-03-04 22:10:30"),
             DateTime.parse("2026-04-14 10:00:30"),
           );
-          repo.mockedPreviewsToReturn = [note1, note2, note3];
+          noteRepo.mockedPreviewsToReturn = [note1, note2, note3];
           await viewmodel.loadPreviews(DiaryType.realDiary);
           viewmodel.sortNotes();
           expect(viewmodel.getSavedNotes().first.getTitle(), "third");
@@ -168,6 +174,111 @@ void main() {
         viewmodel.removeNoteElement(sampleNote, sampleTextElement);
         expect(sampleNote.getElementCount(), 0);
       });
+    });
+    group("DiaryViewmodel - Gestione password", () {
+      test(
+        "resetFakePasswordState riporta correttamente allo stato iniziale le variabili pertinenti alla gestione password",
+        () {
+          viewmodel.resetFakePasswordState();
+          expect(viewmodel.fakePwdSet, false);
+          expect(viewmodel.passwordError, '');
+          expect(viewmodel.passwordMatch, isNull);
+        },
+      );
+
+      test(
+        "validateDiaryPassword imposta correttamente un errore in _passwordError se la password passata non è valida",
+        () {
+          /// Password valida
+          viewmodel.validateDiaryPassword("!S4mPLpwD!");
+          expect(viewmodel.passwordError, "");
+          viewmodel.resetFakePasswordState();
+
+          /// Password corta
+          viewmodel.validateDiaryPassword("!S4mPLpwD");
+          expect(
+            viewmodel.passwordError,
+            "La password deve essere lunga almeno 10 caratteri.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Password senza maiuscole
+          viewmodel.validateDiaryPassword("!s4mplpwd!");
+          expect(
+            viewmodel.passwordError,
+            "La password deve contenere lettere maiuscole e minuscole.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Password senza minuscole
+          viewmodel.validateDiaryPassword("!S4MPLPWD!");
+          expect(
+            viewmodel.passwordError,
+            "La password deve contenere lettere maiuscole e minuscole.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Password senza numeri
+          viewmodel.validateDiaryPassword("!SamPLpwD!");
+          expect(
+            viewmodel.passwordError,
+            "La password deve contenere almeno un numero.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Password senza simboli
+          viewmodel.validateDiaryPassword("aS4mPLpwDa");
+          expect(
+            viewmodel.passwordError,
+            "La password deve contenere almeno un carattere speciale.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Password con spazi
+          viewmodel.validateDiaryPassword("!S4mP LpwD!");
+          expect(
+            viewmodel.passwordError,
+            "La password non può contenere spazi.\n",
+          );
+          viewmodel.resetFakePasswordState();
+
+          /// Più errori
+          viewmodel.validateDiaryPassword("aS4mP LpwDa");
+          expect(
+            viewmodel.passwordError,
+            "La password deve contenere almeno un carattere speciale.\nLa password non può contenere spazi.\n",
+          );
+          viewmodel.resetFakePasswordState();
+        },
+      );
+
+      test("checkPwdMatch confronta correttamente due password", () {
+        viewmodel.checkPwdMatch("pass1", "pass1");
+        expect(viewmodel.passwordMatch!, true);
+
+        viewmodel.checkPwdMatch("pass1", "pass2");
+        expect(viewmodel.passwordMatch!, false);
+      });
+
+      test(
+        "submitDiaryPassword invia la password al DiaryAccountRepository e imposta correttamente _passwordError se il metodo del repository ritorna un errore, altrimenti imposta _fakePwdSet su true",
+        () async {
+          /// Nessun errore
+
+          await viewmodel.submitDiaryPassword("real", "!S4mPLpwD!");
+          expect(viewmodel.passwordError, '');
+          expect(viewmodel.error, isNull);
+          expect(viewmodel.fakePwdSet, true);
+          viewmodel.resetFakePasswordState();
+
+          /// Errore nel repository
+          accRepo.shouldThrowError = true;
+          await viewmodel.submitDiaryPassword("real", "!S4mPLpwD!");
+          expect(viewmodel.error, isNotEmpty);
+          expect(viewmodel.fakePwdSet, false);
+          viewmodel.resetFakePasswordState();
+        },
+      );
     });
   });
 }

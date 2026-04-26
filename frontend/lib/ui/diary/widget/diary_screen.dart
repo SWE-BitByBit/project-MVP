@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_password_setting_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +38,9 @@ class DiaryScreen extends StatelessWidget {
       create: (_) {
         final service = NoteService();
         final repository = NoteRepository(service);
-        final viewmodel = DiaryViewmodel(repository);
+        final accService = DiaryAccountService();
+        final accRepository = DiaryAccountRepository(accService);
+        final viewmodel = DiaryViewmodel(repository, accRepository);
         final diarySession = DiarySession.session;
 
         if (diarySession.isDiaryAuth != null) {
@@ -56,6 +62,7 @@ class DiaryScreenView extends StatelessWidget {
   const DiaryScreenView({super.key});
   @override
   Widget build(BuildContext context) {
+    final session = DiarySession.session;
     return PopScope(
       ///Logout dal diario quando si esce dalla schermata.
       onPopInvokedWithResult: (didPop, result) {
@@ -95,6 +102,26 @@ class DiaryScreenView extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                if (session.loggedDiary == DiaryType.realDiary)
+                  ElevatedButton(
+                    onPressed: () {
+                      viewModel.resetFakePasswordState();
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
+                        ),
+                        context: context,
+                        builder: (context) {
+                          return DiaryPasswordSetting();
+                        },
+                      );
+                    },
+                    child: Text("Impostazione password diario fittizio"),
                   ),
                 const Expanded(child: NoteListWidget()),
               ],

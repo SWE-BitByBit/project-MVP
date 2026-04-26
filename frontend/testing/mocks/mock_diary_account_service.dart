@@ -6,4 +6,14 @@ class MockDiaryAccountService implements DiaryAccountService {
   Future<int> validateDiaryPassword(String pwd) async {
     return returnValue;
   }
+
+  String duplicatePw = "";
+  @override
+  Future<int> registerFakeDiaryPassword(String pwd) async {
+    if (pwd == duplicatePw) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
 }

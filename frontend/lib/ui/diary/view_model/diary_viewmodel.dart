@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/diary_access_result.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
@@ -16,6 +18,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart
 /// cambiamenti di stato.
 class DiaryViewmodel with ChangeNotifier {
   final NoteRepository _noteRepo;
+  final DiaryAccountRepository _accRepo;
 
   ///Stato UI
   Note? _currentNote;
@@ -23,13 +26,27 @@ class DiaryViewmodel with ChangeNotifier {
   bool _loading = false;
   String? _error;
 
+  /// Stato impostazione password diario fittizio
+  String _passwordError = "";
+  bool _fakePwdSet = false;
+  bool? _passwordMatch;
+
   ///Crea istanza di [DiaryViewmodel] con il [NoteRepository] specificato
-  DiaryViewmodel(this._noteRepo);
+  DiaryViewmodel(this._noteRepo, this._accRepo);
 
   ///Getters
 
   /// Ritorna l'ultimo errore, altrimenti ritorna null |
   String? get error => _error;
+
+  /// Ritorna stringa errore password
+  String get passwordError => _passwordError;
+
+  /// Ritorna se la password del diario fittizio è stata impostata con successo
+  bool get fakePwdSet => _fakePwdSet;
+
+  /// Ritorna se le password fornite combaciano
+  bool? get passwordMatch => _passwordMatch;
 
   //Ritorna la lista di note presenti nel diario |
   List<Note> getSavedNotes() {
@@ -238,6 +255,75 @@ class DiaryViewmodel with ChangeNotifier {
   void unloadNote() {
     if (_currentNote != null) {
       _currentNote = null;
+    }
+  }
+
+  /// Impostazione password diario fittizio
+
+  /// Metodo che resetta lo stato quando viene aperto il widget per l'impostazione password diario
+  void resetFakePasswordState() {
+    _passwordError = '';
+    _fakePwdSet = false;
+    _passwordMatch = null;
+    notifyListeners();
+  }
+
+  /// Metodo validazione password mentre viene scritta - errori vengono inseriti in _passwordError
+  void validateDiaryPassword(String pwd) {
+    /// Clear errore precedente
+    _passwordError = '';
+
+    if (pwd.length < 10) {
+      _passwordError += "La password deve essere lunga almeno 10 caratteri.\n";
+    }
+
+    if (!pwd.contains(RegExp(r"[A-Z]")) || !pwd.contains(RegExp(r"[a-z]"))) {
+      _passwordError +=
+          "La password deve contenere lettere maiuscole e minuscole.\n";
+    }
+    if (!pwd.contains(RegExp(r"[0-9]"))) {
+      _passwordError += "La password deve contenere almeno un numero.\n";
+    }
+    if (!pwd.contains(RegExp(r'[!@#%^&*(),.?":{}|<>]'))) {
+      _passwordError +=
+          "La password deve contenere almeno un carattere speciale.\n";
+    }
+
+    if (pwd.contains(RegExp(r"[\s]"))) {
+      _passwordError += "La password non può contenere spazi.\n";
+    }
+
+    notifyListeners();
+  }
+
+  /// Verifica se le password combaciano
+  void checkPwdMatch(String pwd1, String pwd2) {
+    _passwordMatch = (pwd1 == pwd2);
+    notifyListeners();
+  }
+
+  /// Metodo per l'invio della nuova password
+  Future<void> submitDiaryPassword(String realPwd, String pwd) async {
+    try {
+      if (realPwd.isEmpty) {
+        _passwordError += "Inserire password del diario reale.\n";
+      } else {
+        DiaryAccessResult res = await _accRepo.clarifyAccessResult(realPwd);
+        if (res != DiaryAccessResult.realDiary) {
+          _passwordError += "Password diario reale inserita errata.\n";
+        } else {
+          _passwordError += await _accRepo.registerFakeDiaryPassword(pwd);
+
+          if (_passwordError.isEmpty) {
+            _fakePwdSet = true;
+          }
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      _error = "Errore nell'invio della password: $e";
+      notifyListeners();
     }
   }
 }

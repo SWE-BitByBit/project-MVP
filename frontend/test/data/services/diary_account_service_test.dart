@@ -20,5 +20,18 @@ void main() {
         expect(res3, 0);
       },
     );
+
+    test(
+      "registerFakeDiaryPassword verifica correttamente che la password inserita sia diversa dalle password attualmente in uso per entrambi i diari",
+      () async {
+        final res1 = await service.registerFakeDiaryPassword("testpassword");
+        final res2 = await service.registerFakeDiaryPassword("fakepassword");
+        final res3 = await service.registerFakeDiaryPassword("tasddsaddsad");
+
+        expect(res1, 1);
+        expect(res2, 2);
+        expect(res3, 0);
+      },
+    );
   });
 }

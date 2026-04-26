@@ -24,4 +24,15 @@ class MockDiaryAccountRepository implements DiaryAccountRepository {
         return DiaryAccessResult.error;
     }
   }
+
+  @override
+  Future<String> registerFakeDiaryPassword(String pwd) async {
+    if (simulatedDelay > Duration.zero) await Future.delayed(simulatedDelay);
+    if (shouldThrowError) {
+      throw Exception(
+        'Errore di rete simulato durante registerFakeDiaryPassword',
+      );
+    }
+    return "";
+  }
 }

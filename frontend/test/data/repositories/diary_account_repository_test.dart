@@ -30,5 +30,22 @@ void main() {
         expect(res3, DiaryAccessResult.tooManyAttempts);
       },
     );
+
+    test(
+      "registerFakeDiaryPassword ritorna una stringa di errore se la password passata non rispetta i parametri oppure è identica ad una password esistente",
+      () async {
+        /// Password valida
+        final s0 = await repository.registerFakeDiaryPassword("!S4mPL3pwd!");
+        expect(s0, "");
+        final s1 = await repository.registerFakeDiaryPassword("S4mPL3pwdaaa");
+        expect(s1, "Inserire una password valida");
+        mockService.duplicatePw = "!S4mPL3pwd!";
+        final s2 = await repository.registerFakeDiaryPassword("!S4mPL3pwd!");
+        expect(
+          s2,
+          "La password del diario fittizio non può essere identica alla password del diario reale",
+        );
+      },
+    );
   });
 }

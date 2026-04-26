@@ -15,16 +15,19 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_w
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../testing/mocks/mock_diary_account_repository.dart';
 import '../../../../testing/mocks/mock_note_repository.dart';
 
 void main() {
   group("NoteEditorWidget Widget Test", () {
     late MockNoteRepository mockRepo;
+    late MockDiaryAccountRepository mockAccRepo;
     late DiaryViewmodel viewmodel;
 
     setUp(() {
       mockRepo = MockNoteRepository();
-      viewmodel = DiaryViewmodel(mockRepo);
+      mockAccRepo = MockDiaryAccountRepository();
+      viewmodel = DiaryViewmodel(mockRepo, mockAccRepo);
     });
 
     Future<void> pumpEditorWidget(
