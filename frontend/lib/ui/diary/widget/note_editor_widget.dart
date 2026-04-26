@@ -72,7 +72,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   child: TextField(
                     controller: noteTextController,
                     maxLines: null,
-                    decoration: InputDecoration(border: InputBorder.none),
+                    decoration: const InputDecoration(border: InputBorder.none),
                     onChanged: (value) => {
                       viewModel.updateNoteTextElement(
                         widget.selectedNote,
