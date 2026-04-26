@@ -12,18 +12,21 @@ Globals:
       LogFormat: JSON
 
 Resources:
-  HelloWorldFunction:
+  DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/hello_world/
+      CodeUri: src/diary/
       Handler: app.lambda_handler
-      Runtime: python3.12
-      FunctionName: hello-world
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-trusted-conta\
-        cts-poc"
-      Environment:
-        Variables:
-          TABLE_NAME: "trusted_contacts_poc"
+      FunctionName: lambda-diary-notes-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
+  
+  TrustedContactFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/trusted_contact/
+      Handler: app.lambda_handler
+      FunctionName: lambda-trusted-contact-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -45,21 +48,14 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-  GetMaterialsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: materials/lambda_handler.lambda_handler
-      FunctionName: fetch-materials-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
-
-Outputs:
-  HelloWorldFunction:
-    Description: Trusted Contacts Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
+Outputs:  
+  DiaryFunction:
+    Description: Trusted contacts lambda function ARN
+    Value: !GetAtt DiaryFunction.Arn
+  
+  TrustedContactFunction:
+    Description: Diary notes lambda function ARN
+    Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
     Description: DynamoDB Table Name
