@@ -109,6 +109,8 @@ void main() {
         await tester.pumpAndSettle();
         expect(sampleNote.getElementCount(), 1);
 
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
         await tester.tap(find.byIcon(Icons.delete_outline));
         await tester.pumpAndSettle();
         expect(find.text("sample text"), findsNothing);

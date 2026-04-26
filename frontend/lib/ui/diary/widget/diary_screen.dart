@@ -103,7 +103,8 @@ class DiaryScreenView extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (session.loggedDiary == DiaryType.realDiary)
+                if (session.loggedDiary == DiaryType.realDiary) ...[
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       viewModel.resetFakePasswordState();
@@ -123,6 +124,7 @@ class DiaryScreenView extends StatelessWidget {
                     },
                     child: const Text("Impostazione password diario fittizio"),
                   ),
+                ],
                 const Expanded(child: NoteListWidget()),
               ],
             );
