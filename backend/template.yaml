@@ -1,7 +1,8 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  This is the template for the deploy of the lambda used for app: "L'app che protegge e trasforma"
+  This is the template for the deploy of the lambda used for app: "L'app che
+  protegge e trasforma"
 
 Globals:
   Function:
@@ -36,7 +37,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
-          KeyType: HASH 
+          KeyType: HASH
         - AttributeName: contact_id
           KeyType: RANGE
       AttributeDefinitions:

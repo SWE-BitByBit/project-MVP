@@ -4,9 +4,9 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_typ
 
 void main() {
   group('ResourceDTO Unit Test', () {
-    test('fromJson deve mappare correttamente tutti i campi', () {
+    test('fromJson deve mappare correttamente tutti i campi con resource_id', () {
       final json = {
-        'id': 'res-123',
+        'resource_id': 'res-123',
         'title': 'Test Title',
         'content': 'Test Content',
         'url': 'https://test.com',
@@ -22,9 +22,9 @@ void main() {
       expect(resource.type, ResourceType.law);
     });
 
-    test('fromJson deve gestire i campi mancanti con valori di default', () {
+    test('fromJson deve gestire i campi nulli con valori di default', () {
       final json = {
-        'id': null,
+        'resource_id': null,
         'title': null,
         'type': null
       };
@@ -38,7 +38,7 @@ void main() {
 
     test('fromJson deve fare il fallback a article se il tipo è sconosciuto', () {
       final json = {
-        'id': '1',
+        'resource_id': '1',
         'title': 'T',
         'type': 'unknown_type'
       };
@@ -48,9 +48,9 @@ void main() {
       expect(resource.type, ResourceType.article);
     });
 
-    test('toJson deve produrre una mappa corretta', () {
+    test('toJson deve produrre una mappa con chiave id interna', () {
       final json = {
-        'id': '1',
+        'resource_id': '1',
         'title': 'T',
         'content': 'C',
         'url': 'U',
@@ -63,6 +63,62 @@ void main() {
       expect(resultJson['id'], '1');
       expect(resultJson['title'], 'T');
       expect(resultJson['type'], 'community');
+    });
+
+    test('fromJson deve riconoscere il tipo LAW in maiuscolo (formato Lambda)', () {
+      final json = {
+        'resource_id': 'legge-1',
+        'title': 'Codice Rosso',
+        'content': 'Testo della legge',
+        'url': null,
+        'type': 'LAW'
+      };
+
+      final resource = ResourceDTO.fromJson(json);
+
+      expect(resource.id, 'legge-1');
+      expect(resource.type, ResourceType.law);
+      expect(resource.url, isNull);
+    });
+
+    test('fromJson deve riconoscere il tipo COMMUNITY in maiuscolo (formato Lambda)', () {
+      final json = {
+        'resource_id': 'comm-1',
+        'title': 'Comunità',
+        'content': null,
+        'url': 'https://community.example.com',
+        'type': 'COMMUNITY'
+      };
+
+      final resource = ResourceDTO.fromJson(json);
+
+      expect(resource.type, ResourceType.community);
+      expect(resource.content, isNull);
+    });
+
+    test('fromJson deve riconoscere il tipo ARTICLE in maiuscolo (formato Lambda)', () {
+      final json = {
+        'resource_id': 'art-1',
+        'title': 'Articolo',
+        'content': 'Testo',
+        'url': null,
+        'type': 'ARTICLE'
+      };
+
+      final resource = ResourceDTO.fromJson(json);
+
+      expect(resource.type, ResourceType.article);
+    });
+
+    test('fromJson deve restituire id vuoto se resource_id è assente dalla mappa', () {
+      final json = <String, dynamic>{
+        'title': 'Senza ID',
+        'type': 'LAW'
+      };
+
+      final resource = ResourceDTO.fromJson(json);
+
+      expect(resource.id, '');
     });
   });
 }
