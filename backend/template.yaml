@@ -11,31 +11,21 @@ Globals:
       LogFormat: JSON
 
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/hello_world/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      FunctionName: hello-world
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-trusted-contacts-poc"
-      Environment:
-        Variables:
-          TABLE_NAME: "trusted_contacts_poc"
-
   DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/diary/
       Handler: app.lambda_handler
-      FunctionName: diary-notes-microservice-mvp
+      FunctionName: lambda-diary-notes-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
   
   TrustedContactFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/trusted_contact/
       Handler: app.lambda_handler
-      FunctionName: trusted-contact-microservice-mvp
+      FunctionName: lambda-trusted-contact-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -57,10 +47,14 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-Outputs:
-  HelloWorldFunction:
-    Description: Trusted Contacts Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
+Outputs:  
+  DiaryFunction:
+    Description: Trusted contacts lambda function ARN
+    Value: !GetAtt DiaryFunction.Arn
+  
+  TrustedContactFunction:
+    Description: Diary notes lambda function ARN
+    Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
     Description: DynamoDB Table Name
