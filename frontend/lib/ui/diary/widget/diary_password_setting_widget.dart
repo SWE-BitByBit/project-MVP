@@ -35,8 +35,8 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
     final TextEditingController realPassword = TextEditingController();
     final TextEditingController fakePassword1 = TextEditingController();
     final TextEditingController fakePassword2 = TextEditingController();
-    BorderSide field1Border = BorderSide(color: Colors.black87);
-    BorderSide field2Border = BorderSide(color: Colors.black87);
+    BorderSide field1Border = const BorderSide(color: Colors.black87);
+    BorderSide field2Border = const BorderSide(color: Colors.black87);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,18 +48,15 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
       body: Center(
         child: Consumer<DiaryViewmodel>(
           builder: (context, viewModel, child) {
-            if (viewModel.passwordMatch != null) {
-              if (viewModel.passwordMatch == false) {
-                field2Border = BorderSide(color: Colors.red, width: 1.5);
-              } else {
-                field2Border = BorderSide(color: Colors.green, width: 1.5);
-              }
+            if (viewModel.passwordMatch != null &&
+                viewModel.passwordMatch == false) {
+              field2Border = const BorderSide(color: Colors.red, width: 1.5);
             }
             if (viewModel.passwordError.isNotEmpty) {
-              field1Border = BorderSide(color: Colors.red, width: 1.5);
-            } else {
+              field1Border = const BorderSide(color: Colors.red, width: 1.5);
+            } /*else {
               field1Border = BorderSide(color: Colors.black87);
-            }
+            }*/
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -73,12 +70,12 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
                           Expanded(
                             child: Text(
                               "Password impostata con successo.\n",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Color.fromARGB(255, 5, 116, 14),
                               ),
                             ),
@@ -87,7 +84,6 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
                       ),
                     ),
                   Expanded(
-                    ///!!!!
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -101,7 +97,7 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         TextFormField(
                           obscureText: true,
                           controller: fakePassword1,
@@ -116,7 +112,7 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
                             viewModel.checkPwdMatch(value, fakePassword2.text);
                           },
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         TextFormField(
                           obscureText: true,
                           controller: fakePassword2,
@@ -133,46 +129,44 @@ class DiaryPasswordSettingWidget extends StatelessWidget {
                         ),
                         (viewModel.passwordMatch != null &&
                                 viewModel.passwordMatch == false)
-                            ? Text(
+                            ? const Text(
                                 "Le password non combaciano.\n",
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 14,
                                 ),
                               )
-                            : SizedBox(height: 20),
-                        SizedBox(height: 8),
+                            : const SizedBox(height: 20),
+                        const SizedBox(height: 8),
                         SizedBox(
                           width: double.infinity,
                           height: 49,
-                          child: (viewModel.isLoading())
-                              ? const Center(child: CircularProgressIndicator())
-                              : ElevatedButton(
-                                  onPressed: () {
-                                    viewModel.resetFakePasswordState();
-                                    viewModel.validateDiaryPassword(
-                                      fakePassword1.text,
-                                    );
-                                    viewModel.submitDiaryPassword(
-                                      realPassword.text,
-                                      fakePassword1.text,
-                                    );
-                                  },
-                                  child: Text(
-                                    "Imposta password",
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              viewModel.resetFakePasswordState();
+                              viewModel.validateDiaryPassword(
+                                fakePassword1.text,
+                              );
+                              viewModel.submitDiaryPassword(
+                                realPassword.text,
+                                fakePassword1.text,
+                              );
+                            },
+                            child: const Text(
+                              "Imposta password",
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ),
                         ),
                         (viewModel.passwordError.isNotEmpty)
                             ? Text(
                                 viewModel.passwordError,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.red,
                                   fontSize: 14,
                                 ),
                               )
-                            : SizedBox(height: 20),
+                            : const SizedBox(height: 20),
                       ],
                     ),
                   ),

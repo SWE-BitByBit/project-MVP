@@ -16,7 +16,7 @@ class DiaryAccountService {
   ///TODO: implementare logica registrazione password reale.
   ///Dovrebbe usare validateDiaryPassword per verificare che non sia uguale alla pwd del diario criptato o alla password esistente
   Future<int> registerFakeDiaryPassword(String pwd) async {
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 200));
     int check = await validateDiaryPassword(pwd);
     if (check == 0) {}
     return check;
