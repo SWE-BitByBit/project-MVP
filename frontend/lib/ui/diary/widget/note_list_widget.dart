@@ -142,6 +142,7 @@ class NoteListWidget extends StatelessWidget {
             ),
             isThreeLine: true,
             trailing: IconButton(
+              padding: const EdgeInsets.only(top: 24),
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () => _showDeleteConfirmation(
                 context,

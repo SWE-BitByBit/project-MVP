@@ -9,6 +9,7 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_w
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/options_menu_widget.dart';
 
 /// Widget che gestisce la modifica delle note
 ///
@@ -53,6 +54,28 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     });
   }
 
+  Widget _deleteCardOptionMenu(VoidCallback onDelete) {
+    return OptionsMenu<String>(
+      items: [
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            children: const [
+              Icon(Icons.delete_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Elimina', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        if (value == 'delete') {
+          onDelete();
+        }
+      },
+    );
+  }
+
   //Crea una [Card] rappresentante il [NoteElement] passato come parametro
   Card _createCard(NoteElement? element) {
     final viewModel = context.read<DiaryViewmodel>();
@@ -66,32 +89,39 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           _textControllers.add(noteTextController);
 
           card = Card(
-            child: Row(
+            child: Stack(
               children: [
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 40,
+                    top: 8,
+                    left: 8,
+                    bottom: 8,
+                  ),
                   child: TextField(
                     controller: noteTextController,
                     maxLines: null,
                     decoration: const InputDecoration(border: InputBorder.none),
-                    onChanged: (value) => {
+                    onChanged: (value) {
                       viewModel.updateNoteTextElement(
                         widget.selectedNote,
                         element,
                         value,
-                      ),
+                      );
+
                       setState(() {
                         _lastUpdated = widget.selectedNote.getUpdateDate();
-                      }),
+                      });
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
 
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: _deleteCardOptionMenu(() {
                     _removeNoteElement(element, card);
-                  },
+                  }),
                 ),
               ],
             ),
@@ -99,21 +129,27 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           return card;
         case "image":
           card = Card(
-            child: Row(
+            child: Stack(
               children: [
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 40,
+                    top: 8,
+                    left: 8,
+                    bottom: 8,
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
                     child: Image.file(File(element.getContent())),
                   ),
                 ),
-                const SizedBox(width: 16),
 
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: _deleteCardOptionMenu(() {
                     _removeNoteElement(element, card);
-                  },
+                  }),
                 ),
               ],
             ),
@@ -121,9 +157,15 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           return card;
         case "audio":
           card = Card(
-            child: Row(
+            child: Stack(
               children: [
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 40,
+                    top: 8,
+                    left: 8,
+                    bottom: 8,
+                  ),
                   child: NoteAudioPlayerWidget(
                     onDismiss: () {
                       dispose();
@@ -132,12 +174,12 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                 ),
 
-                /// Gestione audio delegata ad un widget separato
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: _deleteCardOptionMenu(() {
                     _removeNoteElement(element, card);
-                  },
+                  }),
                 ),
               ],
             ),
@@ -298,39 +340,39 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     } else {
       return PopScope(
         child: Scaffold(
+          backgroundColor: Colors.teal.shade50,
           body: Column(
             children: <Widget>[
               AppBar(backgroundColor: Colors.teal.shade200),
               Container(
-                padding: const EdgeInsetsGeometry.directional(start: 6, end: 6),
-                color: Colors.teal.shade50,
+                padding: const EdgeInsetsGeometry.directional(
+                  top: 24,
+                  start: 24,
+                  end: 24,
+                  bottom: 24,
+                ),
+                color: const Color.fromARGB(255, 201, 233, 232),
+
                 child: Column(
                   children: [
                     TextField(
                       controller: _titleController,
-                      maxLines: 1,
-                      maxLength: 24,
+                      maxLines: null,
+                      maxLength: 64,
                       decoration: const InputDecoration(
                         hintText: 'Titolo nota',
                         hintStyle: TextStyle(color: Colors.black45),
                         border: InputBorder.none,
+                        counterText: '',
                       ),
                       textAlign: TextAlign.left,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 24,
+                        fontSize: 28,
                       ),
                       onChanged: (value) => {_updateNoteTitle(value)},
                     ),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 20,
-                      child: Text(
-                        "Ultima modifica: ${DateFormat(dayFormat).format(_lastUpdated!)} alle ${DateFormat(timeFormat).format(_lastUpdated!)}",
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
+                    SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       height: 20,
@@ -339,38 +381,19 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                         textAlign: TextAlign.left,
                       ),
                     ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 20,
+                      child: Text(
+                        "Ultima modifica: ${DateFormat(dayFormat).format(_lastUpdated!)} alle ${DateFormat(timeFormat).format(_lastUpdated!)}",
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
               ),
-
-              Padding(
-                padding: const EdgeInsetsGeometry.directional(start: 4, end: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(height: 12),
-                    Ink(
-                      decoration: (ShapeDecoration(
-                        shape: const CircleBorder(),
-                        color: showDeleteButton
-                            ? Colors.red
-                            : const Color.fromARGB(0, 255, 255, 255),
-                      )),
-                      child: IconButton(
-                        onPressed: () {},
-
-                        /// Toggle per bottone eliminazione da implementare
-                        icon: const Icon(Icons.menu),
-                        color: showDeleteButton
-                            ? const Color.fromARGB(255, 22, 22, 22)
-                            : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
+              SizedBox(height: 8),
               Expanded(
                 child: Builder(
                   builder: (context) {
@@ -386,7 +409,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                         },
                       );
                     } else {
-                      return Center(
+                      return Transform.translate(
+                        offset: const Offset(0, -28),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -400,7 +424,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                               "Questa nota è vuota",
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.grey.shade600,
+                                color: const Color.fromARGB(255, 89, 95, 95),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -410,7 +434,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey.shade400,
+                                color: const Color.fromARGB(255, 135, 141, 141),
                               ),
                             ),
                           ],
