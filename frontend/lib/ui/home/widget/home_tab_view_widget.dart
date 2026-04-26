@@ -1,0 +1,62 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../utils/locator.dart';
+import '../view_model/home_view_model.dart';
+import 'home_dashboard_widget.dart';
+
+/// La schermata dedicata esclusivamente alla Tab "Home".
+/// Ha la sua AppBar indipendente per non intaccare le altre Tab.
+class HomeTabView extends StatelessWidget {
+  const HomeTabView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Inietto il ViewModel della Home SOLO per questa tab.
+    // Se l'utente è nella Chat, la memoria usata da HomeViewModel viene liberata/congelata.
+    return ChangeNotifierProvider(
+      create: (_) => getIt<HomeViewModel>(),
+      child: const _HomeTabViewBody(),
+    );
+  }
+}
+
+class _HomeTabViewBody extends StatelessWidget {
+  const _HomeTabViewBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Protegge e Trasforma'),
+        centerTitle: true,
+        backgroundColor: theme.primaryColorLight,
+
+        // Tasto Profilo / Login (Sinistra)
+        leading: IconButton(
+          icon: Icon(Icons.account_circle, size: 30, color: theme.colorScheme.primary),
+          onPressed: () => Navigator.pushNamed(context, '/login'),
+          tooltip: 'Profilo / Accesso',
+        ),
+
+        // Tasto Impostazioni (Destra)
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, size: 28, color: theme.colorScheme.primary),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            tooltip: 'Impostazioni',
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+
+      // Il corpo centrale (La griglia dei bottoni, i banner di allarme, ecc.)
+      body: const SafeArea(
+        bottom: false,
+        child: HomeDashboardWidget(),
+      ),
+    );
+  }
+}

@@ -24,7 +24,7 @@ class ChatbotModeToggleWidget extends StatelessWidget {
             const PopupMenuItem(value: ChatMode.detective, child: Text("Modalità Detective")),
           ],
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30.0),
             child: Row(
               children: [
                 Icon(isDetective ? Icons.psychology : Icons.auto_awesome_motion, size: 20),

@@ -84,6 +84,11 @@ class TrustedContactRepository implements CacheableRepository {
     }
   }
 
+  /// Attiva l'invio dell'SOS ai contatti fidati tramite il livello di rete.
+  Future<void> sendSosAlert() async {
+    await _trustedContactService.sendSosAlert();
+  }
+
   /// Svuota la cache locale (utile ad esempio durante il logout).
   @override
   void clearCache() {

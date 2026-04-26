@@ -1,29 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:command_it/command_it.dart';
 
-/// Gestisce lo stato della UI e la logica di presentazione per la schermata
-/// principale dell'applicazione. Utilizza il mixin [ChangeNotifier] per
-/// notificare i widget in ascolto ad ogni modifica dello stato.
-///
-/// La struttura è predisposta per future espansioni (es. dati profilo utente,
-/// conteggio notifiche, elementi dashboard personalizzati).
+import '../../../data/repositories/dead_man_repository.dart';
+import '../../../domain/models/core/dashboard_item.dart';
+
 class HomeViewModel extends ChangeNotifier {
-  // --- STATO DELLA UI ---
+  final DeadManRepository _deadManRepository;
 
-  String? _error;
+  late final Command<void, List<DashboardItem>> loadDashboard;
 
-  // --- GETTERS ---
+  HomeViewModel(this._deadManRepository) {
+    loadDashboard = Command.createAsyncNoParam<List<DashboardItem>>(
+      _loadDashboardItems,
+      initialValue: [],
+    );
+    loadDashboard.run();
+  }
 
-  /// Indica se è in corso un'operazione asincrona (predisposto per future espansioni).
-  bool get isLoading => false;
+  bool get isDeadManActive => _deadManRepository.currentSettings?.isActive ?? false;
 
-  /// Contiene il messaggio d'errore dell'ultima operazione fallita, altrimenti null.
-  String? get error => _error;
+  Future<List<DashboardItem>> _loadDashboardItems() async {
+    await Future.delayed(const Duration(milliseconds: 300));
 
-  // --- METODI ---
+    // Solo le 3 card richieste per la Home
+    return [
+      DashboardItem(
+        title: 'Contatti Fidati',
+        description: 'La tua rete di emergenza pronta ad aiutarti.',
+        icon: Icons.group,
+        backgroundColor: Colors.teal.shade50,
+        iconColor: Colors.teal.shade800,
+        routeName: '/contacts',
+      ),
+      DashboardItem(
+        title: 'Informazioni',
+        description: 'Risorse, guide e contatti nazionali per la tua sicurezza.',
+        icon: Icons.menu_book,
+        backgroundColor: Colors.orange.shade50,
+        iconColor: Colors.orange.shade800,
+        routeName: '/materials',
+      ),
+      DashboardItem(
+        title: 'Luoghi Sicuri',
+        description: 'Trova i centri di supporto e i luoghi sicuri più vicini a te.',
+        icon: Icons.map_outlined,
+        backgroundColor: Colors.green.shade50,
+        iconColor: Colors.green.shade800,
+        routeName: '/safeplace',
+      ),
+    ];
+  }
 
-  /// Azzera il messaggio di errore corrente e notifica i listener.
-  void clearError() {
-    _error = null;
-    notifyListeners();
+  @override
+  void dispose() {
+    loadDashboard.dispose();
+    super.dispose();
   }
 }

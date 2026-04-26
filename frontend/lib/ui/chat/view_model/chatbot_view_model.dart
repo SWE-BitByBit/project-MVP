@@ -82,6 +82,12 @@ class ChatbotViewModel extends ChangeNotifier {
   // --- IMPLEMENTAZIONE DEI COMANDI ---
 
   Future<void> _loadChatPreviews() async {
+    final user = _authRepository.getCurrentUser();
+
+    if (user == null) {
+      debugPrint("[*] Utente non loggato: salto la chiamata /chats");
+      return;
+    }
     // 1. Scarichiamo i dati
     await _repository.getChatPreviews();
 

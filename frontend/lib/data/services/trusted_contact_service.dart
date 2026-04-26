@@ -53,4 +53,8 @@ class TrustedContactService {
   Future<void> deleteContact(String contactId) async {
     await _apiClient.delete('$_basePath/$contactId');
   }
+
+  Future<void> sendSosAlert() async {
+    await _apiClient.post('$_basePath/sos/');
+  }
 }

@@ -29,12 +29,16 @@ import '../ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
 import '../ui/chat/view_model/chatbot_view_model.dart';
 import '../ui/material/view_model/material_view_model.dart';
 import '../ui/settings/view_model/dead_man_view_model.dart';
+import '../ui/sos/view_model/sos_view_model.dart';
+import '../ui/home/view_model/home_view_model.dart';
 
 final getIt = GetIt.instance;
 
 void setupLocator() {
   // 1. CORE / GLOBAL SERVICES
   _setupCore();
+
+  _setupHome();
 
   // 2. MODULO AUTHENTICATION
   _setupAuth();
@@ -81,6 +85,11 @@ void _setupCore() {
   ]));
 }
 
+void _setupHome() {
+  // Il HomeViewModel ha bisogno del DeadManRepository per sapere se
+  // mostrare il banner dell'allarme attivo!
+  getIt.registerFactory<HomeViewModel>(() => HomeViewModel(getIt<DeadManRepository>()));
+}
 /// Registra le dipendenze relative al modulo dell' autenticazione
 void _setupAuth() {
   getIt.registerLazySingleton<AuthService>(() => AuthService());
@@ -111,6 +120,10 @@ void _setupTrustedContact() {
     authRepository: getIt<AuthRepository>(),
   ),
   );
+  getIt.registerFactory<SosViewModel>(() => SosViewModel(
+    contactsRepository: getIt<TrustedContactRepository>(),
+    authRepository: getIt<AuthRepository>(),
+  ));
 }
 
 /// Registra le dipendenze relative al modulo del Chatbot

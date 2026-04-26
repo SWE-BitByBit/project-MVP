@@ -12,9 +12,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AuthViewModel>(
-      create: (_) => getIt<AuthViewModel>()..checkExistingSession(),
-      child: Consumer<AuthViewModel>(
+    return Consumer<AuthViewModel>(
         builder: (context, viewModel, child) {
           final isUserLoggedIn = viewModel.currentUser != null;
           final colorScheme = Theme.of(context).colorScheme;
@@ -95,7 +93,7 @@ class LoginScreen extends StatelessWidget {
             ),
           );
         },
-      ),
+
     );
   }
 }

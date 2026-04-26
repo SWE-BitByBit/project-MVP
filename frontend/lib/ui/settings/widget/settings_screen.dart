@@ -77,25 +77,8 @@ class _SettingsScreenBody extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 32)
 
-          // --- BOTTONE LOGOUT ---
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Chiamare l'AuthViewModel per il logout
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Esci dall\'account'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-                side: BorderSide(color: Theme.of(context).colorScheme.error),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
         ],
       ),
     );
