@@ -103,27 +103,28 @@ class DiaryScreenView extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (session.loggedDiary == DiaryType.realDiary)
-                  SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    viewModel.resetFakePasswordState();
-                    showModalBottomSheet(
-                      isScrollControlled: true,
-                      backgroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(24),
+                if (session.loggedDiary == DiaryType.realDiary) ...[
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      viewModel.resetFakePasswordState();
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
                         ),
-                      ),
-                      context: context,
-                      builder: (context) {
-                        return const DiaryPasswordSetting();
-                      },
-                    );
-                  },
-                  child: const Text("Impostazione password diario fittizio"),
-                ),
+                        context: context,
+                        builder: (context) {
+                          return const DiaryPasswordSetting();
+                        },
+                      );
+                    },
+                    child: const Text("Impostazione password diario fittizio"),
+                  ),
+                ],
                 const Expanded(child: NoteListWidget()),
               ],
             );
