@@ -1,125 +1,149 @@
 import os
-from typing import List, Optional
 import boto3
 from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Key
 
-from domain.trusted_contact import TrustedContact
-from ports.trusted_contact_repository_port import TrustedContactRepositoryPort
+from domain.dms_configuration_settings import DmsConfigurationSettings
+from ports.dms_repository_port import DmsRepositoryPort
 
-class DynamoDmsAdapter(TrustedContactRepositoryPort):
+class DynamoDmsAdapter(DmsRepositoryPort):
+
     def __init__(self, dynamodb=None):
         self._dynamodb_client = dynamodb or boto3.resource(
             "dynamodb",
             region_name=os.environ["REGION"]
         )
-        self._table = self._dynamodb_client.Table(os.environ["TRUSTED_CONTACT_TABLE"])
+        self._table = self._dynamodb_client.Table(os.environ["DMS_TABLE"])
 
-    def add(self, contact: TrustedContact) -> TrustedContact:
-        
+    def add_dms_config(self, user_id: str) -> DmsConfigurationSettings:
+
+        config = DmsConfigurationSettings(
+            user_id=user_id,
+            is_active=False,
+            first_timer=0,
+            second_timer=0,
+            email_subject="",
+            email_body=""
+        )
+
         try:
             self._table.put_item(
-                Item = {
-                    "user_id": contact.user_id,
-                    "contact_id": contact.contact_id,
-                    "contact_name": contact.contact_name,
-                    "contact_email": contact.contact_email,
-                    "contact_phone_number": contact.contact_phone_number
-                } 
+                Item={
+                    "user_id": user_id,
+                    "is_active": config.is_active,
+                    "first_timer": config.first_timer,
+                    "second_timer": config.second_timer,
+                    "email_subject": config.email_subject,
+                    "email_body": config.email_body,
+                    "first_timer_count_down": 0,
+                    "second_timer_count_down": 0,
+                }
             )
+
         except ClientError as e:
-            raise RuntimeError(f"Error in adding the trusted contact: {e.response['Error']['Message']}")
-        
-        return TrustedContact(
-            user_id = contact.user_id,
-            contact_id = contact.contact_id,
-            contact_name = contact.contact_name,
-            contact_email = contact.contact_email,
-            contact_phone_number = contact.contact_phone_number
-        )
-    
-    def get(self, user_id: str, contact_id: str) -> Optional[TrustedContact]:
+            raise RuntimeError(f"Error adding DMS config: {e.response['Error']['Message']}")
+        return config
+
+    def get_dms_config(self, user_id: str) -> DmsConfigurationSettings:
 
         try:
             response = self._table.get_item(
-                Key={
-                    "user_id": user_id,
-                    "contact_id": contact_id
-                }
+                Key={"user_id": user_id}
             )
             item = response.get("Item")
-            if not item or item.get("user_id") != user_id:
-                return None
+            if not item:
+                raise KeyError(f"DMS config not found for user {user_id}")
             
-            return TrustedContact(
-                user_id = item.get("user_id"),
-                contact_id = item.get("contact_id"),
-                contact_name = item.get("contact_name"),
-                contact_email = item.get("contact_email"),
-                contact_phone_number = item.get("contact_phone_number")
+            return DmsConfigurationSettings(
+                user_id=item["user_id"],
+                is_active=item["is_active"],
+                first_timer=item["first_timer"],
+                second_timer=item["second_timer"],
+                email_subject=item["email_subject"],
+                email_body=item["email_body"]
             )
         except ClientError as e:
-            raise RuntimeError(f"Error in fetching trusted contact: {e.response['Error']['Message']}")
-        
-    def delete(self, user_id: str, contact_id: str) -> None:
+            raise RuntimeError(f"Error fetching DMS config: {e.response['Error']['Message']}")
+
+    def update_dms_config(self, config: DmsConfigurationSettings) -> None:
 
         try:
-            existing = self.get(user_id, contact_id)
-            if not existing:
-                raise KeyError(f"Contact {contact_id} not found")
-            
-            self._table.delete_item(
-                Key={"user_id": user_id, "contact_id": contact_id}
-            )
-        
-        except KeyError:
-            raise
-        except ClientError as e:
-            raise RuntimeError(f"Error in deleting trusted contact: {e.response['Error']['Message']}")
+            existing = self.get_dms_config(config.user_id)
 
-    def update(self, contact: TrustedContact) -> None:
-        try:
-            existing = self.get(contact.user_id, contact.contact_id)
             if not existing:
-                raise KeyError(f"Contact {contact.contact_id} not found")
+                raise KeyError(f"DMS config not found for user {config.user_id}")
             
             self._table.update_item(
-                Key={
-                    "user_id": contact.user_id,
-                    "contact_id": contact.contact_id
-                },
-                UpdateExpression="SET contact_name = :name, contact_email = :email, contact_phone_number = :phone",
+                Key={"user_id": config.user_id},
+                UpdateExpression="""
+                    SET is_active = :active,
+                        first_timer = :first,
+                        second_timer = :second,
+                        email_subject = :subject,
+                        email_body = :body
+                """,
                 ExpressionAttributeValues={
-                    ':name': contact.contact_name,
-                    ':email': contact.contact_email,
-                    ':phone': contact.contact_phone_number,
+                    ":active": config.is_active,
+                    ":first": config.first_timer,
+                    ":second": config.second_timer,
+                    ":subject": config.email_subject,
+                    ":body": config.email_body,
                 }
             )
+
         except KeyError:
             raise
         except ClientError as e:
-            raise RuntimeError(f"Error in updating trusted contact: {e.response['Error']['Message']}")
+            raise RuntimeError(f"Error updating DMS config: {e.response['Error']['Message']}")
 
+    def get_first_timer(self, user_id: str) -> int:
 
-    def list(self, user_id: str) -> List[TrustedContact]:
-        response = self._table.query(
-            KeyConditionExpression = Key("user_id").eq(user_id)
-        )
-
-        trusted_contacts: List[TrustedContact] = []
-
-        for item in response.get("Items", []):
-            trusted_contacts.append(
-                TrustedContact(
-                    user_id = item.get("user_id"),
-                    contact_id = item.get("contact_id"),
-                    contact_name = item.get("contact_name"),
-                    contact_email = item.get("contact_email"),
-                    contact_phone_number = item.get("contact_phone_number")
-                )
+        try:
+            response = self._table.get_item(
+                Key={"user_id": user_id}
             )
+            item = response.get("Item")
+
+            if not item:
+                raise KeyError(f"DMS config not found for user {user_id}")
+            return int(item["first_timer_count_down"])
         
-        return trusted_contacts
+        except ClientError as e:
+            raise RuntimeError(f"Error fetching first timer: {e.response['Error']['Message']}")
 
+    def get_second_timer(self, user_id: str) -> int:
 
+        try:
+            response = self._table.get_item(
+                Key={"user_id": user_id}
+            )
+            item = response.get("Item")
+            if not item:
+                raise KeyError(f"DMS config not found for user {user_id}")
+            return int(item["second_timer_count_down"])
+        
+        except ClientError as e:
+            raise RuntimeError(f"Error fetching second timer: {e.response['Error']['Message']}")
 
+    def update_first_counter(self, user_id: str, remaining_days: int) -> None:
+
+        try:
+            self._table.update_item(
+                Key={"user_id": user_id},
+                UpdateExpression="SET first_timer_count_down = :val",
+                ExpressionAttributeValues={":val": remaining_days}
+            )
+
+        except ClientError as e:
+            raise RuntimeError(f"Error updating first counter: {e.response['Error']['Message']}")
+
+    def update_second_counter(self, user_id: str, remaining_days: int) -> None:
+
+        try:
+            self._table.update_item(
+                Key={"user_id": user_id},
+                UpdateExpression="SET second_timer_count_down = :val",
+                ExpressionAttributeValues={":val": remaining_days}
+            )
+
+        except ClientError as e:
+            raise RuntimeError(f"Error updating second counter: {e.response['Error']['Message']}")

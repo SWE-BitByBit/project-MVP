@@ -1,26 +1,14 @@
-from dataclasses import dataclass
-from abc import ABC
-
-@dataclass
-class AlertTemplate:
-    subject: str
-    body: str
-
-@dataclass
-class UserLocation:
-    latitude: float | None = None
-    longitude: float | None = None
-
-@dataclass
-class EmailMessage(ABC):
-    source_email: str
-    contact_name: str
-    destination_contact_email: str
-
-@dataclass
-class AlertMessage(EmailMessage):
-    user_location: UserLocation
-
-@dataclass
-class DmsMessage(EmailMessage):
-    email_template: AlertTemplate
+class EmailMessage():
+    def __init__(
+        self,
+        source_email,
+        destination_contact_email,
+        contact_name,
+        subject,
+        body,
+    ):
+        self.source_email = source_email
+        self.destination_contact_email = destination_contact_email
+        self.contact_name = contact_name
+        self.subject = subject
+        self.body = body

@@ -4,5 +4,5 @@ class DeleteTrustedContactCmd:
         user_id,
         contact_id,   
     ):
-        self.user_id = user_id,
-        self.contact_id = contact_id,
+        self.user_id = user_id
+        self.contact_id = contact_id

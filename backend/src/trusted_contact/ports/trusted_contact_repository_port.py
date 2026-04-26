@@ -5,7 +5,7 @@ from domain.trusted_contact import TrustedContact
 
 class TrustedContactRepositoryPort(ABC):
     @abstractmethod
-    def add(self, contact: TrustedContact) -> TrustedContact:
+    def add(self, contact: TrustedContact) -> Optional[TrustedContact]:
         pass
     
     @abstractmethod
@@ -17,9 +17,9 @@ class TrustedContactRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def update(self, contact: TrustedContact) -> None:
+    def update(self, contact: TrustedContact) -> Optional[TrustedContact]:
         pass
 
     @abstractmethod
-    def list(self, user_id: str) -> List[TrustedContact]:
+    def list(self, user_id: str) -> Optional[List[TrustedContact]]:
         pass
