@@ -1,7 +1,8 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  This is the template for the deploy of the lambda used for app: "L'app che protegge e trasforma"
+  This is the template for the deploy of the lambda used for app: "L'app che
+  protegge e trasforma"
 
 Globals:
   Function:
@@ -11,17 +12,21 @@ Globals:
       LogFormat: JSON
 
 Resources:
-  HelloWorldFunction:
+  DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/hello_world/
+      CodeUri: src/diary/
       Handler: app.lambda_handler
-      Runtime: python3.12
-      FunctionName: hello-world
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-trusted-contacts-poc"
-      Environment:
-        Variables:
-          TABLE_NAME: "trusted_contacts_poc"
+      FunctionName: lambda-diary-notes-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
+  
+  TrustedContactFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/trusted_contact/
+      Handler: app.lambda_handler
+      FunctionName: lambda-trusted-contact-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -32,7 +37,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
-          KeyType: HASH 
+          KeyType: HASH
         - AttributeName: contact_id
           KeyType: RANGE
       AttributeDefinitions:
@@ -43,10 +48,14 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-Outputs:
-  HelloWorldFunction:
-    Description: Trusted Contacts Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
+Outputs:  
+  DiaryFunction:
+    Description: Trusted contacts lambda function ARN
+    Value: !GetAtt DiaryFunction.Arn
+  
+  TrustedContactFunction:
+    Description: Diary notes lambda function ARN
+    Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
     Description: DynamoDB Table Name

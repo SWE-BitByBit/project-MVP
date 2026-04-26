@@ -7,7 +7,7 @@ class ResourceDTO {
   /// Traduce la mappa [json] proveniente dall'API in un'istanza di [Resource].
   static Resource fromJson(Map<String, dynamic> json) {
     return Resource(
-      id: json['id'] as String? ?? '',
+      id: json['resource_id'] as String? ?? '',
       title: json['title'] as String? ?? 'Senza Titolo',
       content: json['content'] as String?,
       url: json['url'] as String?,

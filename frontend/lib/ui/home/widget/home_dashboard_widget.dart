@@ -5,6 +5,7 @@ import '../../core/widgets/dashboard_button_widget.dart';
 import '../../chat/widget/chat_screen.dart';
 import '../../trusted_contacts/widget/trusted_contacts_screen.dart';
 import '../../material/widget/material_screen.dart';
+import '../../safeplace/widget/safe_place_map_screen.dart';
 
 /// Visualizza la griglia dei pulsanti principali della dashboard.
 ///
@@ -24,7 +25,7 @@ class HomeDashboardWidget extends StatelessWidget {
 
     return ListView.separated(
       padding: const EdgeInsets.all(20),
-      itemCount: 4,
+      itemCount: 5,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -71,7 +72,7 @@ class HomeDashboardWidget extends StatelessWidget {
               debugPrint("Hai cliccato Diario!");
             },
           );
-        } else {
+        } else if (index == 3) {
           return DashboardButtonWidget(
             title: 'Informazioni',
             description:
@@ -83,6 +84,22 @@ class HomeDashboardWidget extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const MaterialScreen()),
+              );
+            },
+          );
+        } else {
+          return DashboardButtonWidget(
+            title: 'Luoghi Sicuri',
+            description: 'Mappa per trovare i centri di supporto e i luoghi sicuri più vicini a te.',
+            icon: Icons.map_outlined,
+            backgroundColor: Colors.green.shade50,
+            iconColor: Colors.green.shade800,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SafePlaceMapScreen(),
+                ),
               );
             },
           );
