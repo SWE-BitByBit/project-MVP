@@ -31,7 +31,7 @@ class TestLambdaHandlerSafePlaces:
 
     def test_lambda_handler_innesca_correttamente_i_componenti(self, mock_dependencies):
         """Verifica che l'handler istanzi le classi corrette e chiami il controller."""
-        event = {"queryStringParameters": None}
+        event = {"queryStringParameters": None, "httpMethod": "GET"}
         context = MagicMock()
 
         response = lambda_handler(event, context)
@@ -50,3 +50,57 @@ class TestLambdaHandlerSafePlaces:
 
         assert response["statusCode"] == 200
         assert response["body"] == "[]"
+
+    def test_lambda_handler_supporta_api_v2_payload(self, mock_dependencies):
+        """Verifica che l'handler riconosca il metodo GET in un payload API Gateway v2."""
+        event = {
+            "requestContext": {
+                "http": {
+                    "method": "GET"
+                }
+            }
+        }
+        context = MagicMock()
+
+        response = lambda_handler(event, context)
+
+        assert response["statusCode"] == 200
+        mock_dependencies["controller_instance"].marker_get.assert_called_once_with(event)
+
+    def test_lambda_handler_gestisce_options_preflight(self, mock_dependencies):
+        """Verifica che l'handler risponda correttamente alle richieste OPTIONS."""
+        event = {"httpMethod": "OPTIONS"}
+        context = MagicMock()
+
+        response = lambda_handler(event, context)
+
+        assert response["statusCode"] == 200
+        assert response["headers"]["Access-Control-Allow-Origin"] == "*"
+        assert "OPTIONS" in response["headers"]["Access-Control-Allow-Methods"]
+        assert response["body"] == ""
+        # Il controller non dovrebbe essere chiamato per OPTIONS
+        mock_dependencies["controller_instance"].marker_get.assert_not_called()
+
+    def test_lambda_handler_rifiuta_metodi_non_supportati(self, mock_dependencies):
+        """Verifica che l'handler restituisca 405 per metodi diversi da GET e OPTIONS."""
+        event = {"httpMethod": "POST"}
+        context = MagicMock()
+
+        response = lambda_handler(event, context)
+
+        assert response["statusCode"] == 405
+        assert response["body"] == "Method Not Allowed"
+        # Il controller non dovrebbe essere chiamato
+        mock_dependencies["controller_instance"].marker_get.assert_not_called()
+
+    def test_lambda_handler_cattura_eccezioni_globali(self, mock_dependencies):
+        """Verifica che l'handler catturi le eccezioni e restituisca 500 con traceback."""
+        mock_dependencies["controller_instance"].marker_get.side_effect = Exception("Errore imprevisto")
+        event = {"httpMethod": "GET"}
+        context = MagicMock()
+
+        response = lambda_handler(event, context)
+
+        assert response["statusCode"] == 500
+        assert "Unhandled Exception" in response["body"]
+        assert "Errore imprevisto" in response["body"]

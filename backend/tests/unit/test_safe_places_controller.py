@@ -12,7 +12,7 @@ class TestSafePlacesController:
         """Verifica che in caso di successo venga restituita la lista serializzata con status 200."""
         mock_service = MagicMock()
         mock_markers = [
-            Marker("1", "Nome1", "Indirizzo1", "45", "11", "ospedale"),
+            Marker("1", "Nome1", "Indirizzo1", 45.0, 11.0, "ospedale"),
         ]
         mock_service.get_all_markers.return_value = mock_markers
         

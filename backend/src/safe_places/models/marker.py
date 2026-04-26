@@ -18,15 +18,21 @@ class Marker:
         marker_id: str,
         name: str,
         address: str,
-        latitude: str,
-        longitude: str,
+        latitude: float,
+        longitude: float,
         category: str,
     ) -> None:
         self._marker_id: Final[str] = marker_id
         self._name: Final[str] = name
         self._address: Final[str] = address
-        self._latitude: Final[str] = latitude
-        self._longitude: Final[str] = longitude
+
+        if not (-90.0 <= latitude <= 90.0):
+            raise ValueError("La latitudine deve essere compresa tra -90 e 90 gradi.")
+        if not (-180.0 <= longitude <= 180.0):
+            raise ValueError("La longitudine deve essere compresa tra -180 e 180 gradi.")
+
+        self._latitude: Final[float] = latitude
+        self._longitude: Final[float] = longitude
         self._category: Final[str] = category
 
     def to_dict(self) -> Dict[str, Any]:

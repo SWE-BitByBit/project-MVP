@@ -11,8 +11,8 @@ class TestMarker:
         marker_id: str = "luogo-001",
         name: str = "Ospedale Test",
         address: str = "Via Test 1",
-        latitude: str = "45.0",
-        longitude: str = "11.0",
+        latitude: float = 45.0,
+        longitude: float = 11.0,
         category: str = "ospedale",
     ) -> Marker:
         """Helper per creare un marker con valori di default."""
@@ -45,15 +45,15 @@ class TestMarker:
 
     def test_to_dict_contiene_latitude(self):
         """Verifica che to_dict includa il campo latitude."""
-        marker = self._make_marker(latitude="45.123")
+        marker = self._make_marker(latitude=45.123)
         result = marker.to_dict()
-        assert result["latitude"] == "45.123"
+        assert result["latitude"] == 45.123
 
     def test_to_dict_contiene_longitude(self):
         """Verifica che to_dict includa il campo longitude."""
-        marker = self._make_marker(longitude="11.456")
+        marker = self._make_marker(longitude=11.456)
         result = marker.to_dict()
-        assert result["longitude"] == "11.456"
+        assert result["longitude"] == 11.456
 
     def test_to_dict_contiene_category(self):
         """Verifica che to_dict includa il campo category."""
@@ -70,3 +70,17 @@ class TestMarker:
         """Verifica che to_dict contenga esattamente 6 campi."""
         marker = self._make_marker()
         assert len(marker.to_dict()) == 6
+
+    def test_invalid_latitude_raises_error(self):
+        """Verifica che una latitudine non valida sollevi ValueError."""
+        with pytest.raises(ValueError, match="La latitudine deve essere compresa tra -90 e 90 gradi."):
+            self._make_marker(latitude=90.1)
+        with pytest.raises(ValueError, match="La latitudine deve essere compresa tra -90 e 90 gradi."):
+            self._make_marker(latitude=-90.1)
+
+    def test_invalid_longitude_raises_error(self):
+        """Verifica che una longitudine non valida sollevi ValueError."""
+        with pytest.raises(ValueError, match="La longitudine deve essere compresa tra -180 e 180 gradi."):
+            self._make_marker(longitude=180.1)
+        with pytest.raises(ValueError, match="La longitudine deve essere compresa tra -180 e 180 gradi."):
+            self._make_marker(longitude=-180.1)

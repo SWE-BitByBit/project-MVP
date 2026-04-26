@@ -63,6 +63,9 @@ Resources:
       Handler: safe_places/lambda_handler.lambda_handler
       FunctionName: fetch-safe-places-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Environment:
+        Variables:
+          PYTHONPATH: "/var/task"
 
 Outputs:
   HelloWorldFunction:

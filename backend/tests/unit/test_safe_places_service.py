@@ -11,8 +11,8 @@ class TestSafePlacesService:
         """Verifica che il service deleghi correttamente la chiamata al repository."""
         mock_repository = MagicMock()
         mock_markers = [
-            Marker("1", "N1", "A1", "45", "11", "C1"),
-            Marker("2", "N2", "A2", "46", "12", "C2")
+            Marker("1", "N1", "A1", 45.0, 11.0, "C1"),
+            Marker("2", "N2", "A2", 46.0, 12.0, "C2")
         ]
         mock_repository.list_markers.return_value = mock_markers
         
