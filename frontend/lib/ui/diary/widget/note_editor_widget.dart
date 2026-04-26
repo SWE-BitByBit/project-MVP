@@ -72,6 +72,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   child: TextField(
                     controller: noteTextController,
                     maxLines: null,
+                    decoration: InputDecoration(border: InputBorder.none),
                     onChanged: (value) => {
                       viewModel.updateNoteTextElement(
                         widget.selectedNote,
@@ -300,25 +301,49 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           body: Column(
             children: <Widget>[
               AppBar(backgroundColor: Colors.teal.shade200),
-              TextField(
-                controller: _titleController,
-                maxLines: 1,
-                maxLength: 24,
-                decoration: const InputDecoration(labelText: 'Titolo nota'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
+              Container(
+                padding: const EdgeInsetsGeometry.directional(start: 6, end: 6),
+                color: Colors.teal.shade50,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      maxLines: 1,
+                      maxLength: 24,
+                      decoration: const InputDecoration(
+                        hintText: 'Titolo nota',
+                        hintStyle: TextStyle(color: Colors.black45),
+                        border: InputBorder.none,
+                      ),
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                      ),
+                      onChanged: (value) => {_updateNoteTitle(value)},
+                    ),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 20,
+                      child: Text(
+                        "Ultima modifica: ${DateFormat(dayFormat).format(_lastUpdated!)} alle ${DateFormat(timeFormat).format(_lastUpdated!)}",
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 20,
+                      child: Text(
+                        "Creata il ${DateFormat(dayFormat).format(widget.selectedNote.getCreationDate())} alle ${DateFormat(timeFormat).format(widget.selectedNote.getCreationDate())}",
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
-                onChanged: (value) => {_updateNoteTitle(value)},
               ),
 
-              Text(
-                "Ultima modifica: ${DateFormat(dayFormat).format(_lastUpdated!)} alle ${DateFormat(timeFormat).format(_lastUpdated!)}",
-              ),
-              Text(
-                "Creata il ${DateFormat(dayFormat).format(widget.selectedNote.getCreationDate())} alle ${DateFormat(timeFormat).format(widget.selectedNote.getCreationDate())}",
-              ),
               Padding(
                 padding: const EdgeInsetsGeometry.directional(start: 4, end: 4),
                 child: Row(
@@ -351,6 +376,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   builder: (context) {
                     if (_elements.isEmpty == false) {
                       return ListView.builder(
+                        padding: const EdgeInsetsGeometry.directional(
+                          start: 8,
+                          end: 8,
+                        ),
                         itemCount: _elements.length,
                         itemBuilder: (BuildContext context, int index) {
                           return _elements[index];

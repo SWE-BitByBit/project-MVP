@@ -120,10 +120,23 @@ class NoteListWidget extends StatelessWidget {
           final note = viewModel.getSavedNotes()[index];
           return ListTile(
             onTap: () => _openNoteEditor(context, viewModel, index),
-            title: Text(
-              note.getTitle(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+            title: (note.getTitle().isEmpty)
+                ? const Text(
+                    "Nota senza titolo",
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black54,
+                      fontSize: 16,
+                    ),
+                  )
+                : Text(
+                    note.getTitle(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
             subtitle: Text(
               "Ultima modifica: ${DateFormat(dayFormat).format(note.getUpdateDate())} alle ${DateFormat(timeFormat).format(note.getUpdateDate())}\nData di creazione: ${DateFormat(dayFormat).format(note.getCreationDate())} alle ${DateFormat(timeFormat).format(note.getCreationDate())}",
             ),
