@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../../domain/models/user.dart';
+import '../../domain/models/auth/user.dart';
 
 /// Fornisce metodi di utilità per la conversione dei dati di autenticazione.
 ///

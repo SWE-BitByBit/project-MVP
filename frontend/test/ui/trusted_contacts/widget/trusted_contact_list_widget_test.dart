@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_list_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
 
 import '../../../../testing/mocks/mock_trusted_contact_repository.dart';

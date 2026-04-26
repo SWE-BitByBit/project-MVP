@@ -1,4 +1,4 @@
-import '../../domain/models/trusted_contact.dart';
+import '../../domain/models/trusted_contact/trusted_contact.dart';
 import '../dtos/trusted_contact_dto.dart';
 import '../services/trusted_contact_service.dart';
 import 'cacheable_repository.dart';

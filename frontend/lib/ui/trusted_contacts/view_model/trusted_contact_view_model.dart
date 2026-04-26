@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:command_it/command_it.dart';
 
-import '../../../domain/models/trusted_contact.dart';
+import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import '../../../data/repositories/trusted_contact_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 

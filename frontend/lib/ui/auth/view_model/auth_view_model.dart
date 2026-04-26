@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:command_it/command_it.dart';
 import '../../../utils/cache_manager.dart';
 import '../../../utils/locator.dart';
-import '../../../domain/models/user.dart';
+import '../../../domain/models/auth/user.dart';
 import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/dead_man_repository.dart';
 
 /// Gestisce lo stato della UI per l'autenticazione e coordina le azioni dell'utente.
 ///
@@ -52,7 +53,14 @@ class AuthViewModel extends ChangeNotifier {
     if (user == null) {
       throw Exception('Autenticazione fallita o annullata dall\'utente.');
     }
-    // Avvisiamo la UI (ad esempio per far sparire la schermata di login)
+    try {
+      final deadManRepo = getIt<DeadManRepository>();
+      await deadManRepo.sendHeartbeat();
+      debugPrint("Heartbeat inviato con successo al login!");
+    } catch (e) {
+      debugPrint("Attenzione: Impossibile inviare l'Heartbeat al login: $e");
+    }
+
     notifyListeners();
   }
 

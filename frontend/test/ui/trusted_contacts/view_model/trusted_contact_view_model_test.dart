@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
 
 import '../../../../testing/mocks/mock_trusted_contact_repository.dart';
 

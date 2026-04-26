@@ -1,4 +1,4 @@
-import '../../domain/models/trusted_contact.dart';
+import '../../domain/models/trusted_contact/trusted_contact.dart';
 
 /// Mapper responsabile della conversione dei dati tra il formato JSON del backend
 /// e l'oggetto di dominio [TrustedContact].

@@ -1,5 +1,5 @@
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/auth_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/auth/user.dart';
 
 class MockAuthRepository implements AuthRepository {
   User? _mockedUser;

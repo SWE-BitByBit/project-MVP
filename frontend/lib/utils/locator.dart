@@ -12,21 +12,23 @@ import '../data/services/safe_place_service.dart';
 import '../data/services/location_service.dart';
 import '../data/services/trusted_contact_service.dart';
 import '../data/services/chatbot_service.dart';
-import '../data/services/material_service.dart'; // <-- AGGIUNTO
-
+import '../data/services/material_service.dart';
+import '../data/services/dead_man_service.dart';
 // --- REPOSITORIES ---
 import '../data/repositories/safe_place_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/trusted_contact_repository.dart';
 import '../data/repositories/chatbot_repository.dart';
-import '../data/repositories/material_repository.dart'; // <-- AGGIUNTO
+import '../data/repositories/material_repository.dart';
+import '../data/repositories/dead_man_repository.dart';
 
 // --- VIEW MODELS ---
 import '../ui/safeplace/view_model/safe_place_view_model.dart';
 import '../ui/auth/view_model/auth_view_model.dart';
 import '../ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
 import '../ui/chat/view_model/chatbot_view_model.dart';
-import '../ui/material/view_model/material_view_model.dart'; // <-- AGGIUNTO
+import '../ui/material/view_model/material_view_model.dart';
+import '../ui/settings/view_model/dead_man_view_model.dart';
 
 final getIt = GetIt.instance;
 
@@ -48,6 +50,9 @@ void setupLocator() {
 
   // 6. MODULO MATERIALE INFORMATIVO (Nuovo)
   _setupMaterial();
+
+  //7. MODULO ALLARME AUTOMATICO
+  _setupSettings();
 }
 
 void _setupCore() {
@@ -70,7 +75,9 @@ void _setupCore() {
   getIt.registerLazySingleton<CacheManager>(() => CacheManager([
     getIt<TrustedContactRepository>(),
     getIt<ChatbotRepository>(),
-    getIt<MaterialRepository>(), // <-- AGGIUNTO QUI
+    getIt<SafePlaceRepository>(),
+    getIt<MaterialRepository>(),
+    getIt<DeadManRepository>(),
   ]));
 }
 
@@ -128,4 +135,15 @@ void _setupMaterial() {
 
   // ViewModel: iniettiamo il repo. registerFactory ci assicura un'istanza pulita ad ogni apertura.
   getIt.registerFactory<MaterialViewModel>(() => MaterialViewModel(getIt<MaterialRepository>()));
+}
+
+void _setupSettings() {
+  // Service: richiede l'ApiClient per le chiamate REST
+  getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
+
+  // Repository: funge da SSOT, iniettiamo il service con named parameter (se lo hai definito così)
+  getIt.registerLazySingleton<DeadManRepository>(() => DeadManRepository(getIt<DeadManService>()));
+
+  // ViewModel: iniettiamo il repo. registerFactory ci assicura un'istanza pulita ad ogni apertura.
+  getIt.registerFactory<DeadManViewModel>(() => DeadManViewModel(getIt<DeadManRepository>(), authRepository: getIt<AuthRepository>()));
 }
