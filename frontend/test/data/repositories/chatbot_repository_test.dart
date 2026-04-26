@@ -79,6 +79,60 @@ void main() {
       expect(msg.content, 'Questa è la mia risposta');
     });
 
+    test('getChatPreviews gestisce chiavi alternative (chat_id, created_at)', () async {
+      mockService.mockedPreviewsJson = [
+        {
+          'chat_id': 'chat-alt',
+          'title': 'Alternative',
+          'created_at': sampleDateString,
+        },
+      ];
+
+      final previews = await repository.getChatPreviews();
+
+      expect(previews.first.getId(), 'chat-alt');
+      expect(previews.first.getTitle(), 'Alternative');
+      expect(previews.first.getCreationDate(), sampleDate);
+    });
+
+    test('getChatPreviews fallback per data mancante', () async {
+      mockService.mockedPreviewsJson = [
+        {
+          'id': 'chat-no-date',
+          'title': 'No Date',
+        },
+      ];
+
+      final previews = await repository.getChatPreviews();
+      expect(previews.first.getCreationDate(), isNotNull);
+    });
+
+    test('sendMessage gestisce chiavi alternative nella risposta (message_id, text, response)', () async {
+      final dummyChat = LocalChat(
+        id: '1',
+        title: 'T',
+        creationDate: DateTime.now(),
+        messages: [],
+      );
+
+      // Test con message_id e text
+      mockService.mockedMessageResponseJson = {
+        'message_id': 'm-alt',
+        'text': 'Alternative text'
+      };
+      var response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
+      expect(response.getResponse().id, 'm-alt');
+      expect(response.getResponse().content, 'Alternative text');
+
+      // Test con response (stile alcuni backend LLM)
+      mockService.mockedMessageResponseJson = {
+        'id': 'm-resp',
+        'response': 'Response content'
+      };
+      response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
+      expect(response.getResponse().content, 'Response content');
+    });
+
     // Test degli Errori (Essenziale per la Coverage)
     test(
       'Se il Service lancia un\'eccezione, il Repository la lascia passare verso il ViewModel',

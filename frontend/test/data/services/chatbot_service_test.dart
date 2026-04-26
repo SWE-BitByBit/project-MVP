@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/chatbot_service.dart';
 
 void main() {
@@ -114,6 +113,102 @@ void main() {
 
       final result = await service.sendMessage('chat-123', 'Ciao', 'DETECTIVE');
       expect(result['content'], contains('DETECTIVE'));
+    });
+
+    test('generateChatTitle restituisce il titolo generato dal server', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(jsonEncode({'title': 'Titolo Generato'}), 200);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      final result = await service.generateChatTitle('Messaggio utente');
+      expect(result, 'Titolo Generato');
+    });
+
+    test('generateChatTitle restituisce fallback se il server fallisce', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 500);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      final result = await service.generateChatTitle('Messaggio utente');
+      expect(result, 'Nuova conversazione');
+    });
+
+    test('fetchChatPreviews lancia Exception se status != 200', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 404);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      expect(() => service.fetchChatPreviews(), throwsException);
+    });
+
+    test('fetchChat lancia Exception se status != 200', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 404);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      expect(() => service.fetchChat('123'), throwsException);
+    });
+
+    test('createChat lancia Exception se status != 201 e != 200', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 500);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      expect(() => service.createChat(), throwsException);
+    });
+
+    test('deleteChat lancia Exception se status != 200 e != 204', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 500);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      expect(() => service.deleteChat('123'), throwsException);
+    });
+
+    test('sendMessage lancia Exception se status != 200 e != 201', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 500);
+      });
+
+      service = ChatbotService(
+        baseUrl: 'https://api.example.com',
+        client: mockClient,
+      );
+
+      expect(
+        () => service.sendMessage('123', 'hi', 'DETECTIVE'),
+        throwsException,
+      );
     });
   });
 }
