@@ -57,10 +57,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   Widget _deleteCardOptionMenu(VoidCallback onDelete) {
     return OptionsMenu<String>(
       items: [
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'delete',
           child: Row(
-            children: const [
+            children: [
               Icon(Icons.delete_outline, color: Colors.red),
               SizedBox(width: 8),
               Text('Elimina', style: TextStyle(color: Colors.red)),
@@ -372,7 +372,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                       ),
                       onChanged: (value) => {_updateNoteTitle(value)},
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       height: 20,
@@ -393,7 +393,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ],
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Expanded(
                 child: Builder(
                   builder: (context) {
@@ -420,21 +420,21 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                               color: Colors.teal.shade200,
                             ),
                             const SizedBox(height: 16),
-                            Text(
+                            const Text(
                               "Questa nota è vuota",
                               style: TextStyle(
                                 fontSize: 18,
-                                color: const Color.fromARGB(255, 89, 95, 95),
+                                color: Color.fromARGB(255, 89, 95, 95),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
+                            const Text(
                               'Aggiungi un elemento con il pulsante qui sotto.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: const Color.fromARGB(255, 135, 141, 141),
+                                color: Color.fromARGB(255, 135, 141, 141),
                               ),
                             ),
                           ],
