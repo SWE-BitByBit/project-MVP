@@ -376,3 +376,262 @@ def test_retrieve_relevant_messages(llm_service, sample_chat_llm):
 
     joined = " ".join(result).lower()
     assert "learning" in joined or "machine" in joined
+
+def test_lambda_put_chat(crud_service, sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PUT"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}",
+        "body": json.dumps({"title": "Updated Lambda Chat"})
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 200
+    
+    body = json.loads(result["body"])
+    assert body["title"] == "Updated Lambda Chat"
+
+
+def test_lambda_put_chat_not_found(crud_service, tables):
+    user_id = str(uuid4())
+    chat_id = str(uuid4())
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PUT"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}",
+        "body": json.dumps({"title": "Doesn't matter"})
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_post_message(crud_service, sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "POST"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "body": json.dumps({"message": "Hello from Lambda Integration Test"})
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 200
+    
+    body = json.loads(result["body"])
+    assert "response" in body
+    assert "input_message_id" in body
+    assert "response_message_id" in body
+
+
+def test_lambda_post_message_not_found(crud_service, tables):
+    user_id = str(uuid4())
+    chat_id = str(uuid4())
+
+    event = {
+        "requestContext": {
+            "http": {"method": "POST"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "body": json.dumps({"message": "Hello"})
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_unauthorized(tables):
+    event = {
+        "requestContext": {
+            "http": {"method": "GET"},
+            "authorizer": {"jwt": {"claims": {}}} # No 'sub'
+        },
+        "rawPath": "/mvp/chats"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 401
+
+
+def test_lambda_invalid_json_body(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PUT"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}",
+        "body": "{ invalid json"
+    }
+
+    # parse_body returns {} on error, handle_chat_put uses defaults
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 200
+
+
+def test_lambda_no_body(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PUT"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}"
+        # No body key
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 200
+
+
+def test_lambda_invalid_route(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "GET"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": "/mvp/not-chats"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_unknown_method_chats(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PATCH"}, # Unsupported method for /chats
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": "/mvp/chats"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_unknown_method_chat_id(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "PATCH"}, # Unsupported method for /chats/{id}
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_unknown_method_messages(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "GET"}, # Unsupported method for /chats/{id}/messages (only POST)
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}/messages"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_no_title_post(sample_chat, tables):
+    user_id = str(uuid4())
+
+    event = {
+        "requestContext": {
+            "http": {"method": "POST"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": "/mvp/chats",
+        "body": json.dumps({}) # No title
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 201
+
+
+def test_lambda_no_stage_path(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "GET"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": "/chats" # No /mvp
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 200
+
+
+def test_lambda_too_many_parts(sample_chat, tables):
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "GET"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}/messages/something"
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 404
+
+
+def test_lambda_llm_failure(sample_chat, tables, monkeypatch):
+    from src.chatbot import lambda_function
+    
+    # Mock LLM service to return None response
+    class MockLLMFailure:
+        def get_message_response(self, *args, **kwargs):
+            return None
+            
+    # We need to ensure get_llm_service returns our mock
+    monkeypatch.setattr(lambda_function, "get_llm_service", lambda: MockLLMFailure())
+    
+    user_id = sample_chat["user_id"]
+    chat_id = sample_chat["chat_id"]
+
+    event = {
+        "requestContext": {
+            "http": {"method": "POST"},
+            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
+        },
+        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "body": json.dumps({"message": "Hello"})
+    }
+
+    result = lambda_handler(event, None)
+    assert result["statusCode"] == 500
