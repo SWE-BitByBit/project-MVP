@@ -1,7 +1,7 @@
 import '../../domain/models/chatbot/chat.dart';
 import '../../domain/models/chatbot/chat_enums.dart';
 import '../../domain/models/chatbot/chat_message.dart';
-import '../../domain/models/chatbot/chat_preview.dart';
+import '../../domain/models/chatbot/proxy_chat.dart';
 import '../../domain/models/chatbot/message_response.dart';
 import '../dtos/chat_dto.dart';
 import '../services/chatbot_service.dart';
@@ -13,16 +13,22 @@ class ChatbotRepository {
 
   ChatbotRepository(this._chatbotService);
 
-  Future<List<ChatPreview>> getChatPreviews() async {
+  Future<List<Chat>> getChatPreviews() async {
     final List<Map<String, dynamic>> rawData = await _chatbotService
         .fetchChatPreviews();
 
     return rawData
         .map(
-          (json) => ChatPreview(
-            id: json['id'] as String,
-            title: json['title'] as String,
-            lastModified: DateTime.parse(json['lastModified'] as String),
+          (json) => ProxyChat(
+            id: (json['id'] ?? json['chat_id'] ?? '') as String,
+            title: (json['title'] ?? 'Senza Titolo') as String,
+            creationDate: DateTime.parse(
+              (json['creationDate'] ??
+                  json['created_at'] ??
+                  json['lastModified'] ??
+                  DateTime.now().toIso8601String()) as String,
+            ),
+            repository: this,
           ),
         )
         .toList();
@@ -61,13 +67,21 @@ class ChatbotRepository {
     );
 
     // Mappatura manuale della risposta (che rappresenta un singolo messaggio)
+    // Supportiamo sia 'id' che 'message_id', e 'content' vs 'text'
     final ChatMessage responseMessage = ChatMessage(
-      id: responseJson['id'] as String,
-      content: responseJson['content'] as String,
-      type: MessageType.USER,
+      id: (responseJson['id'] ?? responseJson['message_id'] ?? 'ai-msg-temp')
+          as String,
+      content: (responseJson['content'] ??
+          responseJson['text'] ??
+          responseJson['response'] ??
+          '') as String,
+      type: MessageType.ai,
       timestamp: DateTime.now(),
     );
 
-    return MessageResponse(response: responseMessage);
+    // Estraggono l'eventuale titolo aggiornato (se inviato dal backend)
+    final String? updatedTitle = responseJson['updated_title'] as String?;
+
+    return MessageResponse(response: responseMessage, updatedTitle: updatedTitle);
   }
 }

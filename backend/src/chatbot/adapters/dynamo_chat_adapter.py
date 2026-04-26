@@ -12,10 +12,7 @@ from chatbot.domain.chat_message import Message
 
 class DynamoChatAdapter(ChatsRepositoryPort):
     def __init__(self, dynamodb=None):
-        self._dynamodb = dynamodb or boto3.resource(
-            "dynamodb",
-            region_name="eu-south-1"
-        )
+        self._dynamodb = dynamodb or boto3.resource("dynamodb")
         self._chats_table = self._dynamodb.Table("chats_mvp")
         self._messages_table = self._dynamodb.Table("chats_messages_mvp")
 

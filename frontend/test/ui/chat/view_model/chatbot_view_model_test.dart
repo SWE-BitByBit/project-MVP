@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 import '../../../../testing/mocks/mock_chatbot_repository.dart';
 
@@ -25,35 +25,37 @@ void main() {
         expect(viewModel.chatPreviews, isEmpty);
         expect(viewModel.isLoading, isFalse);
         expect(viewModel.errorMessage, isNull);
-        expect(viewModel.selectedMode, ChatMode.DETECTIVE);
+        expect(viewModel.selectedMode, ChatMode.detective);
       },
     );
 
     test('setMode cambia correttamente la modalità', () {
-      viewModel.setMode(ChatMode.MIRROR);
-      expect(viewModel.selectedMode, ChatMode.MIRROR);
+      viewModel.setMode(ChatMode.mirror);
+      expect(viewModel.selectedMode, ChatMode.mirror);
     });
   });
 
   group('ChatbotViewModel - Cronologia (Previews)', () {
     test('loadChatPreviews carica le anteprime con successo', () async {
       mockRepository.mockedPreviewsToReturn = [
-        ChatPreview(
+        LocalChat(
           id: '1',
           title: 'Chat test 1',
-          lastModified: DateTime.now(),
+          creationDate: DateTime.now(),
+          messages: [],
         ),
-        ChatPreview(
+        LocalChat(
           id: '2',
           title: 'Chat test 2',
-          lastModified: DateTime.now(),
+          creationDate: DateTime.now(),
+          messages: [],
         ),
       ];
 
       await viewModel.loadChatPreviews();
 
       expect(viewModel.chatPreviews.length, 2);
-      expect(viewModel.chatPreviews.first.id, '1');
+      expect(viewModel.chatPreviews.first.getId(), '1');
       expect(viewModel.errorMessage, isNull);
     });
 
@@ -141,11 +143,12 @@ void main() {
         final aiMessage = ChatMessage(
           id: 'msg-ai-1',
           content: 'Ciao Umano!',
-          type: MessageType.AI,
+          type: MessageType.ai,
           timestamp: DateTime.now(),
         );
         mockRepository.mockedMessageResponse = MessageResponse(
           response: aiMessage,
+          updatedTitle: 'Titolo Aggiornato AI',
         );
 
         // 3. Act: Inviamo il messaggio

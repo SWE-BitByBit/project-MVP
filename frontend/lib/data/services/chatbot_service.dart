@@ -11,10 +11,11 @@ class ChatbotService {
   final http.Client client = http.Client();
 
   Map<String, String> _headers() {
-    final token = "";
+    // TODO: Recuperare il token reale dall'AuthRepository
+    const String token = "";
     return {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
@@ -100,5 +101,22 @@ class ChatbotService {
     }
 
     return jsonDecode(res.body);
+  }
+
+  /// Genera un titolo per la chat basato sul primo messaggio inviato.
+  Future<String> generateChatTitle(String content) async {
+    final uri = Uri.parse('$baseUrl/chats/generate-title');
+    final res = await client.post(
+      uri,
+      headers: _headers(),
+      body: jsonEncode({'content': content}),
+    );
+
+    if (res.statusCode != 200) {
+      return "Nuova conversazione"; // Fallback
+    }
+
+    final data = jsonDecode(res.body);
+    return data['title'] as String;
   }
 }

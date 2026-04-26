@@ -37,7 +37,7 @@ void main() {
       await pumpToggleWidget(tester);
 
       // Verifichiamo che il ViewModel parta effettivamente come DETECTIVE
-      expect(viewModel.selectedMode, ChatMode.DETECTIVE);
+      expect(viewModel.selectedMode, ChatMode.detective);
 
       // Verifichiamo che l'icona della psicologia (Detective) sia presente
       expect(find.byIcon(Icons.psychology), findsOneWidget);
@@ -57,7 +57,7 @@ void main() {
       await tester.pumpAndSettle(); // Aspettiamo che l'animazione dell'interruttore finisca
 
       // VERIFICA LOGICA: Il ViewModel ha registrato il cambio?
-      expect(viewModel.selectedMode, ChatMode.MIRROR);
+      expect(viewModel.selectedMode, ChatMode.mirror);
 
       // VERIFICA VISIVA: Le icone si sono scambiate?
       expect(find.byIcon(Icons.auto_awesome_motion), findsOneWidget); // Appare Mirror
@@ -79,7 +79,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verifica che sia tornato allo stato originario
-      expect(viewModel.selectedMode, ChatMode.DETECTIVE);
+      expect(viewModel.selectedMode, ChatMode.detective);
       expect(find.byIcon(Icons.psychology), findsOneWidget);
     });
   });

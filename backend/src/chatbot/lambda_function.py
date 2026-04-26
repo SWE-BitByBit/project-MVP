@@ -13,6 +13,11 @@ from chatbot.commands.get_chat_list_cmd import GetChatListCmd
 from chatbot.commands.delete_chat_cmd import DeleteChatCmd
 from chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
 
+# --- CONSTANTS ---
+CHAT_NOT_FOUND = {"message": "Chat not found"}
+UNAUTHORIZED = {"message": "Unauthorized"}
+ROUTE_NOT_FOUND = {"message": "Route not found"}
+
 _crud_service = None
 _llm_service = None
 
@@ -106,7 +111,7 @@ def handle_chat_get(user_id, chat_id):
     cmd = GetChatCmd(user_id = user_id, chat_id = chat_id)
     chat = get_crud_service().get_chat(cmd)
     if not chat:
-        return response(404, {"message": "Chat not found"})
+        return response(404, CHAT_NOT_FOUND)
 
     chat_dto = ChatDTO.from_domain(chat)
     return response(200, chat_dto.to_dict())
@@ -122,7 +127,7 @@ def handle_chat_put(user_id, chat_id, body):
     cmd = GetChatCmd(user_id=user_id, chat_id=chat_id)
     chat = get_crud_service().get_chat(cmd)
     if not chat:
-        return response(404, {"message": "Chat not found"})
+        return response(404, CHAT_NOT_FOUND)
 
     update_cmd = UpdateChatCmd(
         user_id = user_id,
@@ -140,7 +145,7 @@ def handle_messages_post(user_id, chat_id, body):
     get_cmd = GetChatCmd(user_id = user_id, chat_id = chat_id)
     chat = get_crud_service().get_chat(get_cmd)
     if not chat:
-        return response(404, {"message": "Chat not found"})
+        return response(404, CHAT_NOT_FOUND)
 
     message = body.get("message")
     response_mode = body.get("response_mode", "default")
@@ -175,6 +180,30 @@ def handle_messages_post(user_id, chat_id, body):
     )
 
 
+def _route_chats_collection(method, user_id, body):
+    if method == "GET":
+        return handle_chats_get(user_id)
+    if method == "POST":
+        return handle_chats_post(user_id, body)
+    return response(404, ROUTE_NOT_FOUND)
+
+
+def _route_chat_resource(method, user_id, chat_id, body):
+    if method == "GET":
+        return handle_chat_get(user_id, chat_id)
+    if method == "DELETE":
+        return handle_chat_delete(user_id, chat_id)
+    if method == "PUT":
+        return handle_chat_put(user_id, chat_id, body)
+    return response(404, ROUTE_NOT_FOUND)
+
+
+def _route_chat_messages(method, user_id, chat_id, body):
+    if method == "POST":
+        return handle_messages_post(user_id, chat_id, body)
+    return response(404, ROUTE_NOT_FOUND)
+
+
 def route(event):
     method = get_method(event)
     user_id = get_user_id(event)
@@ -182,33 +211,25 @@ def route(event):
     body = parse_body(event)
 
     if not user_id:
-        return response(401, {"message": "Unauthorized"})
+        return response(401, UNAUTHORIZED)
 
-    if len(parts) == 1 and parts[0] == "chats":
-        if method == "GET":
-            return handle_chats_get(user_id)
-        if method == "POST":
-            return handle_chats_post(user_id, body)
+    # All chatbot routes start with /chats
+    if not parts or parts[0] != "chats":
+        return response(404, ROUTE_NOT_FOUND)
 
-    if len(parts) == 2 and parts[0] == "chats":
-        chat_id = parts[1]
+    # /chats
+    if len(parts) == 1:
+        return _route_chats_collection(method, user_id, body)
 
-        if method == "GET":
-            return handle_chat_get(user_id, chat_id)
+    # /chats/{chat_id}
+    if len(parts) == 2:
+        return _route_chat_resource(method, user_id, parts[1], body)
 
-        if method == "DELETE":
-            return handle_chat_delete(user_id, chat_id)
+    # /chats/{chat_id}/messages
+    if len(parts) == 3 and parts[2] == "messages":
+        return _route_chat_messages(method, user_id, parts[1], body)
 
-        if method == "PUT":
-            return handle_chat_put(user_id, chat_id, body)
-
-    if len(parts) == 3 and parts[0] == "chats" and parts[2] == "messages":
-        chat_id = parts[1]
-
-        if method == "POST":
-            return handle_messages_post(user_id, chat_id, body)
-
-    return response(404, {"message": "Route not found"})
+    return response(404, ROUTE_NOT_FOUND)
 
 
 def lambda_handler(event, context):

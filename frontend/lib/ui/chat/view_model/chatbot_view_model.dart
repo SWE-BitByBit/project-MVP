@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../domain/models/chatbot/chat.dart';
 import '../../../domain/models/chatbot/chat_enums.dart';
 import '../../../domain/models/chatbot/chat_message.dart';
-import '../../../domain/models/chatbot/chat_preview.dart';
 import '../../../data/repositories/chatbot_repository.dart';
 
 /// Gestisce lo stato della UI e la logica di business per l'intera funzionalità Chatbot.
@@ -12,16 +11,16 @@ class ChatbotViewModel extends ChangeNotifier {
 
   // --- STATO DELLA UI ---
 
-  List<ChatPreview> _chatPreviews = [];
+  List<Chat> _chatPreviews = [];
   Chat? _currentChat;
-  ChatMode _selectedMode = ChatMode.DETECTIVE; // Modalità di default
+  ChatMode _selectedMode = ChatMode.detective; // Modalità di default
 
   bool _isLoading = false;
   String? _errorMessage;
 
   // --- GETTERS (Per permettere alla View di leggere i dati in modo sicuro) ---
 
-  List<ChatPreview> get chatPreviews => List.unmodifiable(_chatPreviews);
+  List<Chat> get chatPreviews => List.unmodifiable(_chatPreviews);
   Chat? get currentChat => _currentChat;
   ChatMode get selectedMode => _selectedMode;
   bool get isLoading => _isLoading;
@@ -112,7 +111,7 @@ class ChatbotViewModel extends ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch
           .toString(), // ID temporaneo locale
       content: content.trim(),
-      type: MessageType.USER,
+      type: MessageType.user,
       timestamp: DateTime.now(),
     );
     _currentChat!.addMessage(userMessage);
@@ -132,6 +131,11 @@ class ChatbotViewModel extends ChangeNotifier {
 
       // 3. Aggiungiamo la risposta dell'AI alla chat
       _currentChat!.addMessage(response.getResponse());
+
+      // 4. Aggiorniamo il titolo della chat se l'AI ne ha generato uno nuovo (come da UML)
+      if (response.getUpdatedTitle() != null) {
+        _currentChat!.setTitle(response.getUpdatedTitle()!);
+      }
     } catch (e) {
       _errorMessage = "Errore di connessione con l'AI. Riprova.";
     } finally {

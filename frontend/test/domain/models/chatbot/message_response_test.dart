@@ -9,7 +9,7 @@ void main() {
     final dummyAiMessage = ChatMessage(
       id: 'msg-ai-1',
       content: 'Risposta di prova',
-      type: MessageType.AI,
+      type: MessageType.ai,
       timestamp: DateTime.now(),
     );
 

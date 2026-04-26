@@ -31,9 +31,9 @@ void main() {
       final messages = chat.getMessages();
       expect(messages.length, 2);
       expect(messages[0].id, 'msg-1');
-      expect(messages[0].type, MessageType.USER);
+      expect(messages[0].type, MessageType.user);
       expect(messages[1].id, 'msg-2');
-      expect(messages[1].type, MessageType.AI);
+      expect(messages[1].type, MessageType.ai);
       expect(messages[1].timestamp, sampleDate);
     });
 
@@ -65,7 +65,7 @@ void main() {
           ChatMessage(
             id: 'msg-1',
             content: 'Invia al server',
-            type: MessageType.USER,
+            type: MessageType.user,
             timestamp: sampleDate,
           )
         ],

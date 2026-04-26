@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 
 /// Controfigura programmabile del ChatbotService.
 class MockChatbotService implements ChatbotService {
+  @override
   final String baseUrl = '';
+  @override
   final http.Client client = http.Client();
 
   // --- TELECOMANDO (Variabili di controllo per i test) ---
@@ -17,8 +19,9 @@ class MockChatbotService implements ChatbotService {
 
   @override
   Future<List<Map<String, dynamic>>> fetchChatPreviews() async {
-    if (shouldThrowError)
+    if (shouldThrowError) {
       throw Exception('Errore 500: Server non raggiungibile');
+    }
 
     mockedChatJson = {
       "chats": [
@@ -62,37 +65,44 @@ class MockChatbotService implements ChatbotService {
 
   @override
   Future<Map<String, dynamic>> fetchChat(String chatId) async {
-    if (shouldThrowError) throw Exception('Errore 404: Chat non trovata');
-    mockedChatJson = {
-      "user_id": "user-123",
-      "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
-      "title": "Nuova chat",
-      "created_at": "2026-04-22T15:22:27.615449+00:00",
-      "updated_at": "2026-04-22T15:22:27.615449+00:00",
-      "messages": [
-        {
-          "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
-          "message_id": "01KPV06H6NVMXSJNV0P2PBPPM1",
-          "text": "Ciao, come ti chiami?",
-          "sender": "user",
-          "created_at": "2026-04-22T16:26:00.789610+00:00",
-        },
-        {
-          "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
-          "message_id": "01KPV06H7X7EGV6GCN6P1VYKQH",
-          "text": "Mi chiamo AI e sono il tuo assistente virtuale",
-          "sender": "ai",
-          "created_at": "2026-04-22T16:26:00.829470+00:00",
-        },
-      ],
-    };
+    if (shouldThrowError) {
+      throw Exception('Errore 404: Chat non trovata');
+    }
+
+    // Restituisce i dati finti solo se non sono stati impostati manualmente dal test
+    if (mockedChatJson.isEmpty) {
+      mockedChatJson = {
+        "user_id": "user-123",
+        "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
+        "title": "Nuova chat",
+        "created_at": "2026-04-22T15:22:27.615449+00:00",
+        "updated_at": "2026-04-22T15:22:27.615449+00:00",
+        "messages": [
+          {
+            "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
+            "message_id": "01KPV06H6NVMXSJNV0P2PBPPM1",
+            "text": "Ciao, come ti chiami?",
+            "sender": "user",
+            "created_at": "2026-04-22T16:26:00.789610+00:00",
+          },
+          {
+            "chat_id": "01KPTWJ5CZ9QM4VH8CSHV451ZV",
+            "message_id": "01KPV06H7X7EGV6GCN6P1VYKQH",
+            "text": "Mi chiamo AI e sono il tuo assistente virtuale",
+            "sender": "ai",
+            "created_at": "2026-04-22T16:26:00.829470+00:00",
+          },
+        ],
+      };
+    }
     return mockedChatJson;
   }
 
   @override
   Future<Map<String, dynamic>> createChat() async {
-    if (shouldThrowError)
+    if (shouldThrowError) {
       throw Exception('Errore 500: Impossibile creare la chat');
+    }
 
     mockedChatJson = {
       "user_id": "user-123",
@@ -107,7 +117,9 @@ class MockChatbotService implements ChatbotService {
 
   @override
   Future<void> deleteChat(String chatId) async {
-    if (shouldThrowError) throw Exception('Errore 500: Impossibile eliminare');
+    if (shouldThrowError) {
+      throw Exception('Errore 500: Impossibile eliminare');
+    }
   }
 
   @override
@@ -117,7 +129,18 @@ class MockChatbotService implements ChatbotService {
     String mode,
   ) async {
     if (shouldThrowError) throw Exception('Errore di rete durante l\'invio');
-    mockedMessageResponseJson = {"response": "Questa è la mia risposta"};
+    mockedMessageResponseJson = {
+      "message_id": "msg-ai-123",
+      "text": "Questa è la mia risposta",
+      "sender": "ai",
+      "created_at": DateTime.now().toIso8601String(),
+      "updated_title": "Titolo Aggiornato AI"
+    };
     return mockedMessageResponseJson;
+  }
+
+  @override
+  Future<String> generateChatTitle(String content) async {
+    return "Titolo Generato Mock";
   }
 }

@@ -19,7 +19,7 @@ void main() {
     });
 
     test(
-      'getChatPreviews mappa correttamente il JSON in oggetti ChatPreview',
+      'getChatPreviews mappa correttamente il JSON in oggetti Chat',
       () async {
         // Arrange: Prepariamo un finto JSON di risposta dal Service
         mockService.mockedPreviewsJson = [
@@ -35,9 +35,9 @@ void main() {
 
         // Assert: Verifichiamo che il Repository abbia fatto bene la traduzione
         expect(previews.length, 1);
-        expect(previews.first.id, 'prev-1');
-        expect(previews.first.title, 'Indagine 1');
-        expect(previews.first.lastModified, sampleDate);
+        expect(previews.first.getId(), 'prev-1');
+        expect(previews.first.getTitle(), 'Indagine 1');
+        expect(previews.first.getCreationDate(), sampleDate);
       },
     );
 
@@ -71,7 +71,7 @@ void main() {
       final response = await repository.sendMessage(
         dummyChat,
         'Ciao',
-        ChatMode.DETECTIVE,
+        ChatMode.detective,
       );
 
       // Assert: Controlliamo il messaggio
