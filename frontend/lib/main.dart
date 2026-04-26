@@ -10,7 +10,6 @@ import 'utils/locator.dart';
 /// Inizializza le configurazioni di sistema e carica le variabili d'ambiente
 /// prima di avviare l'interfaccia utente tramite [runApp].
 Future<void> main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
@@ -21,7 +20,6 @@ Future<void> main() async {
 
   final authService = AuthService();
   final authRepository = AuthRepository(authService);
-  // INIZIALIZZA GET_IT QUI!
   setupLocator();
 
   runApp(MainApp(authRepository: authRepository));

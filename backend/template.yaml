@@ -19,14 +19,15 @@ Resources:
       Handler: app.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
-  
+
   TrustedContactFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/trusted_contact/
       Handler: app.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
+        tact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -48,11 +49,11 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-Outputs:  
+Outputs:
   DiaryFunction:
     Description: Trusted contacts lambda function ARN
     Value: !GetAtt DiaryFunction.Arn
-  
+
   TrustedContactFunction:
     Description: Diary notes lambda function ARN
     Value: !GetAtt TrustedContactFunction.Arn

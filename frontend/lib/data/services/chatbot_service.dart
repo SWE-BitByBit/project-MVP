@@ -5,10 +5,20 @@ import '../../data/dtos/chat_dto.dart';
 
 /// Servizio responsabile della comunicazione HTTP/REST con il backend AWS
 /// per la funzionalità del Chatbot.
-// DA IMPLEMENTARE
 class ChatbotService {
-  final String baseUrl = dotenv.env['API_GATEWAY_URL'] ?? '';
-  final http.Client client = http.Client();
+  /// URL base dell'API Gateway per il Chatbot.
+  final String baseUrl;
+
+  /// Il client HTTP per le richieste.
+  final http.Client client;
+
+  /// Costruttore con iniezione delle dipendenze.
+  /// Se [baseUrl] non viene fornita, viene letta da [dotenv].
+  ChatbotService({
+    String? baseUrl,
+    http.Client? client,
+  })  : baseUrl = baseUrl ?? dotenv.env['API_BASE_URL'] ?? '',
+        client = client ?? http.Client();
 
   Map<String, String> _headers() {
     // TODO: Recuperare il token reale dall'AuthRepository
