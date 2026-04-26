@@ -23,6 +23,20 @@ Resources:
         Variables:
           TABLE_NAME: "trusted_contacts_poc"
 
+  DiaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/diary/
+      Handler: app.lambda_handler
+      FunctionName: diary-notes-microservice-mvp
+  
+  TrustedContactFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/trusted_contact/
+      Handler: app.lambda_handler
+      FunctionName: trusted-contact-microservice-mvp
+
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
