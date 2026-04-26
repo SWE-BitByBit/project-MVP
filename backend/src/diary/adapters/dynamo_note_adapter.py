@@ -2,8 +2,8 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 
-from src.diary.domain.note import NoteElement
-from src.diary.domain.note import Note
+from domain.note_element import NoteElement
+from domain.note import Note
 
 class DynamoNoteAdapter:
 
