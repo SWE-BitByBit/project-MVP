@@ -13,6 +13,10 @@ import '../../../../testing/mocks/mock_location_service.dart';
 
 
 void main() {
+  /// Test per il widget [SafePlaceMapWidget].
+  /// 
+  /// Verifica la corretta visualizzazione della mappa, dei marker,
+  /// gli stati di caricamento e l'interazione con essi.
   group('SafePlaceMapWidget Test', () {
     late MockSafePlaceRepository mockRepository;
     late MockLocationService mockLocation;
@@ -37,6 +41,8 @@ void main() {
       );
     }
 
+    /// Verifica che durante il caricamento venga mostrato 
+    /// un indicatore di progresso circolare.
     testWidgets('Mostra CircularProgressIndicator quando il caricamento è in corso', (WidgetTester tester) async {
       final completer = Completer<List<SafePlace>>();
       mockRepository.completer = completer;
@@ -49,6 +55,8 @@ void main() {
       expect(find.byType(FlutterMap), findsNothing);
     });
 
+    /// Verifica che al termine del caricamento vengano
+    /// mostrati correttamente la mappa e i marker.
     testWidgets('Mostra FlutterMap e MarkerLayer al termine del caricamento', (WidgetTester tester) async {
       await viewModel.fetchSafePlacesCommand.execute();
 
@@ -60,41 +68,33 @@ void main() {
       expect(find.byType(MarkerLayer), findsOneWidget);
     });
 
-    // --- NUOVO TEST 1: Verifica il Tap sul Marker ---
+    /// Verifica che il tocco su un marker selezioni
+    /// correttamente il luogo associato nel ViewModel.
     testWidgets('Tappare su un marker seleziona il luogo nel ViewModel', (WidgetTester tester) async {
-      // 1. Carica i dati finti
       await viewModel.fetchSafePlacesCommand.execute();
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // 2. Trova l'icona del marker rosso (sappiamo che è Icons.location_on)
       final markerIcon = find.byIcon(Icons.location_on);
       expect(markerIcon, findsOneWidget);
 
-      // 3. Simula il tocco dell'utente sul marker
       await tester.tap(markerIcon);
       await tester.pumpAndSettle();
 
-      // 4. Verifica che il ViewModel abbia registrato la selezione
       expect(viewModel.selectedPlace, isNotNull);
       expect(viewModel.selectedPlace!.name, 'Centro Test');
     });
 
-    // --- NUOVO TEST 2: Verifica il Pallino Blu (Posizione Utente) ---
+    /// Verifica che venga mostrato il marker blu che 
+    /// rappresenta la posizione attuale dell'utente se il GPS è attivo.
     testWidgets('Mostra il marker blu della posizione utente se il GPS è attivo', (WidgetTester tester) async {
-      // 1. Carica i dati finti dei luoghi
       await viewModel.fetchSafePlacesCommand.execute();
 
-      // 2. Chiediamo la posizione utente (il mock restituirà 45.0, 11.0)
       await viewModel.getUserLocationCommand.execute();
 
-      // 3. Disegniamo il widget
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // 4. Cerchiamo il pallino blu.
-      // Dato che non ha un'icona specifica ma è un Container con colore blue,
-      // usiamo un WidgetPredicate per trovarlo.
       final blueDotFinder = find.byWidgetPredicate((widget) {
         if (widget is Container && widget.decoration is BoxDecoration) {
           final boxDeco = widget.decoration as BoxDecoration;
@@ -103,7 +103,6 @@ void main() {
         return false;
       });
 
-      // Se lo trova, significa che il blocco if (currentPosition != null) ha funzionato!
       expect(blueDotFinder, findsOneWidget);
     });
   });

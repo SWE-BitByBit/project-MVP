@@ -1,8 +1,8 @@
 from typing import Any, Dict, Final
 
-from materials.controller.resources_controller import ResourcesController
-from materials.repository.s3_resources_repository import S3ResourcesRepository
-from materials.service.resources_service import ResourcesService
+from controller.resources_controller import ResourcesController
+from repository.s3_resources_repository import S3ResourcesRepository
+from service.resources_service import ResourcesService
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:

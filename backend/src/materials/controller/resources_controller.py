@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Final
 
-from materials.ports.get_resources_port import GetResourcesPort
+from ports.get_resources_port import GetResourcesPort
 
 
 class ResourcesController:

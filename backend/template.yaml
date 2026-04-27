@@ -12,6 +12,25 @@ Globals:
       LogFormat: JSON
 
 Resources:
+  # --- API Gateway ---
+  AppHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: app-protegge-trasforma-api-mvp
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+
+  # --- DIARY ---
   DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -20,6 +39,7 @@ Resources:
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
 
+  # --- TRUSTED CONTACTS ---
   TrustedContactFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -48,6 +68,45 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
+
+  # --- CHATBOT ---
+  ChatbotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/chatbot/
+      Handler: lambda_function.lambda_handler
+      FunctionName: lambda-chatbot-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Layers:
+        - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
+      Environment:
+        Variables:
+          PYTHONPATH: "/var/task"
+      Events:
+        GetChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: get
+            ApiId: !Ref AppHttpApi
+        PostChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: post
+            ApiId: !Ref AppHttpApi
+        ChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: any
+            ApiId: !Ref AppHttpApi
+        ChatMessages:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}/messages
+            Method: post
+            ApiId: !Ref AppHttpApi
 
   ChatsTable:
     Type: AWS::DynamoDB::Table
@@ -98,45 +157,75 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  # --- MATERIALS ---
   GetMaterialsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
-      Handler: materials/lambda_handler.lambda_handler
+      CodeUri: src/materials/
+      Handler: lambda_handler.lambda_handler
       FunctionName: fetch-materials-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
+      Events:
+        GetMaterials:
+          Type: HttpApi
+          Properties:
+            Path: /materials
+            Method: get
+            ApiId: !Ref AppHttpApi
 
+  MaterialsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-materials-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # --- SAFE PLACES ---
   GetSafePlacesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
-      Handler: safe_places/lambda_handler.lambda_handler
+      CodeUri: src/safe_places/
+      Handler: lambda_handler.lambda_handler
       FunctionName: fetch-safe-places-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
+      Events:
+        GetSafePlaces:
+          Type: HttpApi
+          Properties:
+            Path: /safe-places
+            Method: get
+            ApiId: !Ref AppHttpApi
 
-  ChatbotFunction:
-    Type: AWS::Serverless::Function
+  SafePlacesBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      CodeUri: src/
-      Handler: chatbot/lambda_function.lambda_handler
-      FunctionName: lambda-chatbot-mvp
-      Runtime: python3.14
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
-      Layers:
-        - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
-    Metadata:
-      BuildMethod: makefile
+      BucketName: app-protegge-trasforma-luoghi-sicuri-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
 Outputs:
+  ApiUrl:
+    Description: "URL base dell'API da inserire nel file .env del frontend"
+    Value: !Sub "https://${AppHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
   DiaryFunction:
     Description: Trusted contacts lambda function ARN
     Value: !GetAtt DiaryFunction.Arn

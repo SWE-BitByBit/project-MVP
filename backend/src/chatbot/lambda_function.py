@@ -1,17 +1,17 @@
 import json
 
-from chatbot.services.chatbot_crud_service import ChatbotCRUDService
-from chatbot.services.chatbot_llm_service import ChatbotLLMService
-from chatbot.adapters.dynamo_chat_adapter import DynamoChatAdapter
-from chatbot.adapters.bedrock_llm_adapter import BedrockLLMAdapter
-from chatbot.domain.dtos.chat_dto import ChatDTO
+from services.chatbot_crud_service import ChatbotCRUDService
+from services.chatbot_llm_service import ChatbotLLMService
+from adapters.dynamo_chat_adapter import DynamoChatAdapter
+from adapters.bedrock_llm_adapter import BedrockLLMAdapter
+from domain.dtos.chat_dto import ChatDTO
 
-from chatbot.commands.create_chat_cmd import CreateChatCmd
-from chatbot.commands.update_chat_cmd import UpdateChatCmd
-from chatbot.commands.get_chat_cmd import GetChatCmd
-from chatbot.commands.get_chat_list_cmd import GetChatListCmd
-from chatbot.commands.delete_chat_cmd import DeleteChatCmd
-from chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
+from commands.create_chat_cmd import CreateChatCmd
+from commands.update_chat_cmd import UpdateChatCmd
+from commands.get_chat_cmd import GetChatCmd
+from commands.get_chat_list_cmd import GetChatListCmd
+from commands.delete_chat_cmd import DeleteChatCmd
+from commands.add_chat_message_cmd import AddChatMessageCmd
 
 # --- CONSTANTS ---
 CHAT_NOT_FOUND = {"message": "Chat not found"}
