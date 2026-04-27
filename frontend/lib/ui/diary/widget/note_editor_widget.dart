@@ -56,8 +56,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
 
   Widget _deleteCardOptionMenu(VoidCallback onDelete) {
     return OptionsMenu<String>(
-      items: [
-        const PopupMenuItem<String>(
+      items: const [
+        PopupMenuItem<String>(
           value: 'delete',
           child: Row(
             children: [
