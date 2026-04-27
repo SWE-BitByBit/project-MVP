@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [develop]
+    branches: [ develop ]
   pull_request:
-    branches: [develop]
+    branches: [ develop ]
 
 jobs:
   # ─────────────────────────────────────────
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # necessario per SonarCloud
+          fetch-depth: 0 # necessario per SonarCloud
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,7 +29,9 @@ jobs:
 
       - name: Run tests and generate coverage
         working-directory: backend
-        run: make coverage   # genera coverage.xml
+        env:
+          PYTHONPATH: src/chatbot:src/materials:src/diary:src/safe_places:src/trusted_contact
+        run: make coverage # genera coverage.xml
 
       - name: SonarCloud Scan - Backend
         uses: SonarSource/sonarqube-scan-action@v7
@@ -79,7 +81,7 @@ jobs:
   # ─────────────────────────────────────────
   deploy:
     name: Deploy su AWS
-    needs: [backend-test]  # parte solo se entrambi i job passano
+    needs: [ backend-test ] # parte solo se entrambi i job passano
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
