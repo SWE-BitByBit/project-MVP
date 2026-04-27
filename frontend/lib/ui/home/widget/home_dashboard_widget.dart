@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
 import 'package:provider/provider.dart';
 import '../view_model/home_view_model.dart';
 import '../../core/widgets/dashboard_button_widget.dart';
@@ -69,7 +70,12 @@ class HomeDashboardWidget extends StatelessWidget {
             backgroundColor: Colors.purple.shade50,
             iconColor: Colors.purple.shade800,
             onTap: () {
-              debugPrint("Hai cliccato Diario!");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DiaryAccessScreen(),
+                ),
+              );
             },
           );
         } else if (index == 3) {
