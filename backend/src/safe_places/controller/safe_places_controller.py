@@ -1,28 +1,29 @@
 import json
 from typing import Any, Dict, Final
 
-from ports.get_resources_port import GetResourcesPort
+from ports.get_marker_port import GetMarkerPort
 
 
-class ResourcesController:
+class SafePlacesController:
     """
-    Controller che orchestra il recupero delle risorse e costruisce la risposta HTTP.
+    Controller che orchestra il recupero dei marker e costruisce la risposta HTTP.
 
-    :param get_resources_port: Porta per il recupero delle risorse.
+    :param get_marker: Porta per il recupero dei marker.
     """
 
-    def __init__(self, get_resources_port: GetResourcesPort) -> None:
-        self._get_resources_port: Final[GetResourcesPort] = get_resources_port
+    def __init__(self, get_marker: GetMarkerPort) -> None:
+        self._get_marker: Final[GetMarkerPort] = get_marker
 
-    def get_resources(self) -> Dict[str, Any]:
+    def marker_get(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Recupera le risorse e produce la risposta per API Gateway.
+        Recupera i marker e produce la risposta per API Gateway.
 
+        :param event: Evento AWS Lambda (non utilizzato ma previsto dall'UML).
         :return: Dizionario compatibile con API Gateway (statusCode, headers, body).
         """
         try:
-            resources = self._get_resources_port.get_resources()
-            body = [resource.to_dict() for resource in resources]
+            markers = self._get_marker.get_all_markers()
+            body = [marker.to_dict() for marker in markers]
             return self._response(200, body)
         except Exception as error:
             return self._response(500, {"errorMessage": str(error)})
