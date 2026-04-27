@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Final
 
-from safe_places.ports.get_marker_port import GetMarkerPort
+from ports.get_marker_port import GetMarkerPort
 
 
 class SafePlacesController:

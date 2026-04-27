@@ -1,8 +1,8 @@
 from typing import Any, Dict, Final
 
-from safe_places.controller.safe_places_controller import SafePlacesController
-from safe_places.repository.s3_safe_places_repository import S3SafePlacesRepository
-from safe_places.service.safe_places_service import SafePlacesService
+from controller.safe_places_controller import SafePlacesController
+from repository.s3_safe_places_repository import S3SafePlacesRepository
+from service.safe_places_service import SafePlacesService
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:

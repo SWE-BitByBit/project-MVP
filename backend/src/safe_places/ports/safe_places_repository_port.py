@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from safe_places.models.marker import Marker
+from models.marker import Marker
 
 
 class SafePlacesRepositoryPort(ABC):

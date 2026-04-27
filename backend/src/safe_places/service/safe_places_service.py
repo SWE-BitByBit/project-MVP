@@ -1,8 +1,8 @@
 from typing import Final, List
 
-from safe_places.models.marker import Marker
-from safe_places.ports.get_marker_port import GetMarkerPort
-from safe_places.ports.safe_places_repository_port import SafePlacesRepositoryPort
+from models.marker import Marker
+from ports.get_marker_port import GetMarkerPort
+from ports.safe_places_repository_port import SafePlacesRepositoryPort
 
 
 class SafePlacesService(GetMarkerPort):

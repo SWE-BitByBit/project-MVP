@@ -3,8 +3,8 @@ from typing import Final, List
 
 import boto3
 
-from safe_places.models.marker import Marker
-from safe_places.ports.safe_places_repository_port import SafePlacesRepositoryPort
+from models.marker import Marker
+from ports.safe_places_repository_port import SafePlacesRepositoryPort
 
 
 class S3SafePlacesRepository(SafePlacesRepositoryPort):

@@ -12,6 +12,7 @@ Globals:
       LogFormat: JSON
 
 Resources:
+  # --- DIARY ---
   DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -20,14 +21,14 @@ Resources:
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
 
+  # --- TRUSTED CONTACTS ---
   TrustedContactFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/trusted_contact/
       Handler: app.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
-        tact-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -49,27 +50,55 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  # --- MATERIALS ---
   GetMaterialsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
-      Handler: materials/lambda_handler.lambda_handler
+      CodeUri: src/materials/
+      Handler: lambda_handler.lambda_handler
       FunctionName: fetch-materials-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
 
+  MaterialsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-materials-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # --- SAFE PLACES ---
   GetSafePlacesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
-      Handler: safe_places/lambda_handler.lambda_handler
+      CodeUri: src/safe_places/
+      Handler: lambda_handler.lambda_handler
       FunctionName: fetch-safe-places-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
+
+  SafePlacesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-luoghi-sicuri-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
 Outputs:
   DiaryFunction:
