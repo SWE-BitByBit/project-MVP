@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List
-from chatbot.domain.chat_message import Message
+from domain.chat_message import Message
 
 @dataclass
 class Chat:

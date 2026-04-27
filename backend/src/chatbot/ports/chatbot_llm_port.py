@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from chatbot.domain.chat import Chat
+from domain.chat import Chat
 
 class ChatbotLLMPort(ABC):
     @abstractmethod

@@ -1,6 +1,6 @@
 import secrets
-from chatbot.ports.chatbot_llm_port import ChatbotLLMPort
-from chatbot.domain.chat import Chat
+from ports.chatbot_llm_port import ChatbotLLMPort
+from domain.chat import Chat
 
 class BedrockLLMAdapter(ChatbotLLMPort):
     def process_prompt(self, chat: Chat, prompt: str, response_mode: str) -> str:

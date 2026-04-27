@@ -1,5 +1,5 @@
-from chatbot.ports.chatbot_llm_port import ChatbotLLMPort
-from chatbot.domain.chat import Chat
+from ports.chatbot_llm_port import ChatbotLLMPort
+from domain.chat import Chat
 from rank_bm25 import BM25Okapi
 from pathlib import Path
 import re

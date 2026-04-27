@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List
-from chatbot.domain.dtos.chat_message_dto import ChatMessageDTO
+from domain.dtos.chat_message_dto import ChatMessageDTO
 
 @dataclass
 class ChatDTO:

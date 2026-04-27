@@ -1,20 +1,20 @@
 from typing import List, Optional
 
-from chatbot.domain.chat import Chat
+from domain.chat import Chat
 
-from chatbot.ports.chats_repository_port import ChatsRepositoryPort
-from chatbot.ports.get_chat_port import GetChatPort
-from chatbot.ports.delete_chat_port import DeleteChatPort
-from chatbot.ports.create_chat_port import CreateChatPort
-from chatbot.ports.update_chat_port import UpdateChatPort
-from chatbot.ports.chat_message_port import ChatMessagePort
+from ports.chats_repository_port import ChatsRepositoryPort
+from ports.get_chat_port import GetChatPort
+from ports.delete_chat_port import DeleteChatPort
+from ports.create_chat_port import CreateChatPort
+from ports.update_chat_port import UpdateChatPort
+from ports.chat_message_port import ChatMessagePort
 
-from chatbot.commands.create_chat_cmd import CreateChatCmd
-from chatbot.commands.get_chat_cmd import GetChatCmd
-from chatbot.commands.get_chat_list_cmd import GetChatListCmd
-from chatbot.commands.delete_chat_cmd import DeleteChatCmd
-from chatbot.commands.update_chat_cmd import UpdateChatCmd
-from chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
+from commands.create_chat_cmd import CreateChatCmd
+from commands.get_chat_cmd import GetChatCmd
+from commands.get_chat_list_cmd import GetChatListCmd
+from commands.delete_chat_cmd import DeleteChatCmd
+from commands.update_chat_cmd import UpdateChatCmd
+from commands.add_chat_message_cmd import AddChatMessageCmd
 
 
 class ChatbotCRUDService(
