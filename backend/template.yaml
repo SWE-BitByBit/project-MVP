@@ -12,6 +12,21 @@ Globals:
       LogFormat: JSON
 
 Resources:
+  # --- API Gateway ---
+  AppHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: app-protegge-trasforma-api-mvp
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+
   # --- DIARY ---
   DiaryFunction:
     Type: AWS::Serverless::Function
@@ -28,7 +43,8 @@ Resources:
       CodeUri: src/trusted_contact/
       Handler: app.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
+        tact-mvp"
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
@@ -58,6 +74,13 @@ Resources:
       Handler: lambda_handler.lambda_handler
       FunctionName: fetch-materials-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetMaterials:
+          Type: HttpApi
+          Properties:
+            Path: /materials
+            Method: get
+            ApiId: !Ref AppHttpApi
 
   MaterialsBucket:
     Type: AWS::S3::Bucket
@@ -83,6 +106,13 @@ Resources:
       Handler: lambda_handler.lambda_handler
       FunctionName: fetch-safe-places-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetSafePlaces:
+          Type: HttpApi
+          Properties:
+            Path: /safe-places
+            Method: get
+            ApiId: !Ref AppHttpApi
 
   SafePlacesBucket:
     Type: AWS::S3::Bucket
@@ -101,6 +131,10 @@ Resources:
         RestrictPublicBuckets: true
 
 Outputs:
+  ApiUrl:
+    Description: "URL base dell'API da inserire nel file .env del frontend"
+    Value: !Sub "https://${AppHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
   DiaryFunction:
     Description: Trusted contacts lambda function ARN
     Value: !GetAtt DiaryFunction.Arn
