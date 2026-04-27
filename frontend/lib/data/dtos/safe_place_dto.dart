@@ -6,13 +6,13 @@ class SafePlaceDTO {
   /// Converte un payload JSON in un'istanza del dominio [SafePlace].
   static SafePlace fromJson(Map<String, dynamic> json) {
     return SafePlace(
-      id: json['id'] as String,
+      id: json['marker_id'] as String,
       name: json['name'] as String,
       address: json['address'] as String,
-      // Usiamo 'num' e poi '.toDouble()' per evitare errori a runtime
-      // se l'API invia un intero (es. 45) invece di un decimale (es. 45.0)
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      // Usiamo double.parse(toString()) per gestire sia stringhe che numeri
+      // Il file S3 attuale ha le coordinate come stringhe (es. "45.3978")
+      latitude: double.parse(json['latitude'].toString()),
+      longitude: double.parse(json['longitude'].toString()),
       category: json['category'] as String,
     );
   }
@@ -20,7 +20,7 @@ class SafePlaceDTO {
   /// Converte un'istanza del dominio [SafePlace] in una mappa JSON.
   static Map<String, dynamic> toJson(SafePlace place) {
     return {
-      'id': place.id,
+      'marker_id': place.id,
       'name': place.name,
       'address': place.address,
       'latitude': place.latitude,

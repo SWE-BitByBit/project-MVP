@@ -1,6 +1,6 @@
 from typing import Any, Dict, Final
 
-from materials.models.resource_type import ResourceType
+from models.resource_type import ResourceType
 
 
 class Resource:

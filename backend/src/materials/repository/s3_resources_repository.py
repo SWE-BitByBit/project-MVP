@@ -3,9 +3,9 @@ from typing import Final, List
 
 import boto3
 
-from materials.models.resource import Resource
-from materials.models.resource_type import ResourceType
-from materials.ports.resources_repository_port import ResourcesRepositoryPort
+from models.resource import Resource
+from models.resource_type import ResourceType
+from ports.resources_repository_port import ResourcesRepositoryPort
 
 
 class S3ResourcesRepository(ResourcesRepositoryPort):
