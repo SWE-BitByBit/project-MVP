@@ -6,7 +6,7 @@ class DmsConfigurationSettings:
         first_timer,
         second_timer,
         email_subject,
-        email_body,   
+        email_body,
     ):
         self.user_id = user_id
         self.is_active = is_active

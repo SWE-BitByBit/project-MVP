@@ -31,3 +31,7 @@ class DmsRepositoryPort(ABC):
     @abstractmethod
     def update_second_counter(self, user_id: str, remaining_days: int) -> None:
         pass
+
+    @abstractmethod
+    def list_all_configs(self) -> list[DmsConfigurationSettings]:
+        pass

@@ -20,7 +20,6 @@ class DmsCRUDService(
 
         :param user_id: chiave per accedere alla entry del db     
         """
-
         config = self._repository.get_dms_config(user_id)
         if config.is_active:
             self._repository.update_first_counter(user_id, config.first_timer)
@@ -34,7 +33,6 @@ class DmsCRUDService(
         :param user_id: chiave per accedere alla entry del db  
 
         """
-
         return self._repository.get_dms_config(user_id)
 
 
@@ -48,10 +46,10 @@ class DmsCRUDService(
         self.send_heartbeat(config.user_id)
 
 
-    def create_dms_configuration_settings(self, user_id: str) -> None:
+    def create_dms_configuration_settings(self, user_id: str) -> DmsConfigurationSettings:
         """
         Creazione della entry nel db dei valori delle impostazioni
 
         :param user_id: chiave creare la entry del db  
         """
-        self._repository.add_dms_config(user_id)
+        return self._repository.add_dms_config(user_id)

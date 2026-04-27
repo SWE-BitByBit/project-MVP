@@ -1,4 +1,5 @@
 import os
+from typing import List
 import boto3
 from botocore.exceptions import ClientError
 
@@ -147,3 +148,25 @@ class DynamoDmsAdapter(DmsRepositoryPort):
 
         except ClientError as e:
             raise RuntimeError(f"Error updating second counter: {e.response['Error']['Message']}")
+        
+    def list_all_configs(self) -> List[DmsConfigurationSettings]:
+
+        try:
+            response = self._table.scan()
+            configs: List[DmsConfigurationSettings] = []
+
+            for item in response.get("Items", []):
+                configs.append(
+                    DmsConfigurationSettings(
+                        user_id=item["user_id"],
+                        is_active=item["is_active"],
+                        first_timer=item["first_timer"],
+                        second_timer=item["second_timer"],
+                        email_subject=item["email_subject"],
+                        email_body=item["email_body"]
+                    )
+                )
+            
+            return configs
+        except ClientError as e:
+            raise RuntimeError(f"Error scanning DMS configs: {e.response['Error']['Message']}")

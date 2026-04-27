@@ -9,5 +9,5 @@ class SetDmsConfigurationSettingsPort(ABC):
         pass
 
     @abstractmethod
-    def create_dms_configuration_settings(self, user_id: str) -> None:
+    def create_dms_configuration_settings(self, user_id: str) -> DmsConfigurationSettings:
         pass

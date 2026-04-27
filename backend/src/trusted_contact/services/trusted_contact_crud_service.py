@@ -6,6 +6,7 @@ from ports.set_trusted_contact_port import SetTrustedContactPort
 from ports.delete_trusted_contact_port import DeleteTrustedContactCmd
 from ports.trusted_contact_repository_port import TrustedContactRepositoryPort
 
+from commands.add_trusted_contact_command import AddTrustedContactCmd
 from commands.get_trusted_contact_command import GetTrustedContactCmd
 from domain.trusted_contact import TrustedContact
 
