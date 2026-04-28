@@ -3,8 +3,8 @@ import os
 
 from adapters.dynamo_note_adapter import DynamoNoteAdapter
 from adapters.s3_note_adapter import S3NoteAdapter
-from application.note_service import NoteService
-from adapters.diary_note_controller import DiaryNoteController
+from services.note_service import NoteService
+from diary_note_controller import DiaryNoteController
 
 def lambda_handler(event, context):
 
