@@ -32,7 +32,7 @@ class TrustedContactCRUDService(
         return self._repository.add(contact)
 
     def get_trusted_contact(self, cmd: GetTrustedContactCmd) -> Optional[TrustedContact]:
-        return self._repository.get_trusted_contact(cmd.user_id, cmd.contact_id)
+        return self._repository.get(cmd.user_id, cmd.contact_id)
     
     def get_all_trusted_contact(self, user_id: str) -> Optional[List[TrustedContact]]:
         return self._repository.list(user_id)

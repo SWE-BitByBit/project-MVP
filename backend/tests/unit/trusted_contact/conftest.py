@@ -52,6 +52,48 @@ def setup_aws(aws_credentials):
                 "second_timer_count_down": 120,
             }
         )
+        dms_table.put_item(
+            Item={
+                "user_id": "user3",
+                "user_email": "user3@gmail.com",
+                "user_name": "luigi",
+                "is_active": True,
+                "first_timer": 6,
+                "second_timer": 16,
+                "email_subject": "Messaggio di emergenza",
+                "email_body": "Corpo del messaggio",
+                "first_timer_count_down": 1,
+                "second_timer_count_down": 7,
+            }
+        )
+        dms_table.put_item(
+            Item={
+                "user_id": "user4",
+                "user_email": "user3@gmail.com",
+                "user_name": "browser",
+                "is_active": True,
+                "first_timer": 6,
+                "second_timer": 16,
+                "email_subject": "Messaggio di emergenza",
+                "email_body": "Corpo del messaggio",
+                "first_timer_count_down": 0,
+                "second_timer_count_down": 0,
+            }
+        )
+        dms_table.put_item(
+            Item={
+                "user_id": "user6",
+                "user_email": "cat@gmail.com",
+                "user_name": "cat",
+                "is_active": True,
+                "first_timer": 6,
+                "second_timer": 16,
+                "email_subject": "Messaggio di emergenza",
+                "email_body": "Corpo del messaggio",
+                "first_timer_count_down": 0,
+                "second_timer_count_down": 1,
+            }
+        )
 
         # tabella contatti fidati
         contact_table = dynamodb.create_table(
@@ -81,6 +123,27 @@ def setup_aws(aws_credentials):
             "contact_email": "cersei@gmail.com",
             "contact_phone_number": "333 2222 222"
         })
+        contact_table.put_item(Item={
+            "user_id": "user3",
+            "contact_id": "contact3",
+            "contact_name": "Jon",
+            "contact_email": "jon@gmail.com",
+            "contact_phone_number": "333 3333 222"
+        })
+        contact_table.put_item(Item={
+            "user_id": "user6",
+            "contact_id": "contact4",
+            "contact_name": "Ed",
+            "contact_email": "ed@gmail.com",
+            "contact_phone_number": "333 3333 222"
+        })
+        contact_table.put_item(Item={
+            "user_id": "user6",
+            "contact_id": "contact5",
+            "contact_name": "Arya",
+            "contact_email": "arya@gmail.com",
+            "contact_phone_number": "333 3333 222"
+        })
 
         # SES
         ses_client = boto3.client("ses", region_name="us-east-1")
@@ -89,7 +152,26 @@ def setup_aws(aws_credentials):
         ses_client.verify_email_identity(EmailAddress="cersei@gmail.com")
         ses_client.verify_email_identity(EmailAddress="user1@gmail.com")
 
-        yield
+        yield {
+            "dynamodb": dynamodb,
+            "ses_client": ses_client,
+            "dms_table": dms_table,
+            "contact_table": contact_table,
+        }
+
+@pytest.fixture(scope="function")
+def aws_dms_table(setup_aws):
+    return setup_aws["dms_table"]
+
+
+@pytest.fixture(scope="function")
+def aws_contact_table(setup_aws):
+    return setup_aws["contact_table"]
+
+
+@pytest.fixture(scope="function")
+def aws_ses_client(setup_aws):
+    return setup_aws["ses_client"]
 
 
 @pytest.fixture(scope="function")
@@ -103,10 +185,12 @@ def controller(setup_aws):
     from src.trusted_contact.services.trusted_contact_crud_service import TrustedContactCRUDService
     from src.trusted_contact.services.sos_alert_service import SOSAlertService
     from src.trusted_contact.trusted_contact_controller import TrustedContactController
+    
+    ses_client = setup_aws["ses_client"]
 
     dynamo_dms = DynamoDmsAdapter()
     dynamo_contacts = DynamoTrustedContactAdapter()
-    ses = SesNotificationAdapter()
+    ses = SesNotificationAdapter(ses_client=ses_client)
 
     controller = TrustedContactController()
     controller._dms_crud_service = DmsCRUDService(dynamo_dms)
@@ -126,7 +210,7 @@ def build_event(method, path, body=None, user_id="user1",
                 "jwt": {
                     "claims": {
                         "sub": user_id,
-                        "name": user_name,
+                        "given_name": user_name,
                         "email": user_email
                     }
                 }

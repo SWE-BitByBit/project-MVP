@@ -65,11 +65,11 @@ class DmsAlertService(UpdateDmsAlertPort):
             body=config.email_body
         )
 
-        self._notification.send_email_message(message)
+        self._notification_repository.send_email_message(message)
 
     def _send_contacts_emails(self, config: DmsConfigurationSettings, user_name: str) -> None:
 
-        contacts: List[TrustedContact] = self._contact_repository.list_trusted_contacts(config.user_id)
+        contacts: List[TrustedContact] = self._contact_repository.list(config.user_id)
 
         for contact in contacts:
 
@@ -79,7 +79,7 @@ class DmsAlertService(UpdateDmsAlertPort):
                 subject="Promemoria di inattività - App Protegge e Trasforma",
                 body=self._build_contacts_email_body(config, user_name)
             )
-            self._notification.send_email_message(message)
+            self._notification_repository.send_email_message(message)
 
     def _build_contacts_email_body(self, config: DmsConfigurationSettings, user_name: str) -> str:
         body = (

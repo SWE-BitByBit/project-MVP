@@ -30,13 +30,7 @@ class DynamoTrustedContactAdapter(TrustedContactRepositoryPort):
         except ClientError as e:
             raise RuntimeError(f"Error in adding the trusted contact: {e.response['Error']['Message']}")
         
-        return TrustedContact(
-            user_id = contact.user_id,
-            contact_id = contact.contact_id,
-            contact_name = contact.contact_name,
-            contact_email = contact.contact_email,
-            contact_phone_number = contact.contact_phone_number
-        )
+        return contact
     
     def get(self, user_id: str, contact_id: str) -> Optional[TrustedContact]:
 
@@ -95,7 +89,7 @@ class DynamoTrustedContactAdapter(TrustedContactRepositoryPort):
                     ':phone': contact.contact_phone_number,
                 }
             )
-            return TrustedContact
+            return contact
         except KeyError:
             raise
         except ClientError as e:

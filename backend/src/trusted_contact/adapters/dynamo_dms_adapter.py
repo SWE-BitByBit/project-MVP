@@ -60,8 +60,8 @@ class DynamoDmsAdapter(DmsRepositoryPort):
             return DmsConfigurationSettings(
                 user_id=item["user_id"],
                 is_active=item["is_active"],
-                first_timer=item["first_timer"],
-                second_timer=item["second_timer"],
+                first_timer=int(item["first_timer"]),
+                second_timer=int(item["second_timer"]),
                 email_subject=item["email_subject"],
                 email_body=item["email_body"]
             )

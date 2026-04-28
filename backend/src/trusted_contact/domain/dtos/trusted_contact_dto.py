@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+@dataclass
 class TrustedContactDTO:
     user_id: str
     contact_id: str

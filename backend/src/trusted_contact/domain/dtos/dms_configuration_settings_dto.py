@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 
+@dataclass
 class DmsConfigurationSettingsDTO:
     user_id: str
     is_active: bool
@@ -24,6 +26,6 @@ class DmsConfigurationSettingsDTO:
             is_active=dms_configuration_settings.is_active,
             first_timer=dms_configuration_settings.first_timer,
             second_timer=dms_configuration_settings.second_timer,
-            email_subjec=dms_configuration_settings.email_subjec,
+            email_subject=dms_configuration_settings.email_subject ,
             email_body=dms_configuration_settings.email_body
         )

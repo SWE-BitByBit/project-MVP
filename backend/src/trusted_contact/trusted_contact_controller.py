@@ -87,7 +87,7 @@ class TrustedContactController:
             return self._handle_scheduled_event()
         
         if parts[0] == "dms_settings":
-            return self._route_dms_settings(method, parts, user_id, user_email, body)
+            return self._route_dms_settings(method, parts, user_id, user_email, user_name, body)
         elif parts[0] == "trusted_contact":
             return self._route_trusted_contact(method, parts, user_id, body)
         elif parts[0] == "alert":
@@ -175,10 +175,10 @@ class TrustedContactController:
             "body": json.dumps(body)
         }
     
-    def _route_dms_settings(self, method, parts, user_id, user_email, body):
+    def _route_dms_settings(self, method, parts, user_id, user_email, user_name, body):
         
         if method == "POST":
-            return self._handle_dms_settings_create(user_id, user_email)
+            return self._handle_dms_settings_create(user_id, user_email, user_name)
         elif method == "GET":
             return self._handle_dms_settings_get(user_id)
         elif method == "PUT" and len(parts) > 1 and parts[1] == "heartbeat":
@@ -222,9 +222,9 @@ class TrustedContactController:
             return self._response(500, SCHEDULER_ERROR)
     
 
-    def _handle_dms_settings_create(self, user_id, user_email):
+    def _handle_dms_settings_create(self, user_id, user_email, user_name):
 
-        dms_settings = self._get_dms_crud_service().create_dms_configuration_settings(user_id, user_email)
+        dms_settings = self._get_dms_crud_service().create_dms_configuration_settings(user_id, user_email, user_name)
         if not dms_settings:
             return self._response(500, SERVER_ERROR)
         dms_settings_dto = DmsConfigurationSettingsDTO.from_domain(dms_settings)
@@ -335,7 +335,7 @@ class TrustedContactController:
             longitude=body.get("longitude")
         )
 
-        response = self._get_sos_alert_service.send_alert_emails(alert_cmd)
+        response = self._get_sos_alert_service().send_alert_emails(alert_cmd)
         if response:
             return self._response(200, {})
         else:

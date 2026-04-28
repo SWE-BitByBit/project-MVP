@@ -47,10 +47,10 @@ class DmsCRUDService(
         self.send_heartbeat(config.user_id)
 
 
-    def create_dms_configuration_settings(self, user_id: str, user_email) -> DmsConfigurationSettings:
+    def create_dms_configuration_settings(self, user_id: str, user_email, user_name: str) -> DmsConfigurationSettings:
         """
         Creazione della entry nel db dei valori delle impostazioni
 
         :param user_id: chiave creare la entry del db  
         """
-        return self._repository.add_dms_config(user_id, user_email)
+        return self._repository.add_dms_config(user_id, user_email, user_name)

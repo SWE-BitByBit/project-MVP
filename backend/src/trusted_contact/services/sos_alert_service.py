@@ -14,7 +14,7 @@ class SOSAlertService(SendAlertPort):
         self._notification_repository = notification_repository
 
     def send_alert_emails(self, cmd: AlertCmd) -> bool:
-        contacts = self._contact_repository.get_all_trusted_contact(cmd.user_id)
+        contacts = self._contact_repository.list(cmd.user_id)
 
         if not contacts:
             return False
