@@ -15,7 +15,7 @@ class DynamoDmsAdapter(DmsRepositoryPort):
         )
         self._table = self._dynamodb_client.Table(os.environ["DMS_TABLE"])
 
-    def add_dms_config(self, user_id: str) -> DmsConfigurationSettings:
+    def add_dms_config(self, user_id: str, user_email: str, user_name: str) -> DmsConfigurationSettings:
 
         config = DmsConfigurationSettings(
             user_id=user_id,
@@ -30,6 +30,8 @@ class DynamoDmsAdapter(DmsRepositoryPort):
             self._table.put_item(
                 Item={
                     "user_id": user_id,
+                    "user_email": user_email,
+                    "user_name": user_name,
                     "is_active": config.is_active,
                     "first_timer": config.first_timer,
                     "second_timer": config.second_timer,
@@ -37,7 +39,8 @@ class DynamoDmsAdapter(DmsRepositoryPort):
                     "email_body": config.email_body,
                     "first_timer_count_down": 0,
                     "second_timer_count_down": 0,
-                }
+                },
+                ConditionExpression="attribute_not_exists(user_id)"
             )
 
         except ClientError as e:
@@ -170,3 +173,31 @@ class DynamoDmsAdapter(DmsRepositoryPort):
             return configs
         except ClientError as e:
             raise RuntimeError(f"Error scanning DMS configs: {e.response['Error']['Message']}")
+        
+
+    def get_user_email(self, user_id: str) -> str:
+        try:
+            response = self._table.get_item(
+                Key={"user_id": user_id}
+            )
+            item = response.get("Item")
+            if not item:
+                raise KeyError(f"DMS config not found for user {user_id}")
+            return item["user_email"]
+    
+        except ClientError as e:
+            raise RuntimeError(f"Error fetching user email: {e.response['Error']['Message']}")
+        
+    
+    def get_user_name(self, user_id: str) -> str:
+        try:
+            response = self._table.get_item(
+                Key={"user_id": user_id}
+            )
+            item = response.get("Item")
+            if not item:
+                raise KeyError(f"DMS config not found for user {user_id}")
+            return item["user_name"]
+    
+        except ClientError as e:
+            raise RuntimeError(f"Error fetching user name: {e.response['Error']['Message']}")

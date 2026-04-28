@@ -38,30 +38,36 @@ class DmsAlertService(UpdateDmsAlertPort):
                      config.user_id, first_timer_count_down - 1 
                 )
                 if first_timer_count_down - 1 == 0:
-                    self._send_user_notification(config)
+                    self._send_user_notification(
+                        config,
+                        self._dms_repository.get_user_email(config.user_id)
+                    )
             
             if second_timer_count_down > 0:
                 self._dms_repository.update_second_counter(
                      config.user_id, second_timer_count_down - 1
                 )
                 if second_timer_count_down - 1 == 0:
-                    self._send_contacts_emails(config)
+                    self._send_contacts_emails(
+                        config,
+                        self._dms_repository.get_user_name(config.user_id)
+                    )
 
         return True
                  
     
-    def _send_user_notification(self, config: DmsConfigurationSettings) -> None:
+    def _send_user_notification(self, config: DmsConfigurationSettings, user_email: str) -> None:
 
         message = EmailMessage(
             source_email=os.environ["SOURCE_EMAIL"],
-            destination_contact_email="email user",
+            destination_contact_email=user_email,
             subject=config.email_subject,
             body=config.email_body
         )
 
         self._notification.send_email_message(message)
 
-    def _send_contacts_emails(self, config: DmsConfigurationSettings) -> None:
+    def _send_contacts_emails(self, config: DmsConfigurationSettings, user_name: str) -> None:
 
         contacts: List[TrustedContact] = self._contact_repository.list_trusted_contacts(config.user_id)
 
@@ -71,13 +77,13 @@ class DmsAlertService(UpdateDmsAlertPort):
                 source_email=os.environ["SOURCE_EMAIL"],
                 destination_contact_email=contact.contact_email,
                 subject="Promemoria di inattività - App Protegge e Trasforma",
-                body=self._build_contacts_email_body(config)
+                body=self._build_contacts_email_body(config, user_name)
             )
             self._notification.send_email_message(message)
 
-    def _build_contacts_email_body(self, config: DmsConfigurationSettings) -> str:
+    def _build_contacts_email_body(self, config: DmsConfigurationSettings, user_name: str) -> str:
         body = (
-            f'?Nome user? non accede alla nostra applicazione -App che Protegge e Trasforma- da {config.second_timer} giorni. Ti avvisiamo in quanto ?nome user? ti ha inserito nei suoi contatti di emergenza. Prova a contattarla per vedere se va tutto bene.'
+            f'{user_name} non accede alla nostra applicazione -App che Protegge e Trasforma- da {config.second_timer} giorni. Ti avvisiamo in quanto {user_name} ti ha inserito nei suoi contatti di emergenza. Prova a contattarla/o per vedere se va tutto bene.'
         )
         return body
           

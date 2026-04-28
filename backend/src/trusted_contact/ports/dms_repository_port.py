@@ -13,7 +13,7 @@ class DmsRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def add_dms_config(self, user_id: str) -> DmsConfigurationSettings:
+    def add_dms_config(self, user_id: str, user_email: str, user_name: str) -> DmsConfigurationSettings:
         pass
 
     @abstractmethod
@@ -34,4 +34,12 @@ class DmsRepositoryPort(ABC):
 
     @abstractmethod
     def list_all_configs(self) -> list[DmsConfigurationSettings]:
+        pass
+
+    @abstractmethod
+    def get_user_email(self, user_id: str) -> str:
+        pass
+
+    @abstractmethod
+    def get_user_name(self, user_id: str) -> str:
         pass

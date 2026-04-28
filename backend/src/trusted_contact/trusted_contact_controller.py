@@ -17,6 +17,8 @@ from services.trusted_contact_crud_service import TrustedContactCRUDService
 UNAUTHORIZED = {"message": "Unauthorized"}
 ROUTE_NOT_FOUND = {"message": "Route not found"}
 SERVER_ERROR = {"message": "Internal server error"}
+SCHEDULER_SUCCESS = {"body": "Scheduled job executed"}
+SCHEDULER_ERROR = {"body": "Scheduler failed"}
 
 
 class TrustedContactController:
@@ -38,16 +40,21 @@ class TrustedContactController:
         user_id = self._get_user_id(event)
         parts = self._split_path(event)
         body = self._parse_body(event)
+        user_name = self._get_user_name(event)
+        user_email = self._get_user_email(event)
 
         if not user_id:
             return self._response(401, UNAUTHORIZED)
+
+        if event.get("source") in ["aws.events", "aws.scheduler"]:
+            return self._handle_scheduled_event()
         
         if parts[0] == "dms_settings":
-            return self._route_dms_settings(method, parts, user_id, body)
+            return self._route_dms_settings(method, parts, user_id, user_email, body)
         elif parts[0] == "trusted_contact":
             return self._route_trusted_contact(method, parts, user_id, body)
         elif parts[0] == "alert":
-            return self._route_alert(method, user_id, body)
+            return self._route_alert(method, user_id, user_name, body)
         else:
             return self._response(404, ROUTE_NOT_FOUND)
     
@@ -95,6 +102,28 @@ class TrustedContactController:
         return claims.get("sub")
     
 
+    def _get_user_name(self, event):
+        claims = (
+            event.get("requestContext", {})
+            .get("authorizer", {})
+            .get("jwt", {})
+            .get("claims", {})
+        )
+
+        return claims.get("given_name", "")
+    
+
+    def _get_user_email(self, event):
+        claims = (
+            event.get("requestContext", {})
+            .get("authorizer", {})
+            .get("jwt", {})
+            .get("claims", {})
+        )
+
+        return claims.get("email", "")
+    
+
     def _response(self, status_code, body):
         if status_code == 204:
             return {
@@ -109,10 +138,10 @@ class TrustedContactController:
             "body": json.dumps(body)
         }
     
-    def _route_dms_settings(self, method, parts, user_id, body):
+    def _route_dms_settings(self, method, parts, user_id, user_email, body):
         
         if method == "POST":
-            return self._handle_dms_settings_create(user_id)
+            return self._handle_dms_settings_create(user_id, user_email)
         elif method == "GET":
             return self._handle_dms_settings_get(user_id)
         elif method == "PUT" and len(parts) > 1 and parts[1] == "heartbeat":
@@ -139,17 +168,26 @@ class TrustedContactController:
             return self._response(404, ROUTE_NOT_FOUND)
         
     
-    def _route_alert(self, method, user_id, body):
+    def _route_alert(self, method, user_id, user_name, body):
 
         if method == "PUT":
-            return self._handle_alert(user_id, body)
+            return self._handle_alert(user_id, user_name, body)
         else:
             return self._response(404, ROUTE_NOT_FOUND)
+        
+    
+    def _handle_scheduled_event(self):
+        response = self._get_dms_alert_service().update_dms_timers()
+
+        if response:
+            return self._response(200, SCHEDULER_SUCCESS)
+        else:
+            return self._response(500, SCHEDULER_ERROR)
     
 
-    def _handle_dms_settings_create(self, user_id):
+    def _handle_dms_settings_create(self, user_id, user_email):
 
-        dms_settings = self._dms_crud_service.create_dms_configuration_settings(user_id)
+        dms_settings = self._dms_crud_service.create_dms_configuration_settings(user_id, user_email)
         if not dms_settings:
             return self._response(500, SERVER_ERROR)
         dms_settings_dto = DmsConfigurationSettingsDTO.from_domain(dms_settings)
@@ -252,10 +290,10 @@ class TrustedContactController:
             return self._response(500, SERVER_ERROR)
         
     
-    def _handle_alert(self, user_id, body):
+    def _handle_alert(self, user_id, user_name, body):
         alert_cmd = AlertCmd(
             user_id=user_id,
-            user_name=body.get("user_name"),
+            user_name=user_name,
             latitude=body.get("latitude"),
             longitude=body.get("longitude")
         )

@@ -43,7 +43,7 @@ class SOSAlertService(SendAlertPort):
             else '<p>Posizione non disponibile.</p>'
         )
         message_body = (
-            f"<p> Ti è arrivato questo messaggio perchè {cmd.user_name} ha inviato un seganle di emergenza tramite app. Chiamala/o il prima possibile per sapere se è tutto apposto.</p>"
+            f"<p> Ti è arrivato questo messaggio perchè {cmd.user_name} ha inviato un sengale di emergenza tramite app. Chiamala/o il prima possibile per sapere se è tutto apposto.</p>"
         )
         return f"""
             <h2>Ciao questo è un messaggio di aiuto dall'applicazione App che protegge e trasforma,</h2>
