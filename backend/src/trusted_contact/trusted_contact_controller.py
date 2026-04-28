@@ -14,26 +14,63 @@ from services.dms_crud_service import DmsCRUDService
 from services.sos_alert_service import SOSAlertService
 from services.trusted_contact_crud_service import TrustedContactCRUDService
 
+from adapters.dynamo_dms_adapter import DynamoDmsAdapter
+from adapters.dynamo_trusted_contact_adapter import DynamoTrustedContactAdapter
+from adapters.ses_notification_adapter import SesNotificationAdapter
+
 UNAUTHORIZED = {"message": "Unauthorized"}
 ROUTE_NOT_FOUND = {"message": "Route not found"}
 SERVER_ERROR = {"message": "Internal server error"}
 SCHEDULER_SUCCESS = {"body": "Scheduled job executed"}
 SCHEDULER_ERROR = {"body": "Scheduler failed"}
 
-
 class TrustedContactController:
 
-    def __init__(
-            self,
-            dms_crud_service: DmsCRUDService,
-            dms_alert_service: DmsAlertService,
-            trusted_contact_crud_service: TrustedContactCRUDService,
-            sos_alert_service: SOSAlertService  
-        ):
-            self._dms_crud_service = dms_crud_service
-            self._dms_alert_service = dms_alert_service
-            self._trusted_contact_crud_service = trusted_contact_crud_service
-            self._sos_alert_service = sos_alert_service
+    def __init__(self):
+            self._dms_crud_service = None
+            self._dms_alert_service = None
+            self._trusted_contact_crud_service = None
+            self._sos_alert_service = None
+
+
+    def _get_dms_crud_service(self) -> DmsCRUDService:
+        if not self._dms_crud_service:
+            dynamo_dms_repository = DynamoDmsAdapter()
+            self._dms_crud_service = DmsCRUDService(dynamo_dms_repository)
+        return self._dms_crud_service
+
+
+    def _get_trusted_contact_crud_service(self) -> TrustedContactCRUDService:
+        if not self._trusted_contact_crud_service:
+            dynamo_trusted_contact_repository = DynamoTrustedContactAdapter()
+            self._trusted_contact_crud_service = TrustedContactCRUDService(
+                dynamo_trusted_contact_repository
+            )
+        return self._trusted_contact_crud_service
+
+
+    def _get_sos_alert_service(self) -> SOSAlertService:
+        if not self._sos_alert_service:
+            dynamo_trusted_contact_repository = DynamoTrustedContactAdapter()
+            ses_repository = SesNotificationAdapter()
+            self._sos_alert_service = SOSAlertService(
+                dynamo_trusted_contact_repository,
+                ses_repository
+            )
+        return self._sos_alert_service
+
+
+    def _get_dms_alert_service(self) -> DmsAlertService:
+        if not self._dms_alert_service:
+            dynamo_dms_repository = DynamoDmsAdapter()
+            dynamo_trusted_contact_repository = DynamoTrustedContactAdapter()
+            ses_repository = SesNotificationAdapter()
+            self._dms_alert_service = DmsAlertService(
+                dynamo_trusted_contact_repository,
+                ses_repository,
+                dynamo_dms_repository
+            )
+        return self._dms_alert_service
 
     def handle_request(self, event, context):
         method = self._get_method(event)
@@ -187,7 +224,7 @@ class TrustedContactController:
 
     def _handle_dms_settings_create(self, user_id, user_email):
 
-        dms_settings = self._dms_crud_service.create_dms_configuration_settings(user_id, user_email)
+        dms_settings = self._get_dms_crud_service().create_dms_configuration_settings(user_id, user_email)
         if not dms_settings:
             return self._response(500, SERVER_ERROR)
         dms_settings_dto = DmsConfigurationSettingsDTO.from_domain(dms_settings)
@@ -197,7 +234,7 @@ class TrustedContactController:
 
     def _handle_dms_settings_get(self, user_id):
 
-        dms_settings = self._dms_crud_service.get_dms_config(user_id)
+        dms_settings = self._get_dms_crud_service().get_dms_config(user_id)
         if not dms_settings:
             return self._response(500, SERVER_ERROR)
         dms_settings_dto = DmsConfigurationSettingsDTO.from_domain(dms_settings)
@@ -214,13 +251,13 @@ class TrustedContactController:
             email_subject=body.get("email_subject"),
             email_body=body.get("email_body")
         )
-        self._dms_crud_service.update_dms_configuration_settings(new_dms_settings)
+        self._get_dms_crud_service().update_dms_configuration_settings(new_dms_settings)
 
         return self._response(204, {})
 
 
     def _handle_heartbeat_update(self, user_id):
-        self._dms_crud_service.send_heartbeat(user_id)
+        self._get_dms_crud_service().send_heartbeat(user_id)
 
         return self._response(204, {})
     
@@ -232,7 +269,7 @@ class TrustedContactController:
             contact_email=body.get("contact_email"),
             contact_phone_number=body.get("contact_phone_number")
         )
-        new_trusted_contact = self._trusted_contact_crud_service.add_trusted_contact(new_trusted_contact_cmd)
+        new_trusted_contact = self._get_trusted_contact_crud_service().add_trusted_contact(new_trusted_contact_cmd)
 
         if not new_trusted_contact:
             return self._response(500, SERVER_ERROR)
@@ -250,7 +287,7 @@ class TrustedContactController:
             contact_phone_number=body.get("contact_phone_number")
         )
 
-        updated_trusted_contact = self._trusted_contact_crud_service.update_trusted_contact(to_update_trusted_contact)
+        updated_trusted_contact = self._get_trusted_contact_crud_service().update_trusted_contact(to_update_trusted_contact)
 
         if not updated_trusted_contact:
             return self._response(500, SERVER_ERROR)
@@ -264,7 +301,7 @@ class TrustedContactController:
             user_id=user_id,
             contact_id=contact_id
         )
-        trusted_contact = self._trusted_contact_crud_service.get_trusted_contact(get_trusted_contact_cmd)
+        trusted_contact = self._get_trusted_contact_crud_service().get_trusted_contact(get_trusted_contact_cmd)
 
         if not trusted_contact:
             return self._response(500, SERVER_ERROR)
@@ -274,7 +311,7 @@ class TrustedContactController:
     
 
     def _handle_trusted_contact_get_all(self, user_id):
-        contacts = self._trusted_contact_crud_service.get_all_trusted_contact(user_id)
+        contacts = self._get_trusted_contact_crud_service().get_all_trusted_contact(user_id)
         return self._response(200, {"trusted_contacts": [t.__dict__ for t in contacts]})
     
 
@@ -283,7 +320,7 @@ class TrustedContactController:
             user_id=user_id,
             contact_id=contact_id
         )
-        response = self._trusted_contact_crud_service.delete_trusted_contact(to_delete_trusted_contact_cmd)
+        response = self._get_trusted_contact_crud_service().delete_trusted_contact(to_delete_trusted_contact_cmd)
         if response:
             return self._response(200, {})
         else:
@@ -298,7 +335,7 @@ class TrustedContactController:
             longitude=body.get("longitude")
         )
 
-        response = self._sos_alert_service.send_alert_emails(alert_cmd)
+        response = self._get_sos_alert_service.send_alert_emails(alert_cmd)
         if response:
             return self._response(200, {})
         else:

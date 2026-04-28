@@ -23,6 +23,8 @@ def setup_mock_dynamo():
         table.put_item(
             Item={
                 "user_id": "user1",
+                "user_email": "prova@gmail.it",
+                "user_name": "mario",
                 "is_active": True,
                 "first_timer": 60,
                 "second_timer": 120,
@@ -72,7 +74,7 @@ def test_get_dms_config_not_found(setup_mock_dynamo):
 
 def test_add_dms_config(setup_mock_dynamo):
     adapter = setup_mock_dynamo
-    result = adapter.add_dms_config("user2")
+    result = adapter.add_dms_config("user2", "prova@gmail.com", "luigi")
 
     assert result is not None
     assert result.user_id == "user2"

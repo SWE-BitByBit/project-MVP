@@ -1,10 +1,11 @@
 import os
 
+from commands.alert_command import AlertCmd
+from domain.email_message import EmailMessage
+
 from ports.send_alert_port import SendAlertPort
 from ports.trusted_contact_repository_port import TrustedContactRepositoryPort
 from ports.notification_port import NotificationPort
-from commands.alert_command import AlertCmd
-from domain.email_message import EmailMessage
 
 class SOSAlertService(SendAlertPort):
 

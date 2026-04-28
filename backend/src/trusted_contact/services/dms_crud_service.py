@@ -1,8 +1,9 @@
+from domain.dms_configuration_settings import DmsConfigurationSettings
+
 from ports.set_dms_heartbeat_port import SetDmsHeartBeatPort
 from ports.get_dms_configuration_settings_port import GetDmsConfigurationSettingsPort
 from ports.set_dms_configuration_settings_port import SetDmsConfigurationSettingsPort
 from ports.dms_repository_port import DmsRepositoryPort
-from domain.dms_configuration_settings import DmsConfigurationSettings
 
 
 class DmsCRUDService(
