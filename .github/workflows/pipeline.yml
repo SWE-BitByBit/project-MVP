@@ -29,6 +29,8 @@ jobs:
 
       - name: Run tests and generate coverage
         working-directory: backend
+        env:
+          PYTHONPATH: src/chatbot:src/materials:src/diary:src/safe_places:src/trusted_contact
         run: make coverage # genera coverage.xml
 
       - name: SonarCloud Scan - Backend

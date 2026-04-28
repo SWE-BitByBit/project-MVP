@@ -23,17 +23,17 @@ deps:
 	source ./venv/bin/activate && $(PIP) install -r tests/requirements.txt
 
 test:
-	source ./venv/bin/activate && pytest -v -s tests/unit/
+	source ./venv/bin/activate && PYTHONPATH=$(shell pwd)/src/chatbot:$(shell pwd)/src/materials:$(shell pwd)/src/diary:$(shell pwd)/src/safe_places:$(shell pwd)/src/trusted_contact pytest -v -s tests/unit/
 
 coverage:
-	source ./venv/bin/activate && pytest \
+	source ./venv/bin/activate && PYTHONPATH=$(shell pwd)/src/chatbot:$(shell pwd)/src/materials:$(shell pwd)/src/diary:$(shell pwd)/src/safe_places:$(shell pwd)/src/trusted_contact pytest \
 		--junitxml=pytest.xml \
 		--cov-report=term-missing \
 		--cov-report=xml:coverage.xml \
 		--cov=src tests/unit/ | tee pytest-coverage.txt
 
 coverage-html:
-	source ./venv/bin/activate && pytest -v -s \
+	source ./venv/bin/activate && PYTHONPATH=$(shell pwd)/src/chatbot:$(shell pwd)/src/materials:$(shell pwd)/src/diary:$(shell pwd)/src/safe_places:$(shell pwd)/src/trusted_contact pytest -v -s \
 		--cov=src \
 		--cov-branch \
 		--cov-report=html:htmlcov \
