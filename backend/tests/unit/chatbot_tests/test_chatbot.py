@@ -612,15 +612,16 @@ def test_lambda_too_many_parts(sample_chat, tables):
 
 def test_lambda_llm_failure(sample_chat, tables, monkeypatch):
     from src.chatbot import lambda_function
-    
+
     # Mock LLM service to return None response
     class MockLLMFailure:
         def get_message_response(self, *args, **kwargs):
             return None
-            
-    # We need to ensure get_llm_service returns our mock
-    monkeypatch.setattr(lambda_function, "get_llm_service", lambda: MockLLMFailure())
-    
+
+    # Patch the _llm_service on the controller instance
+    controller = lambda_function.get_controller()
+    monkeypatch.setattr(controller, "_llm_service", MockLLMFailure())
+
     user_id = sample_chat["user_id"]
     chat_id = sample_chat["chat_id"]
 
