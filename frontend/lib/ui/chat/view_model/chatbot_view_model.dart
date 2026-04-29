@@ -15,7 +15,6 @@ class ChatbotViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
 
   // --- STATO DELLA UI ---
-
   List<Chat> get chats => _repository.cachedChats;
 
   Chat? _currentChat;
@@ -27,51 +26,28 @@ class ChatbotViewModel extends ChangeNotifier {
   final ValueNotifier<String?> asyncError = ValueNotifier(null);
 
   // --- COMANDI REATTIVI ---
-
   late final Command<void, void> loadChatPreviews;
   late final Command<void, void> createChat;
   late final Command<String, void> openChat;
   late final Command<String, void> deleteChat;
   late final Command<({Chat chat, String content, ChatMode mode}), void> sendMessage;
 
-  /// Costruttore: inizializza il ViewModel e configura le dipendenze.
   ChatbotViewModel(
       this._repository, {
         required AuthRepository authRepository,
       }) : _authRepository = authRepository {
 
-    // Inizializzazione dei comandi
-    loadChatPreviews = Command.createAsyncNoParam<void>(
-      _loadChatPreviews,
-      initialValue: null,
-    );
-
-    createChat = Command.createAsyncNoParam<void>(
-      _createChat,
-      initialValue: null,
-    );
-
-    openChat = Command.createAsync<String, void>(
-      _openChat,
-      initialValue: null,
-    );
-
-    deleteChat = Command.createAsync<String, void>(
-      _deleteChat,
-      initialValue: null,
-    );
-
-    sendMessage = Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(
-      _sendMessage,
-      initialValue: null,
-    );
+    loadChatPreviews = Command.createAsyncNoParam<void>(_loadChatPreviews, initialValue: null);
+    createChat = Command.createAsyncNoParam<void>(_createChat, initialValue: null);
+    openChat = Command.createAsync<String, void>(_openChat, initialValue: null);
+    deleteChat = Command.createAsync<String, void>(_deleteChat, initialValue: null);
+    sendMessage = Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(_sendMessage, initialValue: null);
 
     // Caricamento automatico all'avvio
     loadChatPreviews.run();
   }
 
   // --- LOGICA DI SINCRONIZZAZIONE LOCALE ---
-
   void setMode(ChatMode newMode) {
     if (_mode != newMode) {
       _mode = newMode;
@@ -88,10 +64,9 @@ class ChatbotViewModel extends ChangeNotifier {
       debugPrint("[*] Utente non loggato: salto la chiamata /chats");
       return;
     }
-    // 1. Scarichiamo i dati
+
     await _repository.getChatPreviews();
 
-    // 2. Se non c'è NESSUNA chat nel database
     if (chats.isEmpty) {
       if (_currentChat == null) {
         _startNewVirtualChat();
@@ -103,11 +78,9 @@ class ChatbotViewModel extends ChangeNotifier {
     final savedId = _repository.lastViewedChatId;
 
     if (savedId != null && chats.any((c) => c.id == savedId)) {
-
-      _openChat(savedId);
+      await _openChat(savedId);
     } else {
-      _currentChat = chats.first;
-      _repository.lastViewedChatId = _currentChat?.id;
+      _startNewVirtualChat();
     }
 
     notifyListeners();
@@ -119,44 +92,29 @@ class ChatbotViewModel extends ChangeNotifier {
   }
 
   Future<void> _deleteChat(String chatId) async {
-    // 1. Memorizziamo SE stiamo cancellando proprio la chat che stiamo guardando
     final wasCurrentChat = _currentChat?.id == chatId;
-
-    // 2. FIRE AND FORGET: Diciamo al repo di cancellare.
-    // IMPORTANTE: Anche se è un Future, la prima riga nel repo fa "_cachedChats.removeAt()",
-    // quindi la rimozione dalla lista 'chats' avviene in modo ISTANTANEO e sincrono!
     final deleteFuture = _repository.deleteChat(chatId);
 
-    // 3. ORA sistemiamo lo schermo. La lista 'chats' è già aggiornata
-    // e NON contiene più la chat che abbiamo appena "sparato".
     if (wasCurrentChat) {
       if (chats.isNotEmpty) {
-        _currentChat = chats.first; // C'è ancora qualcosa? Apriamo la prima disponibile.
+        _currentChat = chats.first;
       } else {
-        _startNewVirtualChat(); // Era l'ultima? Creiamo subito la bozza vuota!
+        _startNewVirtualChat();
       }
     }
 
-    // 4. Diciamo alla UI di ridisegnarsi con la nuova situazione
     notifyListeners();
 
-    // 5. Gestione errori in background (Il Rollback)
     deleteFuture.catchError((e) {
       asyncError.value = "Impossibile eliminare la chat.";
-      // Se fallisce, il repo ha già reinserito la chat vecchia nella sua lista.
-      // Chiamiamo notifyListeners per farla "riapparire" magicamente a schermo.
       notifyListeners();
     });
   }
 
   Future<void> _openChat(String chatId) async {
-    print('ID CERCATO: $chatId');
     final index = chats.indexWhere((c) => c.id == chatId);
 
-    if (index == -1) {
-      print("Vaffanculo");
-      return;
-    }
+    if (index == -1) return;
 
     final chat = chats[index];
 
@@ -179,10 +137,12 @@ class ChatbotViewModel extends ChangeNotifier {
       type: MessageType.user,
       timestamp: DateTime.now(),
     );
+
     activeChat.addMessage(optimisticMsg);
     notifyListeners();
 
     try {
+
       if (activeChat is LocalChat && activeChat.id.startsWith('virtual_')) {
         final realChat = await _repository.createChat();
 
@@ -191,7 +151,7 @@ class ChatbotViewModel extends ChangeNotifier {
         activeChat = realChat;
         _currentChat = realChat;
 
-        await _repository.getChatPreviews();
+        _repository.lastViewedChatId = realChat.id;
       }
 
       final response = await _repository.sendMessage(
@@ -208,6 +168,10 @@ class ChatbotViewModel extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
+      // ROLLBACK: Se c'è un errore di rete, togliamo il messaggio finto dalla UI
+      activeChat.messages.removeWhere((msg) => msg.id == optimisticMsg.id);
+      asyncError.value = "Errore nell'invio del messaggio.";
+      notifyListeners();
       rethrow;
     }
   }

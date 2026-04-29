@@ -40,6 +40,7 @@ import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
 import '../data/services/mock_diary_services.dart';
+import '../data/services/mock_trusted_contact_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -121,7 +122,8 @@ void _setupSafePlace() {
 
 /// Registra le dipendenze relative al modulo dei Contatti Fidati
 void _setupTrustedContact() {
-  getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
+  //getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
 
   getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>()));
 

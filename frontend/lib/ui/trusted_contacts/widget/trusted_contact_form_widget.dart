@@ -50,16 +50,14 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Usiamo read invece di watch, perché la reattività al caricamento
-    // la gestiremo chirurgicamente sul bottone con ValueListenableBuilder
     final viewModel = context.read<TrustedContactViewModel>();
     final isEditing = widget.initialContact != null;
     final theme = Theme.of(context);
 
     return Padding(
-      // Abbiamo rimosso viewInsets.bottom perché lo gestisce già il ListWidget padre!
       padding: const EdgeInsets.all(24.0),
-      child: Form(
+      child: SafeArea(
+        child: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -191,6 +189,7 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
           ],
         ),
       ),
+    ),
     );
   }
 }
