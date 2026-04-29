@@ -1,4 +1,5 @@
 from typing import Optional
+import re
 
 from ports.validate_password_port import ValidatePasswordPort
 from ports.set_password_port import SetPasswordPort
@@ -13,11 +14,35 @@ class DiaryAuthService(ValidatePasswordPort, SetPasswordPort, CheckPasswordStatu
     
     def __init__(self, auth_repository: DiaryAuthRepositoryPort):
         self.auth_repository = auth_repository
-    
+
     def validate_password(self, cmd: ValidatePasswordCmd) -> str:
         return self.auth_repository.validate_password(cmd.password, cmd.user_id)
     
+    def is_valid_password(self, new_password: str) -> bool:
+        if len(new_password) < 10:
+            return False
+
+        if not re.search(r"[A-Z]", new_password):
+            return False
+
+        if not re.search(r"[a-z]", new_password):
+            return False
+
+        if not re.search(r"[0-9]", new_password):
+            return False
+
+        if not re.search(r'[!@#%^&*(),.?":{}|<>]', new_password):
+            return False
+
+        if re.search(r"\s", new_password):
+            return False
+
+        return True
+
     def set_real_password(self, cmd: SetPasswordCmd) -> None:
+        if not self.is_valid_password(cmd.password):
+            raise ValueError("Password does not meet safety requirements")
+
         self._verify_previous_password_if_needed(cmd)
         
         success = self.auth_repository.set_password(
@@ -28,8 +53,11 @@ class DiaryAuthService(ValidatePasswordPort, SetPasswordPort, CheckPasswordStatu
         
         if not success:
             raise RuntimeError("Failed to set real password")
-    
+
     def set_fake_password(self, cmd: SetPasswordCmd) -> None:
+        if not self.is_valid_password(cmd.password):
+            raise ValueError("Password does not meet safety requirements")
+
         self._verify_previous_password_if_needed(cmd)
         
         success = self.auth_repository.set_password(
