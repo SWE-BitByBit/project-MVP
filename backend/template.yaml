@@ -67,6 +67,7 @@ Resources:
           REGION: eu-south-1
           DMS_TABLE: dead_man_switch_settings_mvp
           TRUSTED_CONTACT_TABLE: trusted_contacts_mvp
+          SOURCE_EMAIL: swe.bitbybit@gmail.com
       Events:
         PostDmsSettings:
           Type: HttpApi
