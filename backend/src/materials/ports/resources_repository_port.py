@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from materials.models.resource import Resource
+from models.resource import Resource
 
 
 class ResourcesRepositoryPort(ABC):
