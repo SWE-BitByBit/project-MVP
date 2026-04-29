@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_viewmodel.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:provider/provider.dart';
 
-/// Widget che gestisce l'accesso ai diari
-///
-/// Essendo consumer di [DiaryAccessViewmodel] si aggiorna in seguito a cambiamenti di stato del ViewModel
 class PasswordFormWidget extends StatefulWidget {
   final VoidCallback onDismiss;
   const PasswordFormWidget({super.key, required this.onDismiss});
@@ -17,62 +12,95 @@ class PasswordFormWidget extends StatefulWidget {
 
 class _PasswordFormWidget extends State<PasswordFormWidget> {
   final TextEditingController _passwordController = TextEditingController();
+  late DiaryAccessViewModel _vm;
 
   @override
-  void dispose() {
-    _passwordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Otteniamo il ViewModel una sola volta all'avvio del widget
+    _vm = context.read<DiaryAccessViewModel>();
+
+    // Mettiamoci in ascolto degli errori!
+    _vm.asyncError.addListener(_onErrorChanged);
   }
 
-  /// Redirect al diario se l'utente ha effettuato l'accesso
-  void _redirect() {
-    final diarySession = DiarySession.session;
-    final vm = context.read<DiaryAccessViewmodel>();
-    if (vm.accessStatus && diarySession.isDiaryAuth == true) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DiaryScreen()),
+  /// Funzione che scatta ogni volta che asyncError cambia valore
+  void _onErrorChanged() {
+    final error = _vm.asyncError.value;
+
+    // 1. CONTROLLO FONDAMENTALE: Il widget è ancora vivo sullo schermo?
+    if (!mounted) return;
+
+    // Se c'è un errore, mostra lo SnackBar
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error, style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
       );
+
+      // Resettiamo subito la variabile per evitare che lo SnackBar
+      // ricompaia se il widget viene ricostruito
+      _vm.asyncError.value = null;
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.read<DiaryAccessViewmodel>();
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('Accedi al diario'),
-              const SizedBox(height: 26),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password diario',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 26),
-              SizedBox(
-                width: double.infinity,
-                height: 49,
+  void dispose() {
+    // Importante: rimuoviamo l'ascoltatore quando usciamo dalla pagina
+    _vm.asyncError.removeListener(_onErrorChanged);
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-                child: ElevatedButton(
-                  onPressed: () {
-                    vm.login(_passwordController.text);
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _redirect();
-                    });
-                  },
-                  child: const Text('Accedi'),
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // Chiude la tastiera cliccando fuori
+      child: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(30.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 64, color: Colors.teal),
+                const SizedBox(height: 16),
+                const Text(
+                  'Accedi al diario',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
+                const SizedBox(height: 26),
+                TextField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password diario',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  onSubmitted: (value) {
+                    FocusScope.of(context).unfocus();
+                    _vm.login.run(value);
+                  },
+                ),
+                const SizedBox(height: 26),
+                SizedBox(
+                  width: double.infinity,
+                  height: 49,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      _vm.login.run(_passwordController.text);
+                    },
+                    child: const Text('Accedi', style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -99,4 +99,32 @@ class AuthService {
       debugPrint('Errore durante il logout di rete: $e');
     }
   }
+
+  /// Tenta di rinnovare i token di sessione usando un refresh token precedentemente salvato.
+  ///
+  /// Restituisce la mappa dei nuovi token se il refresh ha successo.
+  /// Solleva un'eccezione se il refresh token è scaduto o invalido.
+  Future<Map<String, dynamic>> refreshToken(String storedRefreshToken) async {
+    final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
+    final tokenResponse = await _httpClient.post(
+      Uri.https(_cognitoDomain, '/oauth2/token'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic $basicAuth',
+      },
+      body: {
+        'grant_type': 'refresh_token',
+        'client_id': _clientId,
+        'refresh_token': storedRefreshToken,
+      },
+    );
+    if (tokenResponse.statusCode != 200) {
+      throw Exception('Refresh token scaduto o non valido: ${tokenResponse.body}');
+    }
+    final rawData = jsonDecode(tokenResponse.body) as Map<String, dynamic>;
+    if (!rawData.containsKey('refresh_token')) {
+      rawData['refresh_token'] = storedRefreshToken;
+    }
+    return rawData;
+  }
 }

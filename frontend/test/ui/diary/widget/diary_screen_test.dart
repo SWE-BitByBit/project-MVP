@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
 import 'package:provider/provider.dart';

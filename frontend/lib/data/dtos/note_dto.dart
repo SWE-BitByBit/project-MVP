@@ -1,69 +1,63 @@
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-
 import '../../domain/models/diary/note.dart';
-import '../../domain/models/diary/proxy_note.dart';
+import '../../domain/models/diary/local_note.dart';
 import '../../domain/models/diary/note_element.dart';
+import '../../domain/models/diary/note_text_element.dart';
+import '../../domain/models/diary/note_audio_element.dart';
+import '../../domain/models/diary/note_image_element.dart';
 
-/// Oggetto di trasferimento dati per la serializzazione dei contatti fidati.
-/// Mappa i dati JSON del backend verso il Dominio e viceversa.
-class NoteDTO {
-  NoteDTO();
+/// Oggetto di trasferimento dati per la serializzazione delle Note[cite: 57].
+/// Mappa in modo sicuro i dati JSON del backend verso il Dominio e viceversa.
+abstract class NoteDTO {
 
-  ///Pre: json è un file JSON rappresentante una nota di uno dei diari (chiavi: id, title, creationDate, lastModified, elements (opzionale))
-  ///Post: fromJson ritorna un oggetto sottotipo di Note contenente tutte le informazioni presenti nel file JSON inserito in input
-  Note fromJson(Map<String, dynamic> json) {
-    String id = json["id"];
-    String title = json["title"];
-    DateTime creationDate = DateTime.parse(json["creationDate"]);
-    DateTime lastModified = DateTime.parse(json["lastModified"]);
-    Note note = ProxyNote(id, title, creationDate, lastModified);
-    //se JSON "completo" crea nota reale
-    if (json.containsKey("elements")) {
-      note = LocalNote(id, title, creationDate, lastModified);
-      dynamic elementMap = json["elements"];
-      for (int i = 0; i < elementMap.length; i++) {
-        NoteElement elem;
-        switch (elementMap[i]["type"]) {
-          case "text":
-            elem = NoteTextElement(elementMap[i]["content"]);
-            break;
-          case "image":
-            elem = NoteImageElement(elementMap[i]["content"]);
-            break;
-          case "audio":
-            elem = NoteAudioElement(elementMap[i]["content"]);
-            break;
-          default:
-            elem = NoteTextElement(elementMap[i]["content"]);
-            break;
-        }
-        note.addElement(elem, i);
+  /// Converte un JSON in un oggetto di Dominio [LocalNote][cite: 58].
+  static Note fromJson(Map<String, dynamic> json) {
+    final List<dynamic> rawElements = json['elements'] ?? [];
+
+    final List<NoteElement> parsedElements = rawElements.map((elemJson) {
+      final type = elemJson['type']?.toString();
+      final content = elemJson['content']?.toString() ?? '';
+
+      switch (type) {
+        case 'image':
+          return NoteImageElement(content);
+        case 'audio':
+          return NoteAudioElement(content);
+        case 'text':
+        default:
+          return NoteTextElement(content);
       }
-    }
-    return note;
+    }).toList();
+
+    final creationStr = json['created_at']?.toString();
+    final updateStr = json['updated_at']?.toString();
+
+    final creationDate = DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
+    final updateDate = DateTime.tryParse(updateStr ?? '') ?? creationDate;
+
+    return LocalNote(
+      id: json['note_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? 'Nuova Nota',
+      creationDate: creationDate,
+      lastModified: updateDate,
+      initialElements: parsedElements,
+    );
   }
 
-  ///Pre: note è un oggetto di un sottotipo di Note (ProxyNote o LocalNote)
-  ///Post: toJson ritorna un file JSON contenente tutte le informazioni di note, inclusa la lista (ordinata) dei suoi elementi
-  Map<String, dynamic> toJson(Note note) {
-    List<NoteElement> elements = note.getNoteElements();
+  /// Converte un oggetto [Note] in un formato JSON per il Backend[cite: 59].
+  static Map<String, dynamic> toJson(Note note) {
+    final List<Map<String, dynamic>> elementsJson = note.noteElements.map((elem) {
+      return {
+        'type': elem.type,
+        'content': elem.content,
+      };
+    }).toList();
 
-    List<Map<String, dynamic>> elementMap = [];
-    for (int i = 0; i < elements.length; i++) {
-      elementMap.add({
-        "content": elements[i].getContent(),
-        "type": elements[i].getType(),
-      });
-    }
     return {
-      "id": note.getId(),
-      "title": note.getTitle(),
-      "creationDate": note.getCreationDate(),
-      "lastModified": note.getUpdateDate(),
-      "elements": elementMap,
+      'note_id': note.id,
+      'title': note.title,
+      'created_at': note.creationDate.toIso8601String(),
+      'updated_at': note.updateDate.toIso8601String(),
+      'elements': elementsJson,
     };
   }
 }

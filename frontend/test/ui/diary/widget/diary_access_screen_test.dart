@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_viewmodel.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/password_form_widget.dart';
 import 'package:provider/provider.dart';

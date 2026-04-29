@@ -2,12 +2,8 @@ import 'note_element.dart';
 
 ///Classe per gli elementi testuali delle note
 class NoteTextElement extends NoteElement {
-  NoteTextElement(String text) {
-    setContent(text);
-  }
+  NoteTextElement(super.content);
 
   @override
-  String getType() {
-    return 'text';
-  }
+  String get type => 'text';
 }

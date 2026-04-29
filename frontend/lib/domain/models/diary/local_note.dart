@@ -1,99 +1,90 @@
 import 'note.dart';
 import 'note_element.dart';
 
-/// Implementazione concreta dell'interfaccia [Note]
-/// Rappresenta una nota completa
+/// Implementazione concreta dell'interfaccia [Note].
+/// Rappresenta una nota completamente caricata in memoria [cite: 74-79].
 class LocalNote implements Note {
-  /// Campi della nota. id e creationDate sono final dato che una volta impostati l'utente non deve poterli modificare.
-  /// Dato che una LocalNote è sempre associata ad una ProxyNote, il campo origin non è presente.
+
+  /// Identificativo univoco della nota. `final` garantisce che non sia modificabile.
+  @override
   final String id;
-  String title;
+
+  /// Data di creazione. `final` garantisce che non sia modificabile.
+  @override
   final DateTime creationDate;
-  DateTime lastModified;
-  final noteContents = <NoteElement>[];
 
-  LocalNote(this.id, this.title, this.creationDate, this.lastModified);
+  String _title;
+  DateTime _lastModified;
 
-  /// Getter
+  final List<NoteElement> _noteContents;
 
-  /// Ritorna il titolo della nota
+  /// Costruttore
+  LocalNote({
+    required this.id,
+    required String title,
+    required this.creationDate,
+    required DateTime lastModified,
+    List<NoteElement>? initialElements,
+  })  : _title = title,
+        _lastModified = lastModified,
+        _noteContents = initialElements ?? <NoteElement>[];
+
   @override
-  String getTitle() {
-    return title;
-  }
+  String get title => _title;
 
-  /// Ritorna la stringa identificativa della nota
   @override
-  String getId() {
-    return id;
-  }
+  DateTime get updateDate => _lastModified;
 
-  /// Ritorna la data di creazione in formato DateTime
   @override
-  DateTime getCreationDate() {
-    return creationDate;
-  }
+  List<NoteElement> get noteElements => List.unmodifiable(_noteContents);
 
-  /// Ritorna la data di ultima modifica in formato DateTime
+
+  /// Aggiorna il titolo e, se è cambiato, aggiorna automaticamente la data di modifica.
   @override
-  DateTime getUpdateDate() {
-    return lastModified;
-  }
-
-  /// Ritorna la lista degli elementi della nota.
-  @override
-  List<NoteElement> getNoteElements() {
-    return noteContents;
-  }
-
-  /// Ritorna il numero di elementi presenti in noteContents
-  @override
-  int getElementCount() {
-    return noteContents.length;
-  }
-
-  /// Metodi
-
-  //Se il parametro [title] è diverso dal titolo attuale di ProxyNote, il titolo viene cambiato in [title] e _lastModified viene aggiornato. Altrimenti non fa nulla.
-  @override
-  void setTitle(String title) {
-    if (this.title != title) {
-      this.title = title;
+  set title(String newTitle) {
+    if (_title != newTitle) {
+      _title = newTitle;
       updateLastModified();
     }
   }
 
-  //Aggiorna lastModified al momento in cui viene chiamato il metodo.
+  // --- METODI ---
+
+  /// Aggiorna la data di ultima modifica al momento attuale.
   @override
   void updateLastModified() {
-    lastModified = DateTime.now();
+    _lastModified = DateTime.now();
   }
 
-  /// Rimuove il [NoteElement] dalla lista degli elementi
+  /// Ritorna il numero di elementi presenti nella nota.
   @override
-  void removeElement(NoteElement element) {
-    noteContents.remove(element);
-    updateLastModified();
-  }
+  int getElementCount() => _noteContents.length;
 
-  /// Override necessario dato che è definito nell'interfaccia [Note]
-  @override
-  Future<void> load() async {}
-
-  /// Pre: elem è una stringa che rappresenta il contentuto di un NoteElement,
-  ///       type è una string contenente il tipo del NoteElement, pos è la posizione di inserimento nella lista degli elementi della nota
-  /// Post: Un nuovo oggetto NoteElement è stato aggiunto alla lista degli elementi della nota
+  /// Aggiunge un [NoteElement] nella posizione specificata [pos].
   @override
   void addElement(NoteElement element, int pos) {
-    noteContents.insert(pos, element);
+    if (pos >= 0 && pos <= _noteContents.length) {
+      _noteContents.insert(pos, element);
+      updateLastModified(); // Aggiunto per coerenza: modificare il contenuto modifica la nota
+    }
   }
 
+  /// Rimuove il [NoteElement] dalla lista degli elementi.
+  @override
+  void removeElement(NoteElement element) {
+    if (_noteContents.remove(element)) {
+      updateLastModified();
+    }
+  }
+
+  /// Modifica il testo di un elemento specifico.
   @override
   void editNoteElement(NoteElement element, String newText) {
-    noteContents
-        .where((listElem) => listElem == element)
-        .first
-        .setContent(newText);
-    updateLastModified();
+    final index = _noteContents.indexOf(element);
+    if (index != -1) {
+      _noteContents[index].content = newText;
+      updateLastModified();
+    }
   }
+
 }

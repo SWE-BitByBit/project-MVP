@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 
 import '../../../../testing/mocks/mock_diary_account_repository.dart';
 import '../../../../testing/mocks/mock_note_repository.dart';

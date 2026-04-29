@@ -1,137 +1,135 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_password_setting_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
 import 'package:provider/provider.dart';
 
-/// Pagina principale del diario.
-///
-/// Istanzia le dipendenze e poi fa dependency injection tramite [ChangeNotifierProvider]
-/// Logica di stato e l'effettiva costruzione della UI sono delegate ai vari widget
+import '../../../utils/locator.dart';
+import '../../../../domain/models/diary/diary_session.dart';
+import '../../../../domain/models/diary/diary_enums.dart';
+
+import '../view_model/diary_view_model.dart';
+import '../view_model/diary_access_view_model.dart';
+
+import 'diary_access_screen.dart';
+import 'diary_security_menu_widget.dart';
+import 'note_actions_widget.dart';
+import 'note_list_widget.dart';
+
+/// IL WRAPPER: Inietta i ViewModel.
+/// Usiamo MultiProvider perché questa schermata gestisce sia l'accesso che la lista.
 class DiaryScreen extends StatelessWidget {
   const DiaryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final session = DiarySession.session;
-    //Se l'utente non ha effettuato l'accesso e in qualche modo arriva al diario, lo riporta alla schermata di login
-    if (session.isDiaryAuth == null || session.isDiaryAuth == false) {
-      Timer(
-        const Duration(seconds: 1),
-        () => Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const DiaryAccessScreen()),
-          (route) => false,
-        ),
-      );
-    }
     return ChangeNotifierProvider(
-      create: (_) {
-        final service = NoteService();
-        final repository = NoteRepository(service);
-        final accService = DiaryAccountService();
-        final accRepository = DiaryAccountRepository(accService);
-        final viewmodel = DiaryViewmodel(repository, accRepository);
-        final diarySession = DiarySession.session;
-
-        if (diarySession.isDiaryAuth != null) {
-          viewmodel.loadPreviews(diarySession.loggedDiary!);
-          viewmodel.sortNotes();
-        }
-        return viewmodel;
-      },
-      child: const DiaryScreenView(),
+    create: (_) => getIt<DiaryViewModel>(),
+    child: const DiaryStateSwitcher(),
     );
   }
 }
 
-/// Vista pura
-///
-/// Riceve [DiaryViewmodel] dal provider e compone il layout con i widget [NoteListWidget] e [NoteActionsWidget]
-/// per la visualizzazione a lista delle note e la gestione del pulsante per l'aggiunta di note rispettivamente
-class DiaryScreenView extends StatelessWidget {
+/// SWITCHER: Decide se mostrare il login del diario o le note, SENZA usare il Navigator.
+class DiaryStateSwitcher extends StatelessWidget {
+  const DiaryStateSwitcher({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<DiaryAccessViewModel>(
+      builder: (context, accessVm, child) {
+        if (accessVm.isCheckingStatus) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        if (accessVm.isAuthenticated) {
+          return const DiaryScreenView();
+        } else {
+          return const DiaryAccessScreenView();
+        }
+      },
+    );
+  }
+}
+
+/// LA VISTA PURA (Le Note): Ascolta gli eventi per gli errori e carica i dati iniziali.
+class DiaryScreenView extends StatefulWidget {
   const DiaryScreenView({super.key});
+
+  @override
+  State<DiaryScreenView> createState() => _DiaryScreenViewState();
+}
+
+class _DiaryScreenViewState extends State<DiaryScreenView> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<DiaryViewModel>();
+      final session = DiarySession.session;
+
+      // 1. Ascolto errori (come nel Chatbot)
+      vm.asyncError.addListener(() {
+        if (vm.asyncError.value != null) {
+          _showFloatingSnackBar(vm.asyncError.value!);
+          vm.asyncError.value = null; // Resetta l'errore dopo averlo mostrato
+        }
+      });
+
+      // 2. Carica le note automaticamente all'apertura del tab
+      if (session.loggedDiary != null) {
+        vm.loadNotes.run(session.loggedDiary!);
+      }
+    });
+  }
+
+  void _showFloatingSnackBar(String message) {
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: colorScheme.onError)),
+        backgroundColor: colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 80.0, left: 16.0, right: 16.0),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = DiarySession.session;
-    return PopScope(
-      ///Logout dal diario quando si esce dalla schermata.
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) DiarySession.session.endSession();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Diario'),
-          centerTitle: true,
-          backgroundColor: Colors.teal.shade200,
-        ),
-        body: Consumer<DiaryViewmodel>(
-          builder: (context, viewModel, child) {
-            return Column(
-              children: [
-                if (viewModel.error != null)
-                  Container(
-                    width: double.infinity,
-                    color: Colors.red.shade50,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            viewModel.error!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (session.loggedDiary == DiaryType.realDiary) ...[
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      viewModel.resetFakePasswordState();
-                      showModalBottomSheet(
-                        isScrollControlled: true,
-                        backgroundColor: Colors.white,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(24),
-                          ),
-                        ),
-                        context: context,
-                        builder: (context) {
-                          return const DiaryPasswordSetting();
-                        },
-                      );
-                    },
-                    child: const Text("Impostazione password diario fittizio"),
-                  ),
-                ],
-                const Expanded(child: NoteListWidget()),
-              ],
-            );
-          },
-        ),
-        floatingActionButton: const NoteActionsWidget(),
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Diario'),
+        centerTitle: true,
+        backgroundColor: Colors.teal.shade200,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lock_outline),
+            tooltip: 'Blocca Diario',
+            onPressed: () {
+              context.read<DiaryAccessViewModel>().logout.run();
+            },
+          ),
+        ],
       ),
+      body: Column(
+        children: [
+          // Bottone per impostare la password del diario fittizio (visibile solo nel diario reale)
+          if (session.loggedDiary == DiaryType.real_diary) ...[
+            const SizedBox(height: 16),
+            const DiarySecurityMenuWidget(),
+            const SizedBox(height: 8),
+          ],
+
+          // Lista delle Note
+          const Expanded(child: NoteListWidget()),
+        ],
+      ),
+      floatingActionButton: const NoteActionsWidget(),
     );
   }
 }

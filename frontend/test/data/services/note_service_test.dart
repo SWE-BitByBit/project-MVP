@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 
 void main() {
   group("NoteService", () {

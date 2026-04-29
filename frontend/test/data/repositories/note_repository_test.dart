@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_note.dart';
 
 import '../../../testing/mocks/mock_note_service.dart';
 

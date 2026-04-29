@@ -8,12 +8,8 @@ import '../../core/widgets/auth_placeholder_screen.dart';
 
 // Importa le tue vere schermate
 import '../../chat/widget/chatbot_screen.dart';
-// import '../../diary/widget/diary_screen.dart'; // Quando lo avrai
+import '../../diary/widget/diary_screen.dart';
 
-import '../../sos/widget/sos_floating_button_widget.dart';
-import '../../sos/widget/sos_home_icon_widget.dart';
-import '../../sos/widget/sos_pull_bottom_widget.dart';
-import '../../sos/widget/sos_pull_top_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +53,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // Inietto il ViewModel dell'SOS qui, così è disponibile per tutte le tab
     return Consumer<AuthViewModel>(
         builder: (context, authVm, child) {
+
+          if (authVm.isInitializing) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
           final isLoggedIn = authVm.currentUser != null;
 
           return Scaffold(
@@ -90,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // TAB 2: Diario
                     isLoggedIn
-                        ? const Center(child: Text("DiaryScreen() in arrivo..."))
+                        ? const DiaryScreen()
                         : AuthPlaceholderScreen( // Usiamo il lucchetto anche qui!
                       appBar: AppBar(title: const Text('Il mio Diario'), centerTitle: true),
                       title: 'Diario protetto',
@@ -142,7 +144,6 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedIndex: _currentIndex,
               onDestinationSelected: (index) => _onTabTapped(index, isLoggedIn),
               destinations: [
-                // Opzione 1: Aggiungi un cerchio rosso qui se vuoi testare l'SOS sulla Home
                 NavigationDestination(
                     icon: const Icon(Icons.chat_bubble_outline),
                     selectedIcon: const Icon(Icons.chat_bubble),

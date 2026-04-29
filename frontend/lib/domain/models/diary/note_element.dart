@@ -1,22 +1,12 @@
-/// Classe astratta per gli elementi delle [Note]
+/// Classe base astratta per gli elementi delle note.
 abstract class NoteElement {
-  String _content = '';
+  /// Contenuto dell'elemento (testo, path dell'immagine o dell'audio).
+  /// Essendo pubblica, Dart crea in automatico getter e setter efficienti.
+  String content;
 
-  NoteElement();
+  NoteElement(this.content);
 
-  /// Getter
-  /// Ritorna il contenuto dell'elemento
-  String getContent() {
-    return _content;
-  }
-
-  /// Ritorna il tipo dell'elemento
-  String getType() {
-    return '';
-  }
-
-  /// Imposta il contenuto
-  void setContent(String content) {
-    _content = content;
-  }
+  /// Getter astratto che definisce il tipo dell'elemento.
+  /// Ogni sottoclasse DEVE implementarlo.
+  String get type;
 }

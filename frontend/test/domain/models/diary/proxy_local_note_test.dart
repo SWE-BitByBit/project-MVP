@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/proxy_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_note.dart';
 
 void main() {
   Note sampleNote = ProxyNote(

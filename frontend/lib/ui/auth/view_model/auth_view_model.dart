@@ -22,6 +22,8 @@ class AuthViewModel extends ChangeNotifier {
   /// Comando per l'esecuzione del logout.
   late final Command<void, void> logout;
 
+  bool isInitializing = true;
+
   /// Inizializza il view model configurando i comandi reattivi.
   /// 
   /// Riceve l'istanza di [_authRepository] tramite Dependency Injection.
@@ -38,10 +40,16 @@ class AuthViewModel extends ChangeNotifier {
   /// Verifica se esiste una sessione utente attiva nel repository.
   /// 
   /// Notifica i listener se l'utente è presente per aggiornare la navigazione.
-  void checkExistingSession() {
-    if (_authRepository.isLoggedIn()) {
-      notifyListeners();
+  Future<void> checkExistingSession() async {
+    isInitializing = true;
+    notifyListeners();
+
+    if (!_authRepository.isLoggedIn()) {
+      await _authRepository.restoreSession();
     }
+
+    isInitializing = false;
+    notifyListeners();
   }
 
   /// Logica interna per la procedura di login.

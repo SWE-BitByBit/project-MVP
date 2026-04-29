@@ -14,6 +14,9 @@ import '../data/services/trusted_contact_service.dart';
 import '../data/services/chatbot_service.dart';
 import '../data/services/material_service.dart';
 import '../data/services/dead_man_service.dart';
+import '../data/services/diary_account_service.dart';
+import '../data/services/note_service.dart';
+
 // --- REPOSITORIES ---
 import '../data/repositories/safe_place_repository.dart';
 import '../data/repositories/auth_repository.dart';
@@ -21,6 +24,8 @@ import '../data/repositories/trusted_contact_repository.dart';
 import '../data/repositories/chatbot_repository.dart';
 import '../data/repositories/material_repository.dart';
 import '../data/repositories/dead_man_repository.dart';
+import '../data/repositories/diary_account_repository.dart';
+import '../data/repositories/note_repository.dart';
 
 // --- VIEW MODELS ---
 import '../ui/safeplace/view_model/safe_place_view_model.dart';
@@ -31,6 +36,10 @@ import '../ui/material/view_model/material_view_model.dart';
 import '../ui/settings/view_model/dead_man_view_model.dart';
 import '../ui/sos/view_model/sos_view_model.dart';
 import '../ui/home/view_model/home_view_model.dart';
+import '../ui/diary/view_model/diary_access_view_model.dart';
+import '../ui/diary/view_model/diary_view_model.dart';
+
+import '../data/services/mock_diary_services.dart';
 
 final getIt = GetIt.instance;
 
@@ -52,11 +61,14 @@ void setupLocator() {
   // 5. MODULO CHATBOT
   _setupChatbot();
 
-  // 6. MODULO MATERIALE INFORMATIVO (Nuovo)
+  // 6. MODULO MATERIALE INFORMATIVO
   _setupMaterial();
 
-  //7. MODULO ALLARME AUTOMATICO
+  // 7. MODULO ALLARME AUTOMATICO
   _setupSettings();
+
+  // 8. MODULO DIARIO CRIPTATO E FITTIZIO
+  _setupDiary();
 }
 
 void _setupCore() {
@@ -74,22 +86,20 @@ void _setupCore() {
     ),
   );
 
-  // Aggiunto MaterialRepository al CacheManager!
-  // Ora al logout si svuoterà anche la cache dei materiali.
   getIt.registerLazySingleton<CacheManager>(() => CacheManager([
     getIt<TrustedContactRepository>(),
     getIt<ChatbotRepository>(),
     getIt<SafePlaceRepository>(),
     getIt<MaterialRepository>(),
     getIt<DeadManRepository>(),
+    getIt<NoteRepository>(),
   ]));
 }
 
 void _setupHome() {
-  // Il HomeViewModel ha bisogno del DeadManRepository per sapere se
-  // mostrare il banner dell'allarme attivo!
   getIt.registerFactory<HomeViewModel>(() => HomeViewModel(getIt<DeadManRepository>()));
 }
+
 /// Registra le dipendenze relative al modulo dell' autenticazione
 void _setupAuth() {
   getIt.registerLazySingleton<AuthService>(() => AuthService());
@@ -118,8 +128,8 @@ void _setupTrustedContact() {
   getIt.registerFactory<TrustedContactViewModel>(() => TrustedContactViewModel(
     getIt<TrustedContactRepository>(),
     authRepository: getIt<AuthRepository>(),
-  ),
-  );
+  ));
+
   getIt.registerFactory<SosViewModel>(() => SosViewModel(
     contactsRepository: getIt<TrustedContactRepository>(),
     authRepository: getIt<AuthRepository>(),
@@ -140,23 +150,36 @@ void _setupChatbot() {
 
 /// Registra le dipendenze relative al modulo del Materiale Informativo
 void _setupMaterial() {
-  // Service: richiede l'ApiClient per le chiamate REST
   getIt.registerLazySingleton<MaterialService>(() => MaterialService(apiClient: getIt<ApiClient>()));
 
-  // Repository: funge da SSOT, iniettiamo il service con named parameter (se lo hai definito così)
   getIt.registerLazySingleton<MaterialRepository>(() => MaterialRepository(service: getIt<MaterialService>()));
 
-  // ViewModel: iniettiamo il repo. registerFactory ci assicura un'istanza pulita ad ogni apertura.
   getIt.registerFactory<MaterialViewModel>(() => MaterialViewModel(getIt<MaterialRepository>()));
 }
 
+/// Registra le dipendenze relative al modulo dell'allarme automatico
 void _setupSettings() {
-  // Service: richiede l'ApiClient per le chiamate REST
   getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
 
-  // Repository: funge da SSOT, iniettiamo il service con named parameter (se lo hai definito così)
   getIt.registerLazySingleton<DeadManRepository>(() => DeadManRepository(getIt<DeadManService>()));
 
-  // ViewModel: iniettiamo il repo. registerFactory ci assicura un'istanza pulita ad ogni apertura.
   getIt.registerFactory<DeadManViewModel>(() => DeadManViewModel(getIt<DeadManRepository>(), authRepository: getIt<AuthRepository>()));
+}
+
+/// Registra le dipendenze relative al modulo del Diario (Criptato e Fittizio)
+void _setupDiary() {
+  // Services
+  getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
+  getIt.registerLazySingleton<NoteService>(() => MockNoteService());
+  /*
+  getIt.registerLazySingleton<DiaryAccountService>(() => DiaryAccountService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<NoteService>(() => NoteService(apiClient: getIt<ApiClient>()));
+*/
+  // Repositories
+  getIt.registerLazySingleton<DiaryAccountRepository>(() => DiaryAccountRepository(getIt<DiaryAccountService>()));
+  getIt.registerLazySingleton<NoteRepository>(() => NoteRepository(getIt<NoteService>()));
+
+  // ViewModels (Registrati come Factory per garantire uno stato pulito alla riapertura delle schermate)
+  getIt.registerFactory<DiaryAccessViewModel>(() => DiaryAccessViewModel(getIt<DiaryAccountRepository>()));
+  getIt.registerFactory<DiaryViewModel>(() => DiaryViewModel(getIt<NoteRepository>(), getIt<DiaryAccountRepository>()));
 }

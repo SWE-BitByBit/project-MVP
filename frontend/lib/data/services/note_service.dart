@@ -1,97 +1,83 @@
-import 'dart:io';
+import '../../../domain/models/diary/diary_enums.dart';
+import '../../../domain/models/diary/diary_session.dart';
+import '../network/api_client.dart';
 
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-
-/// Servizio responsabile della comunicazione HTTP/REST con il backend
-/// per la funzionalità dei diari.
+/// Servizio responsabile della gestione delle note (CRUD) nel diario.
+///
+/// Interagisce con DynamoDB per i testi e S3 per i contenuti binari.
 class NoteService {
-  final _placeHolderComplete = <Map<String, dynamic>>[
-    {
-      "id": "0",
-      "title": "Nota test 1",
-      "creationDate": "2026-04-11 10:00:30",
-      "lastModified": "2026-04-14 18:00:30",
-      "elements": [
-        {"type": "text", "content": "Nota di prova"},
-      ],
-    },
-    {
-      "id": "1",
-      "title": "Nota test 2",
-      "creationDate": "2026-04-14 10:00:30",
-      "lastModified": "2026-04-14 16:00:30",
-      "elements": [
-        {"type": "text", "content": "Nota di prova con due elementi"},
-        {"type": "text", "content": "Secondo elemento"},
-      ],
-    },
-    {
-      "id": "2",
-      "title": "Nota test 3",
-      "creationDate": "2026-04-12 10:00:30",
-      "lastModified": "2026-04-14 15:00:30",
-      "elements": [],
-    },
-  ];
+  final ApiClient _apiClient;
 
-  final _placeHolderQuick = <Map<String, dynamic>>[
-    {
-      "id": "0",
-      "title": "Nota test 1",
-      "creationDate": "2026-03-14 10:10:30",
-      "lastModified": "2026-04-14 18:00:30",
-    },
-    {
-      "id": "1",
-      "title": "Nota test 2",
-      "creationDate": "2026-02-14 10:30:30",
-      "lastModified": "2026-04-14 16:00:30",
-    },
-    {
-      "id": "2",
-      "title": "Nota test 3",
-      "creationDate": "2026-04-14 10:00:30",
-      "lastModified": "2026-04-14 15:00:30",
-    },
-  ];
+  /// Percorso base per le API del diario.
+  static const String _basePath = '/diary';
 
+  NoteService({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  /// Metodo privato per iniettare il token della sessione diario negli header.
+  Map<String, String> _buildAuthHeaders() {
+    final sessionToken = DiarySession.session.token;
+    if (sessionToken == null || sessionToken.isEmpty) {
+      throw Exception("Accesso al diario non autorizzato: Session Token mancante.");
+    }
+    return {
+      'X-Diary-Token': sessionToken,
+    };
+  }
+
+  /// Recupera le preview di tutte le note di un determinato diario.
+  ///
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}/].
   Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _placeHolderQuick;
-  }
+    final response = await _apiClient.get(
+      '$_basePath/${targetDiary.name}/',
+      headers: _buildAuthHeaders(),
+    );
 
-  Future<Map<String, dynamic>> fetchNoteById(String noteId) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    ///Workaround data la mancanza della logica backend
-    Map<String, dynamic> out = _placeHolderComplete
-        .where((json) => (json["id"] == noteId))
-        .toList()[0];
-    return out;
-  }
-
-  ///Recupera una lista di [File] appartenenti alla nota di cui viene passato l'id.
-  /*Future<List<File>> fetchNoteMedia(
-    DiaryType targetDiary,
-    String noteId,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    if (response is List) {
+      return response.cast<Map<String, dynamic>>();
+    }
     return [];
-  }*/
-
-  Future<void> saveNote(Map<String, dynamic> json) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  Future<void> deleteNote(String noteId) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
+  /// Recupera il contenuto completo di una singola nota.
+  ///
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}/].
+  Future<Map<String, dynamic>> fetchNoteById(DiaryType targetDiary, String noteId) async {
+    final response = await _apiClient.get(
+      '$_basePath/${targetDiary.name}/$noteId/',
+      headers: _buildAuthHeaders(),
+    );
+    return response as Map<String, dynamic>;
+  }
+
+  /// Crea una nuova nota o aggiorna una esistente nel database.
+  Future<Map<String, dynamic>> saveNote(DiaryType targetDiary, Map<String, dynamic> noteData) async {
+    final String? noteId = noteData['note_id'];
+
+    if (noteId == null) {
+      // POST /diary/{diary_type}/ - Creazione nuova nota
+      return await _apiClient.post(
+        '$_basePath/${targetDiary.name}/',
+        body: noteData,
+        headers: _buildAuthHeaders(),
+      );
+    } else {
+      // PUT /diary/{diary_type}/{note_id}/ - Aggiornamento nota esistente
+      return await _apiClient.put(
+        '$_basePath/${targetDiary.name}/$noteId/',
+        body: noteData,
+        headers: _buildAuthHeaders(),
+      );
+    }
+  }
+
+  /// Rimuove la nota dal database e i relativi file binari da S3.
+  ///
+  /// Corrisponde all'endpoint [DELETE /diary/{diary_type}/{note_id}/].
+  Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
+    await _apiClient.delete(
+      '$_basePath/${targetDiary.name}/$noteId/',
+      headers: _buildAuthHeaders(),
+    );
   }
 }

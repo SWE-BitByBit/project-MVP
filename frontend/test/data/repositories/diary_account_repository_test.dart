@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/services/diary_access_result.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 
 import '../../../testing/mocks/mock_diary_account_service.dart';
 

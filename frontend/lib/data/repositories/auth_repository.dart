@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../domain/models/auth/user.dart';
 import '../dtos/user_dto.dart';
 import '../services/auth_service.dart';
@@ -10,6 +11,9 @@ import '../services/auth_service.dart';
 class AuthRepository {
   /// Servizio per le operazioni di rete con AWS Cognito.
   final AuthService _authService;
+
+  final _secureStorage = const FlutterSecureStorage();
+  final String _refreshTokenKey = 'cognito_refresh_token';
 
   /// Utente attualmente autenticato nella sessione locale.
   User? _currentUser;
@@ -31,6 +35,14 @@ class AuthRepository {
     try {
       final Map<String, dynamic> rawData = await _authService.login();
       _currentUser = UserDTO.fromJson(rawData);
+
+      if (rawData.containsKey('refresh_token')) {
+        await _secureStorage.write(
+          key: _refreshTokenKey,
+          value: rawData['refresh_token'],
+        );
+      }
+
       return _currentUser;
     } catch (e) {
       debugPrint('Errore nel Repository durante il login: $e');
@@ -45,9 +57,26 @@ class AuthRepository {
     try {
       await _authService.logout();
     } finally {
-      // Resettiamo sempre l'utente locale anche se la chiamata di rete fallisce
-
       _currentUser = null;
+      await _secureStorage.delete(key: _refreshTokenKey);
+    }
+  }
+
+  Future<bool> restoreSession() async {
+    try {
+      final savedRefreshToken = await _secureStorage.read(key: _refreshTokenKey);
+
+      if (savedRefreshToken == null) {
+        return false;
+      }
+      final Map<String, dynamic> rawData = await _authService.refreshToken(savedRefreshToken);
+      _currentUser = UserDTO.fromJson(rawData);
+      return true;
+
+    } catch (e) {
+      debugPrint('Impossibile ripristinare la sessione (token scaduto?): $e');
+      await _secureStorage.delete(key: _refreshTokenKey);
+      return false;
     }
   }
 }
