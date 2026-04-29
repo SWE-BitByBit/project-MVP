@@ -1,21 +1,29 @@
 from ulid import ULID
 import os
+from typing import List
 
-from ports.primary_ports import GetNotePort, SetNotePort, DeleteNotePort
 from domain.note import Note
 from domain.note import NoteElement
 from commands.add_note_command import AddNoteCmd
 from commands.delete_note_element_command import DeleteNoteElementCmd
 from commands.get_note_command import GetNoteCmd
+from commands.get_notes_command import GetNotesCmd
 from commands.set_note_element_command import SetNoteElementCmd
+from commands.delete_note_command import DeleteNoteCmd
+
+from ports.delete_note_port import DeleteNotePort
+from ports.get_note_port import GetNotePort
+from ports.set_note_port import SetNotePort
+from ports.note_repository_port import NoteRepositoryPort
+from ports.file_repository_port import FileRepositoryPort
 
 class NoteService(GetNotePort, SetNotePort, DeleteNotePort):
 
-    def __init__(self, note_repository, file_repository):
+    def __init__(self, note_repository: NoteRepositoryPort, file_repository: FileRepositoryPort):
         self.note_repository = note_repository
         self.file_repository = file_repository
 
-    def add_note(self, cmd: AddNoteCmd):
+    def add_note(self, cmd: AddNoteCmd) -> Note:
 
         note = Note(
             note_id=str(ULID()),
@@ -61,7 +69,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort):
             "upload_urls": presigned_urls
         }
 
-    def get_note(self, cmd: GetNoteCmd):
+    def get_note(self, cmd: GetNoteCmd) -> Note:
         item = self.note_repository.get(
             cmd.user_id,
             cmd.note_id,
@@ -101,7 +109,12 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort):
             "elements": elements
         }
 
-    def list_notes(self, cmd):
+
+    def delete_note(self, cmd: DeleteNoteCmd) -> bool:
+        #TODO
+        return True
+
+    def list_notes(self, cmd: GetNotesCmd) -> List[Note]:
         return self.note_repository.list(
             cmd.user_id,
             cmd.diary_type
