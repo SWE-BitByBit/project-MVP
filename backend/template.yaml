@@ -77,80 +77,79 @@ Resources:
             ApiId: !Ref AppHttpApi
             Auth:
               Authorizer: MyJWTAuthorizer
-          GetDmsSettings:
-            Type: HttpApi
-            Properties:
-              Path: /dms_settings
-              Method: get
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          PutHeartBeat:
-            Type: HttpApi
-            Properties:
-              Path: /dms_settings/heartbeat
-              Method: put
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          PutDmsSettings:
-            Type: HttpApi
-            Properties:
-              Path: /dms_settings
-              Method: put
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          PostTrustedContact:
-            Type: HttpApi
-            Properties:
-              Path: /trusted_contact
-              Method: post
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          PutTrustedContact:
-            Type: HttpApi
-            Properties:
-              Path: /trusted_contact/{contact_id}
-              Method: put
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          GetTrustedContacts:
-            Type: HttpApi
-            Properties:
-              Path: /trusted_contact
-              Method: get
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          GetTrustedContact:
-            Type: HttpApi
-            Properties:
-              Path: /trusted_contact/{contact_id}
-              Method: get
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          DeleteTrustedContact:
-            Type: HttpApi
-            Properties:
-              Path: /trusted_contact/{contact_id}
-              Method: delete
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-          PutAlert:
-            Type: HttpApi
-            Properties:
-              Path: /alert
-              Method: put
-              ApiId: !Ref AppHttpApi
-              Auth:
-                Authorizer: MyJWTAuthorizer
-        
-
+        GetDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutHeartBeat:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings/heartbeat
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetTrustedContacts:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutAlert:
+          Type: HttpApi
+          Properties:
+            Path: /alert
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+      
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
