@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Aggiunge src/chatbot al path per gli import interni (es. 'from ports.xxx')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src" / "chatbot"))
+# Aggiunge src/ al path per gli import con prefisso 'src.chatbot.xxx'
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
+
 import pytest
 import boto3
 from moto import mock_aws
