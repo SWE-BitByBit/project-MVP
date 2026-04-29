@@ -3,7 +3,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-// Modifica questi import in base alla struttura reale del tuo progetto
 import '../view_model/safe_place_view_model.dart';
 
 
@@ -15,7 +14,7 @@ class SafePlaceMapWidget extends StatelessWidget {
   /// Il controller per muovere la mappa dinamicamente
   final MapController mapController;
 
-  /// Modifichiamo il costruttore per richiedere il controller
+  /// Crea un'istanza di [SafePlaceMapWidget].
   const SafePlaceMapWidget({super.key, required this.mapController});
 
   @override
@@ -27,7 +26,6 @@ class SafePlaceMapWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // --- MARKER DEI LUOGHI SICURI ---
         final markers = viewModel.safePlaces.map((place) {
           return Marker(
             point: LatLng(place.latitude, place.longitude),
@@ -41,7 +39,6 @@ class SafePlaceMapWidget extends StatelessWidget {
           );
         }).toList();
 
-        // --- MARKER DELL'UTENTE (PALLINO BLU) ---
         if (viewModel.currentPosition != null) {
           markers.add(
             Marker(
@@ -66,8 +63,6 @@ class SafePlaceMapWidget extends StatelessWidget {
           );
         }
 
-        // Il centro iniziale: prima priorità la posizione utente,
-        // seconda priorità il primo luogo sicuro, fallback su Padova.
         final LatLng initialCenter;
         if (viewModel.currentPosition != null) {
           initialCenter = LatLng(
@@ -81,7 +76,7 @@ class SafePlaceMapWidget extends StatelessWidget {
         }
 
         return FlutterMap(
-          mapController: mapController, // <--- AGGIUNGIAMO IL CONTROLLER QUI
+          mapController: mapController,
           options: MapOptions(
             initialCenter: initialCenter,
             initialZoom: 14.0,

@@ -1,8 +1,8 @@
 from typing import Final, List
 
-from materials.models.resource import Resource
-from materials.ports.get_resources_port import GetResourcesPort
-from materials.ports.resources_repository_port import ResourcesRepositoryPort
+from models.resource import Resource
+from ports.get_resources_port import GetResourcesPort
+from ports.resources_repository_port import ResourcesRepositoryPort
 
 
 class ResourcesService(GetResourcesPort):
