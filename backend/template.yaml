@@ -27,13 +27,100 @@ Resources:
       Handler: app.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
+      Environment:
+        Variables:
+          REGION: eu-south-1
+          DMS_TABLE: dead_man_switch_settings_mvp
+          TRUSTED_CONTACT_TABLE: trusted_contacts_mvp
+      Events:
+        PostDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+          GetDmsSettings:
+            Type: HttpApi
+            Properties:
+              Path: /dms_settings
+              Method: get
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          PutHeartBeat:
+            Type: HttpApi
+            Properties:
+              Path: /dms_settings/heartbeat
+              Method: put
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          PutDmsSettings:
+            Type: HttpApi
+            Properties:
+              Path: /dms_settings
+              Method: put
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          PostTrustedContact:
+            Type: HttpApi
+            Properties:
+              Path: /trusted_contact
+              Method: post
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          PutTrustedContact:
+            Type: HttpApi
+            Properties:
+              Path: /trusted_contact/{contact_id}
+              Method: put
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          GetTrustedContacts:
+            Type: HttpApi
+            Properties:
+              Path: /trusted_contact
+              Method: get
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          GetTrustedContact:
+            Type: HttpApi
+            Properties:
+              Path: /trusted_contact/{contact_id}
+              Method: get
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          DeleteTrustedContact:
+            Type: HttpApi
+            Properties:
+              Path: /trusted_contact/{contact_id}
+              Method: delete
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+          PutAlert:
+            Type: HttpApi
+            Properties:
+              Path: /alert
+              Method: put
+              ApiId: !Ref AppHttpApi
+              Auth:
+                Authorizer: MyJWTAuthorizer
+        
 
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: trusted-contacts-mvp
+      TableName: trusted_contacts_mvp
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -44,6 +131,22 @@ Resources:
         - AttributeName: user_id
           AttributeType: S
         - AttributeName: contact_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+  
+  DeadManSwitchSettingsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: dead_man_switch_settings_mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: user_id
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
@@ -58,5 +161,9 @@ Outputs:
     Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
-    Description: DynamoDB Table Name
+    Description: Trusted Contact DynamoDB Table Name
     Value: !Ref TrustedContactsTable
+  
+  DeadManSwitchSettingsTable:
+    Description: Dead Man switch DynamoDB Table Name
+    Value: !Ref DeadManSwitchSettingsTable
