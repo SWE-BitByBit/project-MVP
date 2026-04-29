@@ -38,63 +38,40 @@ class DiaryAccountRepository {
     }
   }
 
-  /// Validazione nuova password diario fittizio.
-  /// Se tutto è ok ritorna null o stringa vuota, altrimenti ritorna la stringa di errore.
-  Future<String> registerFakeDiaryPassword(String pwd) async {
-    if (pwd.isEmpty) {
+  /// Metodo unificato per impostare o modificare la password (reale o fittizia).
+  /// Se tutto è ok ritorna una stringa vuota, altrimenti ritorna la stringa di errore.
+  Future<String> setPassword({
+    String? oldPassword,
+    required String newPassword,
+    required DiaryType diaryType,
+  }) async {
+    if (newPassword.isEmpty) {
       return "La password non può essere vuota";
     }
 
     // Validazione robusta lato client
-    if (pwd.length < 10 ||
-        !pwd.contains(RegExp(r"[A-Z]")) ||
-        !pwd.contains(RegExp(r"[a-z]")) ||
-        !pwd.contains(RegExp(r"[0-9]")) ||
-        !pwd.contains(RegExp(r'[!@#%^&*(),.?":{}|<>]')) ||
-        pwd.contains(RegExp(r"\s"))) {
+    if (newPassword.length < 10 ||
+        !newPassword.contains(RegExp(r"[A-Z]")) ||
+        !newPassword.contains(RegExp(r"[a-z]")) ||
+        !newPassword.contains(RegExp(r"[0-9]")) ||
+        !newPassword.contains(RegExp(r'[!@#%^&*(),.?":{}|<>]')) ||
+        newPassword.contains(RegExp(r"\s"))) {
       return "Inserire una password valida";
-    } else {
-      try {
-        // Supponendo che questo metodo chiami un endpoint POST /diary/fake/password
-        final response = await _service.registerFakeDiaryPassword(pwd);
-        if (response['error'] == 'IDENTICAL_TO_REAL') {
-          return "La password del diario fittizio non può essere identica alla password del diario reale";
-        }
-        if (response['error'] == 'SAME_AS_CURRENT') {
-          return "La nuova password deve essere diversa da quella attualmente in uso";
-        }
-        return "";
-      } catch (e) {
-        return "Errore imprevisto durante la registrazione della password.";
-      }
-    }
-  }
-
-  /// Richiede al servizio di aggiornare la password reale del diario
-  Future<String> registerRealDiaryPassword(String pwd) async {
-    if (pwd.isEmpty) {
-      return "La password non può essere vuota";
     }
 
-    // Validazione robusta lato client
-    if (pwd.length < 10 ||
-        !pwd.contains(RegExp(r"[A-Z]")) ||
-        !pwd.contains(RegExp(r"[a-z]")) ||
-        !pwd.contains(RegExp(r"[0-9]")) ||
-        !pwd.contains(RegExp(r'[!@#%^&*(),.?":{}|<>]')) ||
-        pwd.contains(RegExp(r"\s"))) {
-      return "Inserire una password valida";
-    } else {
-      try {
-        // Supponendo che questo metodo chiami un endpoint POST /diary/real/password
-        final response = await _service.registerRealDiaryPassword(pwd);
-        if (response['error'] == 'SAME_AS_CURRENT') {
-          return "La nuova password deve essere diversa da quella attualmente in uso";
-        }
-        return "";
-      } catch (e) {
-        return "Errore imprevisto durante la registrazione della password.";
+    try {
+      final response = await _service.setPassword(oldPassword, newPassword, diaryType);
+
+      // Gestione degli errori unificata dal backend
+      if (response['error'] == 'IDENTICAL_TO_REAL') {
+        return "La password del diario fittizio non può essere identica alla password del diario reale";
       }
+      if (response['error'] == 'SAME_AS_CURRENT') {
+        return "La nuova password deve essere diversa da quella attualmente in uso";
+      }
+      return "";
+    } catch (e) {
+      return "Errore imprevisto durante la registrazione della password.";
     }
   }
 

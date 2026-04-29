@@ -9,7 +9,6 @@ import '../../../data/repositories/chatbot_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../domain/models/chatbot/local_chat.dart';
 
-/// ViewModel che gestisce lo stato e la logica di presentazione del Chatbot.
 class ChatbotViewModel extends ChangeNotifier {
   final ChatbotRepository _repository;
   final AuthRepository _authRepository;
@@ -43,7 +42,6 @@ class ChatbotViewModel extends ChangeNotifier {
     deleteChat = Command.createAsync<String, void>(_deleteChat, initialValue: null);
     sendMessage = Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(_sendMessage, initialValue: null);
 
-    // Caricamento automatico all'avvio
     loadChatPreviews.run();
   }
 

@@ -1,4 +1,5 @@
 import '../network/api_client.dart';
+import '../../domain/models/diary/diary_enums.dart';
 
 /// Servizio responsabile della sicurezza e dell'accesso al diario.
 ///
@@ -8,7 +9,7 @@ class DiaryAccountService {
   final ApiClient _apiClient;
 
   /// Percorso base per le API del diario.
-  static const String _basePath = '/diary';
+  static const String _basePath = '/diary/auth';
 
   DiaryAccountService({required ApiClient apiClient}) : _apiClient = apiClient;
 
@@ -21,7 +22,7 @@ class DiaryAccountService {
     final body = {'password': password};
 
     final response = await _apiClient.post(
-      '$_basePath/auth/',
+      '$_basePath/login',
       body: body,
       requiresAuth: true,
     );
@@ -29,25 +30,18 @@ class DiaryAccountService {
     return response as Map<String, dynamic>;
   }
 
-  /// Registra una nuova password per il diario fittizio.
-  Future<Map<String, dynamic>> registerFakeDiaryPassword(String password) async {
-    final body = {'password': password};
+  /// Imposta o aggiorna la password (Reale o Fittizia).
+  ///
+  /// Se [oldPassword] è nullo, si assume che sia la prima attivazione.
+  Future<Map<String, dynamic>> setPassword(String? oldPassword, String newPassword, DiaryType diaryType) async {
+    final body = {
+      if (oldPassword != null) 'old_password': oldPassword,
+      'new_password': newPassword,
+      'diary_type': diaryType == DiaryType.real_diary ? 'real_diary' : 'fake_diary',
+    };
 
     final response = await _apiClient.post(
-      '$_basePath/fake/password/',
-      body: body,
-      requiresAuth: true,
-    );
-
-    return response as Map<String, dynamic>;
-  }
-
-  /// Registra una nuova password per il diario reale.
-  Future<Map<String, dynamic>> registerRealDiaryPassword(String password) async {
-    final body = {'password': password};
-
-    final response = await _apiClient.post(
-      '$_basePath/real/password/',
+      '$_basePath/set-password',
       body: body,
       requiresAuth: true,
     );

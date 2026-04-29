@@ -106,15 +106,19 @@ class DiaryAccessViewModel extends ChangeNotifier {
   // --- LOGICA PASSWORD (PRIMA ATTIVAZIONE E MODIFICA) ---
   // ==========================================
 
-  /// Crea la password per la prima volta e fa il login automatico
+  /// Crea la password per la prima volta (nessuna vecchia password)
   Future<void> _createInitialPassword(String newPassword) async {
     _passwordError = _validatePasswordLocally(newPassword);
     if (_passwordError.isNotEmpty) {
       notifyListeners();
-      throw Exception("Password non valida"); // Blocca il comando
+      throw Exception("Password non valida");
     }
+    final serverError = await _accRepo.setPassword(
+      oldPassword: null,
+      newPassword: newPassword,
+      diaryType: DiaryType.real_diary,
+    );
 
-    final serverError = await _accRepo.registerRealDiaryPassword(newPassword);
     if (serverError.isNotEmpty) {
       _passwordError = serverError;
       notifyListeners();
@@ -122,7 +126,7 @@ class DiaryAccessViewModel extends ChangeNotifier {
     }
 
     needsInitialSetup = false;
-    await _login(newPassword); // Login automatico dopo la creazione
+    await _login(newPassword);
   }
 
   /// Aggiorna la password del diario REALE dal menu impostazioni
@@ -133,16 +137,12 @@ class DiaryAccessViewModel extends ChangeNotifier {
       return;
     }
 
-    // 1. Controllo di sicurezza: la vecchia password è giusta?
-    final res = await _accRepo.clarifyAccessResult(oldPwd);
-    if (res != DiaryAccessResult.real_diary) {
-      _passwordError = "La vecchia password non è corretta.";
-      notifyListeners();
-      return;
-    }
+    final error = await _accRepo.setPassword(
+      oldPassword: oldPwd,
+      newPassword: newPwd,
+      diaryType: DiaryType.real_diary,
+    );
 
-    // 2. Registra la nuova (sfrutta il metodo che hai creato nel repository)
-    final error = await _accRepo.registerRealDiaryPassword(newPwd);
     if (error.isEmpty) {
       _setupSuccess = true;
     } else {
@@ -159,16 +159,12 @@ class DiaryAccessViewModel extends ChangeNotifier {
       return;
     }
 
-    // 1. Controllo di sicurezza: conosce la password del diario reale?
-    final res = await _accRepo.clarifyAccessResult(realPwd);
-    if (res != DiaryAccessResult.real_diary) {
-      _passwordError = "Password diario reale errata.";
-      notifyListeners();
-      return;
-    }
+    final error = await _accRepo.setPassword(
+      oldPassword: realPwd,
+      newPassword: fakePwd,
+      diaryType: DiaryType.fake_diary,
+    );
 
-    // 2. Registra la password fittizia
-    final error = await _accRepo.registerFakeDiaryPassword(fakePwd);
     if (error.isEmpty) {
       _setupSuccess = true;
     } else {

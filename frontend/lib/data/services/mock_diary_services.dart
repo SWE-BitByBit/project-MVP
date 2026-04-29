@@ -14,9 +14,15 @@ class MockDiaryAccountService implements DiaryAccountService {
     await Future.delayed(const Duration(seconds: 1));
     if (_hasRealPassword) {
       if (password == _realPassword) {
-        return {'token': 'mock_token_per_diario_reale', 'diary_type': 'real_diary'};
+        return {
+          'token': 'mock_token_per_diario_reale',
+          'diary_type': 'real_diary'
+        };
       } else if (password == _fakePassword) {
-        return {'token': 'mock_token_per_diario_fittizio', 'diary_type': 'fake_diary'};
+        return {
+          'token': 'mock_token_per_diario_fittizio',
+          'diary_type': 'fake_diary'
+        };
       }
     }
 
@@ -25,21 +31,41 @@ class MockDiaryAccountService implements DiaryAccountService {
   }
 
   @override
-  Future<Map<String, dynamic>> registerFakeDiaryPassword(String password) async {
+  Future<Map<String, dynamic>> registerFakeDiaryPassword(
+      String password) async {
     await Future.delayed(const Duration(seconds: 1));
     _fakePassword = password;
     return {};
   }
 
   @override
-  Future<Map<String, dynamic>> registerRealDiaryPassword(String password) async {
+  Future<Map<String, dynamic>> registerRealDiaryPassword(
+      String password) async {
     await Future.delayed(const Duration(seconds: 1));
     _realPassword = password;
     _hasRealPassword = true;
     return {};
   }
+ @override
+  Future<Map<String, dynamic>> setPassword(String? oldPassword, String newPassword, DiaryType diaryType) async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (oldPassword == null){
+      _realPassword = newPassword;
+      _hasRealPassword = true;
+    }else if (oldPassword == _realPassword){
+      if (diaryType == DiaryType.real_diary) {
 
-  @override
+      } else {
+        _fakePassword = newPassword;
+      }
+    }
+    return {};
+  }
+
+
+
+
+    @override
   Future<bool> checkHasRealPassword() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return _hasRealPassword;
