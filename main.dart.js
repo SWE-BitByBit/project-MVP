@@ -30715,7 +30715,7 @@ s=q}for(;;)switch(s){case 0:if($.Y==null)A.aRk()
 $.Y.toString
 q=3
 s=6
-return A.j($.Br().zk(".env"),$async$aOg)
+return A.j($.Br().zk("assets/env"),$async$aOg)
 case 6:q=1
 s=5
 break
