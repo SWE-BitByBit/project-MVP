@@ -4,6 +4,14 @@ Description: >
   This is the template for the deploy of the lambda used for app: "L'app che
   protegge e trasforma"
 
+Parameters:
+  CognitoIssuer:
+    Type: String
+    Default: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_Vf1MMfPoO"
+  CognitoAudience:
+    Type: String
+    Default: "5dlcoa478c3uve9bctpopae4kl"
+  
 Globals:
   Function:
     Timeout: 10
@@ -12,6 +20,33 @@ Globals:
       LogFormat: JSON
 
 Resources:
+# --- API Gateway ---
+  AppHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: app-protegge-trasforma-api-mvp
+      Auth:
+        DefaultAuthorizer: MyJWTAuthorizer
+        Authorizers:
+          MyJWTAuthorizer:
+            JwtConfiguration:
+              Issuer: !Ref CognitoIssuer
+              Audience:
+                - !Ref CognitoAudience
+            IdentitySource: "$request.header.Authorization"
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+
   DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
