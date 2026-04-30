@@ -4,7 +4,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from src.materials.lambda_handler import lambda_handler
+from materials.lambda_handler import lambda_handler
 
 BUCKET_NAME = "app-protegge-trasforma-materials-mvp"
 FILE_KEY = "materials.json"

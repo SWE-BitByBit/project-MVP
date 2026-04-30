@@ -3,9 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.materials.controller.resources_controller import ResourcesController
-from src.materials.models.resource import Resource
-from src.materials.models.resource_type import ResourceType
+from materials.controller.resources_controller import ResourcesController
+from materials.models.resource import Resource
+from materials.models.resource_type import ResourceType
 
 
 def _crea_risorsa(

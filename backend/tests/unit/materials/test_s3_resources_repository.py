@@ -4,8 +4,8 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from src.materials.models.resource_type import ResourceType
-from src.materials.repository.s3_resources_repository import S3ResourcesRepository
+from materials.models.resource_type import ResourceType
+from materials.repository.s3_resources_repository import S3ResourcesRepository
 
 BUCKET_NAME = "app-protegge-trasforma-materials-mvp"
 FILE_KEY = "materials.json"
