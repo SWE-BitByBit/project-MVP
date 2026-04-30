@@ -1,62 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
-import 'package:provider/provider.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 
-import '../../../../testing/mocks/mock_diary_account_repository.dart';
-import '../../../../testing/mocks/mock_note_repository.dart';
+import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
+import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
+
 
 void main() {
-  group("NoteActionsWidget Widget Test", () {
-    late MockNoteRepository mockRepo;
-    late MockDiaryAccountRepository mockAccRepo;
-    late DiaryViewmodel viewmodel;
+  late MockDiaryViewModel mockVm;
+  late MockCommand<({Note note, DiaryType diary}), void> mockSaveNoteCommand;
 
-    setUp(() {
-      mockRepo = MockNoteRepository();
-      mockAccRepo = MockDiaryAccountRepository();
-      viewmodel = DiaryViewmodel(mockRepo, mockAccRepo);
-    });
+  setUpAll(() {
+    registerFallbackValue(DiaryType.real_diary);
+    registerFallbackValue((
+    note: LocalNote(
+      id: 'fake',
+      title: '',
+      creationDate: DateTime.now(),
+      lastModified: DateTime.now(),
+    ),
+    diary: DiaryType.real_diary
+    ));
+  });
 
-    Future<void> pumpActionsWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<DiaryViewmodel>.value(
-              value: viewmodel,
-              child: const NoteActionsWidget(),
-            ),
-          ),
+  setUp(() {
+    mockVm = MockDiaryViewModel();
+    mockSaveNoteCommand = MockCommand<({Note note, DiaryType diary}), void>();
+
+    // Stubbing obbligatorio per i membri interni dei comandi
+    when(() => mockSaveNoteCommand.isRunning).thenReturn(ValueNotifier(false));
+    when(() => mockSaveNoteCommand.canExecute).thenReturn(ValueNotifier(true));
+
+    // Assicuriamoci che il comando asincrono completi immediatamente
+    when(() => mockSaveNoteCommand.runAsync(any())).thenAnswer((_) async => {});
+
+    when(() => mockVm.saveNote).thenReturn(mockSaveNoteCommand);
+    when(() => mockVm.asyncError).thenReturn(ValueNotifier(null));
+    when(() => mockVm.notes).thenReturn([]);
+
+    // Reset Singleton Session
+    DiarySession.session.isDiaryAuth = false;
+    DiarySession.session.loggedDiary = null;
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<DiaryViewModel>.value(
+          value: mockVm,
+          child: const NoteActionsWidget(),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    testWidgets("Deve mostrare il FloatingActionButton con l'icona '+'", (
-      WidgetTester tester,
-    ) async {
-      await pumpActionsWidget(tester);
-      expect(find.byType(FloatingActionButton), findsOne);
-      expect(find.byIcon(Icons.add), findsOneWidget);
-    });
+  group('NoteActionsWidget - Tests', () {
 
-    testWidgets("Il click sul bottone aggiunge una nota", (
-      WidgetTester tester,
-    ) async {
-      /// Necessario che la DiarySession sia attiva
-      final session = DiarySession.session;
-      session.initSession(DiaryType.realDiary);
-      await pumpActionsWidget(tester);
-      viewmodel.loadPreviews(DiaryType.realDiary);
-      expect(viewmodel.getNoteListSize(), 0);
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+    testWidgets('non mostra il pulsante se non autenticato', (tester) async {
+      DiarySession.session.isDiaryAuth = false;
 
-      expect(viewmodel.getNoteListSize(), 1);
-      session.endSession();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
   });
 }

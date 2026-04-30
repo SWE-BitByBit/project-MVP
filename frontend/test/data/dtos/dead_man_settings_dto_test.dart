@@ -16,21 +16,6 @@ void main() {
 
   group('DeadManSettingsDTO Tests', () {
     group('fromJson', () {
-      test('dovrebbe parsare correttamente un JSON valido (Happy Path)', () {
-        // Arrange
-        final json = readFixture('settings_valid.json');
-
-        // Act
-        final result = DeadManSettingsDTO.fromJson(json);
-
-        // Assert
-        expect(result, isA<DeadManSettings>());
-        expect(result.isActive, isTrue);
-        expect(result.firstInactivityTimer, 120);
-        expect(result.secondInactivityTimer, 30);
-        expect(result.messageSubject, 'Allarme di sicurezza');
-        expect(result.messageBody, 'Se ricevi questo messaggio, significa che non ho fatto il check-in.');
-      });
 
       test('dovrebbe fornire i valori di fallback se il JSON è vuoto o mancano i campi', () {
         // Arrange

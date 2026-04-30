@@ -1,288 +1,111 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../testing/mocks/mock_diary_account_repository.dart';
-import '../../../../testing/mocks/mock_note_repository.dart';
+import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
 
 void main() {
-  group("NoteEditorWidget Widget Test", () {
-    late MockNoteRepository mockRepo;
-    late MockDiaryAccountRepository mockAccRepo;
-    late DiaryViewmodel viewmodel;
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    setUp(() {
-      mockRepo = MockNoteRepository();
-      mockAccRepo = MockDiaryAccountRepository();
-      viewmodel = DiaryViewmodel(mockRepo, mockAccRepo);
+  late MockDiaryViewModel mockViewModel;
+  late MockSaveNoteCommand mockSaveCommand;
+  late MockDeleteNoteCommand mockDeleteCommand;
+  late LocalNote testNote;
+
+  setUpAll(() {
+    // Mock del Platform Channel per flutter_secure_storage
+    const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return null; // Ritorna null per simulare successo su write/delete/read
     });
 
-    Future<void> pumpEditorWidget(
-      WidgetTester tester, {
-      required VoidCallback onDismiss,
-      required Note note,
-    }) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<DiaryViewmodel>.value(
-              value: viewmodel,
-              child: NoteEditorWidget(onDismiss: onDismiss, selectedNote: note),
-            ),
-          ),
+    registerFallbackValue((
+    note: LocalNote(
+      id: 'fake',
+      title: '',
+      creationDate: DateTime.now(),
+      lastModified: DateTime.now(),
+    ),
+    diary: DiaryType.real_diary,
+    ));
+
+    registerFallbackValue((noteId: 'fake', diary: DiaryType.real_diary));
+  });
+
+  setUp(() async {
+    mockViewModel = MockDiaryViewModel();
+    mockSaveCommand = MockSaveNoteCommand();
+    mockDeleteCommand = MockDeleteNoteCommand();
+
+    when(() => mockViewModel.saveNote).thenReturn(mockSaveCommand);
+    when(() => mockViewModel.deleteNote).thenReturn(mockDeleteCommand);
+
+    // Ora initSession non fallirà più grazie al mock del canale
+    await DiarySession.session.initSession(DiaryType.real_diary, "test_token");
+
+    testNote = LocalNote(
+      id: "test_id",
+      title: "Titolo Iniziale",
+      creationDate: DateTime(2026, 4, 30, 10, 0),
+      lastModified: DateTime(2026, 4, 30, 10, 0),
+    );
+  });
+
+  tearDown(() async {
+    await DiarySession.session.endSession();
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: ChangeNotifierProvider<DiaryViewModel>.value(
+        value: mockViewModel,
+        child: NoteEditorWidget(
+          selectedNote: testNote,
+          onDismiss: () {},
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    testWidgets("Il widget visualizza correttamente la nota selezionata", (
-      WidgetTester tester,
-    ) async {
-      /// Necessario che la DiarySession sia attiva
-      final session = DiarySession.session;
-      session.initSession(DiaryType.realDiary);
-      Note sampleNote = LocalNote(
-        "id",
-        "sample title",
-        DateTime.parse("2026-04-14 18:00:30"),
-        DateTime.parse("2026-04-14 18:00:30"),
-      );
-
-      NoteElement textElement = NoteTextElement("sample text");
-      NoteElement imageElement = NoteImageElement("/fake_path");
-      NoteElement audioElement = NoteAudioElement("/second_path");
-
-      sampleNote.addElement(textElement, sampleNote.getElementCount());
-      sampleNote.addElement(imageElement, sampleNote.getElementCount());
-      sampleNote.addElement(audioElement, sampleNote.getElementCount());
-
-      mockRepo.mockCreatedNote = sampleNote;
-      mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-      await viewmodel.loadPreviews(DiaryType.realDiary);
-      await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-      await tester.pumpAndSettle();
-
-      expect(find.text("sample title"), findsOne);
-      expect(find.text("sample text"), findsOne);
-      expect(find.byType(Image), findsOne);
-      expect(find.byType(NoteAudioPlayerWidget), findsOne);
-
-      session.endSession();
+  group('NoteEditorWidget - UI Rendering', () {
+    testWidgets('Visualizza correttamente il titolo e le date della nota', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.text('Titolo Iniziale'), findsOneWidget);
+      expect(find.textContaining('30/4/2026'), findsWidgets);
     });
 
-    testWidgets(
-      "Il bottone di eliminazione rimuove correttamente un elemento dalla nota",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
+    testWidgets('Mostra placeholder quando la nota è vuota', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.text("Questa nota è vuota"), findsOneWidget);
+    });
+  });
 
-        NoteElement textElement = NoteTextElement("sample text");
+  group('NoteEditorWidget - Logic & Persistence', () {
+    testWidgets('Modifica del TextField titolo aggiorna l\'oggetto LocalNote', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.enterText(find.byType(TextField).first, "Titolo Modificato");
+      expect(testNote.title, "Titolo Modificato");
+    });
 
-        sampleNote.addElement(textElement, sampleNote.getElementCount());
+    testWidgets('Aggiunta elemento testuale via FAB aggiorna la nota', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Aggiungi testo"));
+      await tester.pumpAndSettle();
+      expect(testNote.getElementCount(), 1);
+      expect(testNote.noteElements.first, isA<NoteTextElement>());
+    });
 
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
 
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        viewmodel.loadNote(0);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-        expect(sampleNote.getElementCount(), 1);
-
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byIcon(Icons.delete_outline));
-        await tester.pumpAndSettle();
-        expect(find.text("sample text"), findsNothing);
-        expect(sampleNote.getElementCount(), 0);
-        session.endSession();
-      },
-    );
-
-    testWidgets(
-      "Il widget visualizza correttamente il FloatingActionButton per l'aggiunta degli elementi",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-
-        expect(find.byType(FloatingActionButton), findsOne);
-        expect(find.byIcon(Icons.create_new_folder_outlined), findsOneWidget);
-
-        session.endSession();
-      },
-    );
-
-    testWidgets(
-      "Premere il FloatingActionButton per l'aggiunta degli elementi mostra tre PopupMenuItem.",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(PopupMenuItem), findsExactly(3));
-        expect(find.text("Aggiungi testo"), findsOne);
-        expect(find.text("Aggiungi immagine"), findsOne);
-        expect(find.text("Aggiungi traccia audio"), findsOne);
-
-        session.endSession();
-      },
-    );
-
-    testWidgets(
-      "Premere il PopupMenuItem 'Aggiungi testo' aggiunge un elemento testuale vuoto alla nota",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-
-        expect(sampleNote.getElementCount(), 0);
-
-        /// Simula click bottone aggiunta
-        await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text("Aggiungi testo"));
-        await tester.pumpAndSettle();
-        expect(sampleNote.getElementCount(), 1);
-        expect(sampleNote.getNoteElements().first.getType(), "text");
-
-        session.endSession();
-      },
-    );
-
-    /// Non riesco a capire come testare image picker e file picker
-    /*testWidgets(
-      "Premere il PopupMenuItem 'Aggiungi immagine' aggiunge un elemento immagine alla nota",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-
-        expect(sampleNote.getElementCount(), 0);
-
-        /// Simula click bottone aggiunta
-        await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text("Aggiungi immagine"));
-        await tester.pumpAndSettle();
-
-        expect(sampleNote.getElementCount(), 1);
-        expect(sampleNote.getNoteElements().first.getType(), "image");
-
-        session.endSession();
-      },
-    );
-
-    testWidgets(
-      "Premere il PopupMenuItem 'Aggiungi traccia audio' aggiunge un elemento audio alla nota",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note sampleNote = LocalNote(
-          "id",
-          "sample title",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpEditorWidget(tester, onDismiss: () {}, note: sampleNote);
-        await tester.pumpAndSettle();
-
-        expect(sampleNote.getElementCount(), 0);
-
-        /// Simula click bottone aggiunta
-        await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text("Aggiungi traccia audio"));
-        await tester.pumpAndSettle();
-        expect(sampleNote.getElementCount(), 1);
-        expect(sampleNote.getNoteElements().first.getType(), "audio");
-
-        session.endSession();
-      },
-    );*/
   });
 }

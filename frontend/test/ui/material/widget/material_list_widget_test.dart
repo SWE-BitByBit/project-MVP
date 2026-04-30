@@ -1,97 +1,167 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
+
 import 'package:mvp_app_protegge_e_trasforma/ui/material/widget/material_list_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/material/view_model/material_view_model.dart';
-import '../../../../testing/mocks/mock_material_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
+
+import '../../../../testing/mocks/material/mock_material_view_model.dart';
+import '../../../../testing/mocks/core/mock_url_launcher_platform.dart';
+
+// 1. Creiamo un Fake per LaunchOptions per soddisfare Mocktail
+class FakeLaunchOptions extends Fake implements LaunchOptions {}
 
 void main() {
-  late MockMaterialRepository mockRepository;
-  late MaterialViewModel viewModel;
+  late MockMaterialViewModel mockVm;
+  late MockUrlLauncherPlatform mockUrlLauncher;
 
-  setUp(() {
-    mockRepository = MockMaterialRepository();
-    viewModel = MaterialViewModel(mockRepository);
+  // 2. Registriamo il Fake nel setUpAll
+  setUpAll(() {
+    registerFallbackValue(FakeLaunchOptions());
   });
 
-  Widget createWidget() {
+  setUp(() {
+    mockVm = MockMaterialViewModel();
+
+    // Mock di UrlLauncher per intercettare i click sui bottoni web
+    mockUrlLauncher = MockUrlLauncherPlatform();
+    UrlLauncherPlatform.instance = mockUrlLauncher;
+
+    // Configura il mock di url_launcher per autorizzare l'apertura dei link.
+    // Ora any() per LaunchOptions funzionerà grazie al Fake!
+    when(() => mockUrlLauncher.canLaunch(any())).thenAnswer((_) async => true);
+    when(() => mockUrlLauncher.launchUrl(any(), any())).thenAnswer((_) async => true);
+  });
+
+  Widget createWidgetUnderTest() {
     return MaterialApp(
       home: Scaffold(
-        body: ChangeNotifierProvider<MaterialViewModel>.value(
-          value: viewModel,
-          child: MaterialListWidget(viewModel: viewModel),
-        ),
+        body: MaterialListWidget(viewModel: mockVm),
       ),
     );
   }
 
-  group('MaterialListWidget Widget Test', () {
-    testWidgets('Deve mostrare CircularProgressIndicator durante il caricamento', (WidgetTester tester) async {
-      // 1. Prepariamo il completer
-      final completer = Completer<List<Resource>>();
-      mockRepository.completer = completer;
+  group('MaterialListWidget - Render Tests', () {
+    testWidgets('renderizza una lista vuota senza errori', (tester) async {
+      when(() => mockVm.materials).thenReturn([]);
 
-      // 2. Avviamo il comando
-      final future = viewModel.loadMaterials.execute();
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createWidget());
-
-      // 3. Forziamo 1 frame per far apparire la rotellina
-      await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      // 4. Sblocchiamo i dati
-      completer.complete(mockRepository.mockedMaterials);
-
-      // 5. Aspettiamo che il Command finisca di fare il suo lavoro
-      await future;
-
-      // 6. IL TRUCCO: Invece di pumpAndSettle, facciamo due pump espliciti.
-      // Il primo registra il cambio di stato (running = false).
-      await tester.pump();
-      // Il secondo fa un "salto in avanti" nel tempo per far sparire la rotellina fisicamente.
-      await tester.pump(const Duration(milliseconds: 50));
-
-      // 7. Verifichiamo che non ci sia più
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // ListView dovrebbe essere presente ma senza ExpansionTile
+      expect(find.byType(ListView), findsOneWidget);
+      expect(find.byType(ExpansionTile), findsNothing);
     });
 
-    testWidgets('Deve mostrare un messaggio d\'errore se il caricamento fallisce', (WidgetTester tester) async {
-      mockRepository.shouldThrowError = true;
+    testWidgets('renderizza correttamente le card delle risorse fornite', (tester) async {
+      when(() => mockVm.materials).thenReturn([
+        const Resource(
+          id: '1',
+          title: 'Titolo Articolo',
+          type: ResourceType.article,
+        ),
+        const Resource(
+          id: '2',
+          title: 'Legge Test',
+          type: ResourceType.law,
+        ),
+      ]);
 
-      await viewModel.loadMaterials.execute();
-      await tester.pumpWidget(createWidget());
-      await tester.pump();
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.textContaining('errore durante il recupero dei dati'), findsOneWidget);
+      expect(find.byType(ExpansionTile), findsNWidgets(2));
+      expect(find.text('Titolo Articolo'), findsOneWidget);
+      expect(find.text('Legge Test'), findsOneWidget);
     });
+  });
 
-    testWidgets('Deve mostrare la lista di card quando il caricamento ha successo', (WidgetTester tester) async {
-      await viewModel.loadMaterials.execute();
-      await tester.pumpWidget(createWidget());
-      await tester.pump();
+  group('MaterialListWidget - Expansion & Interactions', () {
+    testWidgets('espande la card e mostra il contenuto testuale', (tester) async {
+      when(() => mockVm.materials).thenReturn([
+        const Resource(
+          id: 'test_exp',
+          title: 'Titolo Espandibile',
+          content: 'Testo di prova nascosto',
+          type: ResourceType.community,
+        ),
+      ]);
 
-      expect(find.byType(Card), findsNWidgets(3));
-      expect(find.text('Law Resource'), findsOneWidget);
-      expect(find.text('Community Resource'), findsOneWidget);
-    });
+      await tester.pumpWidget(createWidgetUnderTest());
 
-    testWidgets('Il click su una card deve espandere i dettagli (ExpansionTile)', (WidgetTester tester) async {
-      await viewModel.loadMaterials.execute();
-      await tester.pumpWidget(createWidget());
-      await tester.pump();
+      // Il contenuto inizialmente non è visibile
+      expect(find.text('Testo di prova nascosto'), findsNothing);
 
-      // Inizialmente i contenuti non sono visibili o non processati
-      expect(find.text('Content 1'), findsNothing);
+      // Clicca sulla card (ExpansionTile) per espanderla
+      await tester.tap(find.text('Titolo Espandibile'));
 
-      // Clicchiamo sulla ExpansionTile (la card 0)
-      await tester.tap(find.text('Law Resource'));
+      // Aspettiamo che l'animazione di espansione si concluda
       await tester.pumpAndSettle();
 
       // Ora il contenuto deve essere visibile
-      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Testo di prova nascosto'), findsOneWidget);
+
+      // Dato che non c'è URL, il bottone non deve esserci
+      expect(find.text('Visita il Link'), findsNothing);
+    });
+
+    testWidgets('mostra il bottone URL se presente e interagisce con url_launcher', (tester) async {
+      const testUrl = 'https://example.com';
+      when(() => mockVm.materials).thenReturn([
+        const Resource(
+          id: 'test_url',
+          title: 'Risorsa con Link',
+          url: testUrl,
+          type: ResourceType.article,
+        ),
+      ]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Espande la card
+      await tester.tap(find.text('Risorsa con Link'));
+      await tester.pumpAndSettle();
+
+      // Verifica la presenza del bottone
+      final buttonFinder = find.widgetWithText(FilledButton, 'Visita il Link');
+      expect(buttonFinder, findsOneWidget);
+
+      // Clicca il bottone
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+
+      // Verifica che UrlLauncher sia stato invocato con l'URL corretto
+      verify(() => mockUrlLauncher.canLaunch(testUrl)).called(1);
+      verify(() => mockUrlLauncher.launchUrl(testUrl, any())).called(1);
+    });
+
+    testWidgets('mostra uno SnackBar di errore se url_launcher fallisce', (tester) async {
+      const badUrl = 'https://badurl.com';
+      when(() => mockVm.materials).thenReturn([
+        const Resource(
+          id: 'bad_url',
+          title: 'Link Rotto',
+          url: badUrl,
+          type: ResourceType.article,
+        ),
+      ]);
+
+      // Simuliamo il fallimento del check di canLaunch
+      when(() => mockUrlLauncher.canLaunch(badUrl)).thenAnswer((_) async => false);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.tap(find.text('Link Rotto'));
+      await tester.pumpAndSettle();
+
+      // Clicca il bottone che ora dovrebbe fallire e sollevare l'eccezione
+      await tester.tap(find.widgetWithText(FilledButton, 'Visita il Link'));
+      await tester.pump(); // Esegui microtask (showSnackBar)
+      await tester.pumpAndSettle(); // Finisci animazione SnackBar
+
+      // Verifica che lo SnackBar di errore venga mostrato
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('Ops! Impossibile aprire questo link.'), findsOneWidget);
     });
   });
 }

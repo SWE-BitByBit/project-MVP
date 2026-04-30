@@ -16,7 +16,7 @@ import 'ui/diary/view_model/diary_access_view_model.dart';
 import 'ui/sos/view_model/sos_view_model.dart';
 import 'ui/sos/widget/sos_pull_top_widget.dart';
 import 'ui/settings/widget/settings_screen.dart';
-import 'ui/trusted_contacts/widget/trusted_contacts_screen.dart';
+import 'ui/trusted_contacts/widget/trusted_contact_screen.dart';
 import 'ui/material/widget/material_screen.dart';
 import 'ui/safeplace/widget/safe_place_map_screen.dart';
 

@@ -1,66 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/password_form_widget.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/password_form_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 
-import '../../../../testing/mocks/mock_diary_account_repository.dart';
+import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
 
 void main() {
-  group("PasswordFormWidget Widget Test", () {
-    late MockDiaryAccountRepository mockRepo;
-    late DiaryAccessViewmodel viewmodel;
+  late MockDiaryAccessViewModel mockVm;
+  late MockCommand<String, void> mockLoginCommand;
 
-    setUp(() {
-      mockRepo = MockDiaryAccountRepository();
-      viewmodel = DiaryAccessViewmodel(mockRepo);
+  setUp(() {
+    mockVm = MockDiaryAccessViewModel();
+    mockLoginCommand = MockCommand<String, void>();
+
+    // Stubbing dei membri interni del comando
+    when(() => mockLoginCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
+    when(() => mockLoginCommand.canExecute).thenReturn(ValueNotifier<bool>(true));
+    when(() => mockLoginCommand.run(any())).thenReturn(null);
+
+    // Stubbing del ViewModel
+    when(() => mockVm.login).thenReturn(mockLoginCommand);
+    when(() => mockVm.asyncError).thenReturn(ValueNotifier<String?>(null));
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: ChangeNotifierProvider<DiaryAccessViewModel>.value(
+        value: mockVm,
+        child: PasswordFormWidget(onDismiss: () {}),
+      ),
+    );
+  }
+
+  group('PasswordFormWidget - UI Rendering', () {
+    testWidgets('visualizza correttamente tutti gli elementi grafici', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      expect(find.text('Accedi al diario'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.text('Accedi'), findsOneWidget);
+    });
+  });
+
+  group('PasswordFormWidget - Interactions', () {
+    testWidgets('cliccando il pulsante Accedi chiama vm.login.run con la password inserita', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      const testPassword = 'secret_password_123';
+      await tester.enterText(find.byType(TextField), testPassword);
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+
+      verify(() => mockLoginCommand.run(testPassword)).called(1);
     });
 
-    Future<void> pumpPwFormWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<DiaryAccessViewmodel>.value(
-              value: viewmodel,
-              child: PasswordFormWidget(onDismiss: () {}),
-            ),
-          ),
-        ),
-      );
-    }
+    testWidgets('premendo invio sulla tastiera chiama vm.login.run', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-    testWidgets(
-      "Il widget visualizza correttamente il TextField per l'inserimento della password",
-      (WidgetTester tester) async {
-        await pumpPwFormWidget(tester);
-        await tester.pumpAndSettle();
-        expect(find.byType(TextField), findsOne);
-      },
-    );
+      const testPassword = 'keyboard_submit_pwd';
+      await tester.enterText(find.byType(TextField), testPassword);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
 
-    testWidgets(
-      "Il widget visualizza correttamente l'ElevatedButton per effettuare il tentativo di accesso",
-      (WidgetTester tester) async {
-        await pumpPwFormWidget(tester);
-        await tester.pumpAndSettle();
-        expect(find.byType(ElevatedButton), findsOne);
-      },
-    );
+      verify(() => mockLoginCommand.run(testPassword)).called(1);
+    });
+  });
 
-    testWidgets(
-      "Il widget apre il NoteListWidget se l'utente accede con la password corretta",
-      (WidgetTester tester) async {
-        await pumpPwFormWidget(tester);
-        await tester.pumpAndSettle();
-        final pwdField = find.byType(TextField);
-        await tester.enterText(pwdField, "real");
-        await tester.pumpAndSettle();
-        await tester.tap(find.text("Accedi"));
-        await tester.pumpAndSettle();
+  group('PasswordFormWidget - Error Handling', () {
+    testWidgets('mostra uno SnackBar quando viene emesso un errore asincrono', (tester) async {
+      // Creiamo un ValueNotifier reale per testare il listener
+      final errorNotifier = ValueNotifier<String?>(null);
+      when(() => mockVm.asyncError).thenReturn(errorNotifier);
 
-        expect(find.byType(DiaryScreen), findsOne);
-      },
-    );
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Simuliamo l'errore
+      const errorMessage = 'Password errata, riprova.';
+      errorNotifier.value = errorMessage;
+
+      // Pump per far scattare il listener e la visualizzazione dello SnackBar
+      await tester.pump();
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text(errorMessage), findsOneWidget);
+
+      // Verifica che il widget abbia resettato l'errore nel ViewModel (come da codice sorgente)
+      expect(errorNotifier.value, isNull);
+    });
   });
 }

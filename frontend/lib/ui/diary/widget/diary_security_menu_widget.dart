@@ -23,7 +23,6 @@ class DiarySecurityMenuWidget extends StatelessWidget {
             ),
             context: context,
             builder: (context) {
-              // Passiamo il parametro che abbiamo configurato precedentemente
               return DiaryPasswordSetting(
                 isModifyingRealPassword: value == 'real',
               );
@@ -37,7 +36,7 @@ class DiarySecurityMenuWidget extends StatelessWidget {
               children: [
                 Icon(Icons.security, color: Colors.teal),
                 SizedBox(width: 10),
-                Text('Gestisci password fittizia'),
+                Expanded(child: Text('Gestisci password fittizia')),
               ],
             ),
           ),
@@ -47,7 +46,7 @@ class DiarySecurityMenuWidget extends StatelessWidget {
               children: [
                 Icon(Icons.key, color: Colors.teal),
                 SizedBox(width: 10),
-                Text('Modifica password reale'),
+                Expanded(child: Text('Modifica password reale')),
               ],
             ),
           ),

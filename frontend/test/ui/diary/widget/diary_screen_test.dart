@@ -1,122 +1,134 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
-import 'package:provider/provider.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/diary_access_screen.dart';
 
-import '../../../../testing/mocks/mock_diary_account_repository.dart';
-import '../../../../testing/mocks/mock_note_repository.dart';
+import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
+import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
 
 void main() {
-  group("DiaryScreen - UI Integration Test", () {
-    late MockNoteRepository mockRepo;
-    late MockDiaryAccountRepository mockAccRepo;
-    late DiaryViewmodel viewmodel;
+  late MockDiaryAccessViewModel mockAccessVm;
+  late MockDiaryViewModel mockDiaryVm;
 
-    setUp(() {
-      mockRepo = MockNoteRepository();
-      mockAccRepo = MockDiaryAccountRepository();
-      viewmodel = DiaryViewmodel(mockRepo, mockAccRepo);
-    });
+  late MockCommand<String, void> mockLoginCommand;
+  late MockCommand<void, void> mockLogoutCommand;
+  late MockCommand<DiaryType, void> mockLoadNotesCommand;
+  late MockCommand<String, void> mockCreatePwdCommand;
 
-    Future<void> pumpScreen(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<DiaryViewmodel>.value(
-            value: viewmodel,
-            child: const DiaryScreenView(),
-          ),
-        ),
-      );
+  setUpAll(() {
+    registerFallbackValue(DiaryType.real_diary);
+  });
+
+  setUp(() {
+    mockAccessVm = MockDiaryAccessViewModel();
+    mockDiaryVm = MockDiaryViewModel();
+
+    mockLoginCommand = MockCommand<String, void>();
+    mockLogoutCommand = MockCommand<void, void>();
+    mockLoadNotesCommand = MockCommand<DiaryType, void>();
+    mockCreatePwdCommand = MockCommand<String, void>();
+
+    for (var cmd in [mockLoginCommand, mockLogoutCommand, mockLoadNotesCommand ,mockCreatePwdCommand]) {
+      when(() => cmd.isRunning).thenReturn(ValueNotifier<bool>(false));
+      when(() => cmd.canRun).thenReturn(ValueNotifier<bool>(true));
     }
 
-    testWidgets(
-      'Deve mostrare il banner di errore rosso se il ViewModel ha un errore',
-      (WidgetTester tester) async {
-        mockRepo.shouldThrowError = true;
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
-        expect(find.byIcon(Icons.error_outline), findsOneWidget);
-      },
-    );
+    // Stubbing AccessViewModel Properties
+    when(() => mockAccessVm.login).thenReturn(mockLoginCommand);
+    when(() => mockAccessVm.logout).thenReturn(mockLogoutCommand);
+    when(() => mockAccessVm.createInitialPassword).thenReturn(mockCreatePwdCommand);
+    when(() => mockAccessVm.asyncError).thenReturn(ValueNotifier<String?>(null));
+    when(() => mockAccessVm.isCheckingStatus).thenReturn(false);
+    when(() => mockAccessVm.isAuthenticated).thenReturn(false);
+    when(() => mockAccessVm.needsInitialSetup).thenReturn(false); // Fix crash #1
+    when(() => mockAccessVm.passwordError).thenReturn("");
 
-    testWidgets(
-      "Deve mostrare il FloatingActionButton per l'aggiunta delle note",
-      (WidgetTester tester) async {
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
-        expect(find.byType(FloatingActionButton), findsOne);
-        expect(find.byIcon(Icons.add), findsOneWidget);
-      },
-    );
+    // Stubbing DiaryViewModel Properties
+    when(() => mockDiaryVm.loadNotes).thenReturn(mockLoadNotesCommand);
+    when(() => mockDiaryVm.asyncError).thenReturn(ValueNotifier<String?>(null));
+    when(() => mockDiaryVm.notes).thenReturn([]);
+    when(() => mockLoadNotesCommand.run(any())).thenAnswer((_) async {});
 
-    testWidgets("Deve mostrare il NoteListWidget nel corpo", (
-      WidgetTester tester,
-    ) async {
-      await viewmodel.loadPreviews(DiaryType.realDiary);
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
-      expect(find.byType(NoteListWidget), findsOne);
+    final getIt = GetIt.instance;
+    if (getIt.isRegistered<DiaryViewModel>()) {
+      getIt.unregister<DiaryViewModel>();
+    }
+    getIt.registerSingleton<DiaryViewModel>(mockDiaryVm);
+
+    DiarySession.session.isDiaryAuth = false;
+    DiarySession.session.loggedDiary = null;
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: ChangeNotifierProvider<DiaryAccessViewModel>.value(
+        value: mockAccessVm,
+        child: const DiaryScreen(),
+      ),
+    );
+  }
+
+  group('DiaryScreen - Switching Logic', () {
+    testWidgets('mostra CircularProgressIndicator quando isCheckingStatus è true', (tester) async {
+      when(() => mockAccessVm.isCheckingStatus).thenReturn(true);
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets("Deve mostrare il titolo nell'AppBar", (
-      WidgetTester tester,
-    ) async {
-      await viewmodel.loadPreviews(DiaryType.realDiary);
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
-      expect(find.text("Diario"), findsOne);
+    testWidgets('mostra DiaryAccessScreenView quando isAuthenticated è false', (tester) async {
+      when(() => mockAccessVm.isAuthenticated).thenReturn(false);
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.byType(DiaryAccessScreenView), findsOneWidget);
     });
 
-    testWidgets(
-      "Deve mostrare l'ElevatedButton per accedere all'impostazione della password del diario fittizio solo se l'utente ha effettuato l'accesso al diario reale",
-      (WidgetTester tester) async {
-        DiarySession session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
-        expect(find.byType(ElevatedButton), findsOne);
-        expect(find.text("Impostazione password diario fittizio"), findsOne);
-        session.endSession();
-      },
-    );
+    testWidgets('mostra DiaryScreenView quando isAuthenticated è true', (tester) async {
+      when(() => mockAccessVm.isAuthenticated).thenReturn(true);
+      await tester.pumpWidget(createWidgetUnderTest());
+      expect(find.byType(DiaryScreenView), findsOneWidget);
+    });
+  });
 
-    testWidgets(
-      "L'ElevatedButton per accedere all'impostazione della password del diario fittizio apre correttamente il DiaryPasswordSettingWidget",
-      (WidgetTester tester) async {
-        DiarySession session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text("Impostazione password diario fittizio"));
-        await tester.pumpAndSettle();
-        expect(find.byType(TextFormField), findsExactly(3));
-        expect(find.text("Imposta password"), findsOne);
-        session.endSession();
-      },
-    );
-    testWidgets(
-      "Non deve mostrare l'ElevatedButton per accedere all'impostazione della password del diario fittizio se l'utente è nel diario fittizio",
-      (WidgetTester tester) async {
-        DiarySession session = DiarySession.session;
-        session.initSession(DiaryType.fakeDiary);
-        await viewmodel.loadPreviews(DiaryType.fakeDiary);
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
-        expect(find.byType(ElevatedButton), findsNothing);
-        expect(
-          find.text("Impostazione password diario fittizio"),
-          findsNothing,
-        );
-        session.endSession();
-      },
-    );
+  group('DiaryScreenView - Functionality', () {
+    testWidgets('carica le note all\'inizializzazione se autenticato', (tester) async {
+      when(() => mockAccessVm.isAuthenticated).thenReturn(true);
+      DiarySession.session.loggedDiary = DiaryType.real_diary;
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      verify(() => mockLoadNotesCommand.run(DiaryType.real_diary)).called(1);
+    });
+
+    testWidgets('visualizza SnackBar in caso di errore asincrono', (tester) async {
+      final errorNotifier = ValueNotifier<String?>(null);
+      when(() => mockDiaryVm.asyncError).thenReturn(errorNotifier);
+      when(() => mockAccessVm.isAuthenticated).thenReturn(true);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      errorNotifier.value = "Errore mock";
+      await tester.pump();
+
+      expect(find.text("Errore mock"), findsOneWidget);
+    });
+
+    testWidgets('il pulsante di logout attiva il comando corretto', (tester) async {
+      when(() => mockAccessVm.isAuthenticated).thenReturn(true);
+      when(() => mockLogoutCommand.run()).thenAnswer((_) async {});
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.tap(find.byIcon(Icons.lock_outline));
+      await tester.pump();
+
+      verify(() => mockLogoutCommand.run()).called(1);
+    });
   });
 }
