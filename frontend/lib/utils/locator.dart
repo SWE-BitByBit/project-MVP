@@ -126,8 +126,8 @@ void _setupSafePlace() {
 /// Registra le dipendenze relative al modulo dei Contatti Fidati
 void _setupTrustedContact() {
   //-----------------MOCKED----------------
-  //getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
-  getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
+  getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
+  //getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
 
   getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>()));
 
@@ -166,8 +166,8 @@ void _setupMaterial() {
 /// Registra le dipendenze relative al modulo dell'allarme automatico
 void _setupSettings() {
   //-----------------MOCKED----------------
-  //getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
-  getIt.registerLazySingleton<DeadManService>(() => MockDeadManService());
+  getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
+  //getIt.registerLazySingleton<DeadManService>(() => MockDeadManService());
 
   getIt.registerLazySingleton<DeadManRepository>(() => DeadManRepository(getIt<DeadManService>()));
 
@@ -179,13 +179,13 @@ void _setupDiary() {
 
   // Services
   //-----------------MOCKED----------------
-  /*
+
   getIt.registerLazySingleton<DiaryAccountService>(() => DiaryAccountService(apiClient: getIt<ApiClient>()));
   getIt.registerLazySingleton<NoteService>(() => NoteService(apiClient: getIt<ApiClient>()));
-*/
+/*
   getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
   getIt.registerLazySingleton<NoteService>(() => MockNoteService());
-
+*/
 
   // Repositories
   getIt.registerLazySingleton<DiaryAccountRepository>(() => DiaryAccountRepository(getIt<DiaryAccountService>()));
