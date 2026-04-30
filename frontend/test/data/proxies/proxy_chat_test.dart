@@ -46,7 +46,7 @@ void main() {
           ChatMessage(
             id: 'msg-1',
             content: 'Sono un messaggio pesantissimo',
-            type: MessageType.AI,
+            type: MessageType.ai,
             timestamp: sampleDate,
           )
         ],
@@ -86,7 +86,7 @@ void main() {
       final userMessage = ChatMessage(
         id: 'msg-user',
         content: 'Ciao!',
-        type: MessageType.USER,
+        type: MessageType.user,
         timestamp: DateTime.now(),
       );
       proxyChat.addMessage(userMessage);

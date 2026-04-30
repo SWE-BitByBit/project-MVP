@@ -55,7 +55,7 @@ void main() {
       final aiMessage = ChatMessage(
         id: 'msg-ai',
         content: 'Sono il detective AI, come posso aiutarti?',
-        type: MessageType.AI,
+        type: MessageType.ai,
         timestamp: DateTime.now(),
       );
       mockRepo.mockedMessageResponse = MessageResponse(response: aiMessage);

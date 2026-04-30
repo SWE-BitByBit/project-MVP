@@ -46,6 +46,24 @@ class ChatScreenView extends StatelessWidget {
           }
         },
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leadingWidth: 96,
+          leading: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Indietro',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  tooltip: 'Cronologia chat',
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+            ],
+          ),
           title: const _AppBarTitle(),
           actions: const [ChatbotModeToggleWidget(), ChatbotCreateChatWidget()],
         ),
