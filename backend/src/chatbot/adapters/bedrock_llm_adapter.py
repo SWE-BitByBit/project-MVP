@@ -1,18 +1,40 @@
-import secrets
+import boto3
+
 from ports.chatbot_llm_port import ChatbotLLMPort
 from domain.chat import Chat
 
 class BedrockLLMAdapter(ChatbotLLMPort):
+    def __init__(self):
+        self.client = boto3.client(
+            "bedrock-runtime",
+            region_name="eu-south-1"
+        )
+        self.model_id = "eu.amazon.nova-pro-v1:0"
+
     def process_prompt(self, chat: Chat, prompt: str, response_mode: str) -> str:
-        # Usiamo una lista di risposte predefinite per simulare l'AI senza usare random()
-        # che fa arrabbiare SonarQube per motivi di sicurezza.
-        mock_responses = [
-            "Capisco perfettamente quello che stai provando. Vuoi approfondire?",
-            "Interessante punto di vista. Come ti fa sentire questa situazione?",
-            "Sono qui per ascoltarti. Continua pure a raccontarmi.",
-            "Questa è una riflessione molto profonda. Grazie per averla condivisa.",
-            "Analizzando quello che dici, sembra che ci sia molto su cui lavorare insieme."
-        ]
-        
-        # Selezioniamo una risposta in modo sicuro con secrets
-        return secrets.choice(mock_responses)
+        try:
+            response = self.client.converse(
+                modelId=self.model_id,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
+                inferenceConfig={
+                    "maxTokens": 512,
+                    "temperature": 0.5,
+                    "topP": 0.9
+                }
+            )
+
+            return response["output"]["message"]["content"][0]["text"]
+
+        except Exception as e:
+            raise RuntimeError(
+                f"Errore durante invocazione Bedrock '{self.model_id}': {str(e)}"
+            )
