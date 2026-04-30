@@ -1,4 +1,8 @@
 from datetime import datetime
+from typing import List
+
+from commands.add_element_new_note_command import AddElementNewNoteCmd
+
 
 class AddNoteCmd:
     def __init__(
@@ -8,7 +12,7 @@ class AddNoteCmd:
         created_at: datetime,
         last_modified_at: datetime,
         diary_type,
-        elements: list = None
+        elements: List[AddElementNewNoteCmd]
     ):
         self.user_id = user_id
         self.title = title

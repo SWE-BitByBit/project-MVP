@@ -33,8 +33,8 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             title=cmd.title,
             created_at=cmd.created_at,
             last_modified_at=cmd.last_modified_at,
-            message_elements=[],
-            diary_type=cmd.diary_type
+            diary_type=cmd.diary_type,
+            message_elements=[]
         )
 
         presigned_urls = []
