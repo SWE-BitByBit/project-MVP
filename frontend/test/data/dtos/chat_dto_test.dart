@@ -1,97 +1,164 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:flutter_test/flutter_test.dart';
+import 'dart:io';
 
-// Sostituisci questi import in base ai percorsi del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/dtos/chat_dto.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
 void main() {
-  group('ChatDTO - Data Transfer Object', () {
+  Map<String, dynamic> readFixture(String name) {
+    // Gestione sicura del path a seconda di come vengono eseguiti i test (IDE vs CLI)
+    final path = Directory.current.path.endsWith('test')
+        ? '../testing/fixtures/chatbot/$name'
+        : 'testing/fixtures/chatbot/$name';
+    final file = File(path);
+    return jsonDecode(file.readAsStringSync());
+  }
 
-    final sampleDate = DateTime(2024, 5, 20, 14, 30);
-    final sampleDateString = sampleDate.toIso8601String();
+  group('ChatDTO Tests', () {
+    group('fromJson', () {
+      test('dovrebbe parsare correttamente un JSON valido (Happy Path)', () {
+        // Arrange
+        final json = readFixture('chat_valid.json');
 
-    test('fromJson legge correttamente i dati da un file JSON esterno', () {
+        // Act
+        final result = ChatDTO.fromJson(json);
 
+        // Assert
+        expect(result, isA<LocalChat>());
+        expect(result.id, 'chat_123');
+        expect(result.title, 'Emergenza e supporto');
+        expect(result.creationDate, DateTime.parse('2023-10-01T12:00:00.000Z'));
+        expect(result.updateDate, DateTime.parse('2023-10-01T12:30:00.000Z'));
 
-      final file = File('testing/fixtures/chat_response.json');
-      final jsonString = file.readAsStringSync();
-      final Map<String, dynamic> jsonDalBackend = jsonDecode(jsonString);
+        expect(result.messages.length, 2);
 
+        final firstMessage = result.messages[0];
+        expect(firstMessage.id, 'msg_1');
+        expect(firstMessage.content, 'Ho bisogno di aiuto');
+        expect(firstMessage.type, MessageType.user);
+        expect(firstMessage.timestamp, DateTime.parse('2023-10-01T12:05:00.000Z'));
 
-      final chat = ChatDTO.fromJson(jsonDalBackend);
+        final secondMessage = result.messages[1];
+        expect(secondMessage.id, 'msg_2');
+        expect(secondMessage.content, 'Come posso aiutarti oggi?');
+        expect(secondMessage.type, MessageType.ai);
+        expect(secondMessage.timestamp, DateTime.parse('2023-10-01T12:05:05.000Z'));
+      });
 
-      expect(chat.getId(), 'chat-100');
-      expect(chat.getTitle(), 'Indagine Omicidio');
-      expect(chat.getCreationDate(), sampleDate);
+      test('dovrebbe fornire valori di default per campi mancanti o nulli', () {
+        // Arrange
+        final json = readFixture('chat_incomplete.json');
 
-      final messages = chat.getMessages();
-      expect(messages.length, 2);
-      expect(messages[0].id, 'msg-1');
-      expect(messages[0].type, MessageType.USER);
-      expect(messages[1].id, 'msg-2');
-      expect(messages[1].type, MessageType.AI);
-      expect(messages[1].timestamp, sampleDate);
+        // Act
+        final result = ChatDTO.fromJson(json);
+
+        // Assert
+        expect(result.id, '');
+        expect(result.title, 'Nuova conversazione');
+        expect(result.messages, isEmpty);
+
+        // Verifica che le date di default siano state generate in prossimità dell'esecuzione
+        final now = DateTime.now();
+        final differenceCreation = now.difference(result.creationDate).inSeconds.abs();
+        final differenceUpdate = now.difference(result.updateDate).inSeconds.abs();
+
+        expect(differenceCreation, lessThan(2)); // Tolleranza di 2 secondi
+        expect(differenceUpdate, lessThan(2));
+      });
+
+      test('dovrebbe gestire formati data non validi impostandoli ai default (DateTime.now())', () {
+        // Arrange
+        final json = {
+          'chat_id': 'chat_error',
+          'created_at': 'data-invalida',
+          'messages': [
+            {
+              'message_id': 'msg_err',
+              'created_at': 'timestamp-invalido'
+            }
+          ]
+        };
+
+        // Act
+        final result = ChatDTO.fromJson(json);
+
+        // Assert
+        final now = DateTime.now();
+        expect(now.difference(result.creationDate).inSeconds.abs(), lessThan(2));
+        expect(now.difference(result.updateDate).inSeconds.abs(), lessThan(2));
+        expect(now.difference(result.messages.first.timestamp).inSeconds.abs(), lessThan(2));
+      });
     });
 
-    // TEST 2: Caso limite (La lista messaggi non c'è)
-    test('fromJson gestisce correttamente l\'assenza della chiave "messages"', () {
-      // Arrange: Un JSON valido ma senza messaggi (es. una chat appena creata)
-      final jsonSenzaMessaggi = {
-        'id': 'chat-101',
-        'title': 'Nuova Chat Vuota',
-        'creationDate': sampleDateString,
-      };
+    group('toJson', () {
+      test('dovrebbe serializzare correttamente un oggetto Chat in JSON (Happy Path)', () {
+        // Arrange
+        final chat = LocalChat(
+          id: 'chat_456',
+          title: 'Titolo di test',
+          creationDate: DateTime.utc(2023, 11, 1, 10, 0, 0),
+          updateDate: DateTime.utc(2023, 11, 1, 10, 30, 0),
+          messages: [
+            ChatMessage(
+              id: 'msg_3',
+              content: 'Messaggio utente',
+              type: MessageType.user,
+              timestamp: DateTime.utc(2023, 11, 1, 10, 5, 0),
+            ),
+            ChatMessage(
+              id: 'msg_4',
+              content: 'Risposta AI',
+              type: MessageType.ai,
+              timestamp: DateTime.utc(2023, 11, 1, 10, 5, 10),
+            )
+          ],
+        );
 
-      // Act
-      final chat = ChatDTO.fromJson(jsonSenzaMessaggi);
+        // Act
+        final result = ChatDTO.toJson(chat);
 
-      // Assert: Grazie al tuo "?? []" nel codice, non deve crashare ma restituire lista vuota
-      expect(chat.getId(), 'chat-101');
-      expect(chat.getMessages(), isEmpty);
+        // Assert
+        expect(result['chat_id'], 'chat_456');
+        expect(result['title'], 'Titolo di test');
+        expect(result['created_at'], '2023-11-01T10:00:00.000Z');
+        expect(result['updated_at'], '2023-11-01T10:30:00.000Z');
+
+        final messagesJson = result['messages'] as List<Map<String, dynamic>>;
+        expect(messagesJson.length, 2);
+
+        expect(messagesJson[0]['chat_id'], 'chat_456');
+        expect(messagesJson[0]['message_id'], 'msg_3');
+        expect(messagesJson[0]['text'], 'Messaggio utente');
+        expect(messagesJson[0]['sender'], 'user');
+        expect(messagesJson[0]['created_at'], '2023-11-01T10:05:00.000Z');
+
+        expect(messagesJson[1]['chat_id'], 'chat_456');
+        expect(messagesJson[1]['message_id'], 'msg_4');
+        expect(messagesJson[1]['text'], 'Risposta AI');
+        expect(messagesJson[1]['sender'], 'ai');
+        expect(messagesJson[1]['created_at'], '2023-11-01T10:05:10.000Z');
+      });
+
+      test('dovrebbe serializzare una chat senza messaggi', () {
+        // Arrange
+        final chat = LocalChat(
+          id: 'chat_empty',
+          title: 'Vuota',
+          creationDate: DateTime.utc(2024, 1, 1),
+          updateDate: DateTime.utc(2024, 1, 1),
+          messages: [],
+        );
+
+        // Act
+        final result = ChatDTO.toJson(chat);
+
+        // Assert
+        expect(result['chat_id'], 'chat_empty');
+        expect(result['messages'], isEmpty);
+      });
     });
-
-    // TEST 3: Dall'App al Server (toJson)
-    test('toJson converte correttamente un oggetto Chat in una Map JSON', () {
-      // 1. Arrange: Creiamo un oggetto LocalChat reale
-      final chatOriginale = LocalChat(
-        id: 'chat-200',
-        title: 'Test Serializzazione',
-        creationDate: sampleDate,
-        messages: [
-          ChatMessage(
-            id: 'msg-1',
-            content: 'Invia al server',
-            type: MessageType.USER,
-            timestamp: sampleDate,
-          )
-        ],
-      );
-
-      // 2. Act: Usiamo il DTO per trasformarlo in JSON
-      final jsonOutput = ChatDTO.toJson(chatOriginale);
-
-      // 3. Assert: Controlliamo che le chiavi e i valori della Mappa siano pronti per internet
-      expect(jsonOutput['id'], 'chat-200');
-      expect(jsonOutput['title'], 'Test Serializzazione');
-      expect(jsonOutput['creationDate'], sampleDateString);
-
-      // Essendo LocalChat a impostare lastModified al momento della creazione, ci basta
-      // assicurarci che il DTO non l'abbia perso per strada.
-      expect(jsonOutput['lastModified'], isNotNull);
-
-      // Verifichiamo la lista annidata
-      expect(jsonOutput['messages'], isA<List>());
-      final messagesJson = jsonOutput['messages'] as List;
-      expect(messagesJson.length, 1);
-      expect(messagesJson[0]['id'], 'msg-1');
-      expect(messagesJson[0]['content'], 'Invia al server');
-      expect(messagesJson[0]['type'], 'USER'); // L'Enum deve essere tornato Stringa
-      expect(messagesJson[0]['timestamp'], sampleDateString);
-    });
-
   });
 }

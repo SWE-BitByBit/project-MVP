@@ -1,90 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
-// Sostituisci i percorsi con quelli del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart'; // Nome del tuo file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 
-// Importiamo la nostra controfigura
-import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chat.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
+
+
 
 void main() {
-  group('ChatWidget Widget Test', () {
-    late MockChatbotRepository mockRepo;
-    late ChatbotViewModel viewModel;
+  late MockChatbotViewModel mockViewModel;
 
-    setUp(() {
-      mockRepo = MockChatbotRepository();
-      viewModel = ChatbotViewModel(mockRepo);
-    });
+  setUp(() {
+    mockViewModel = MockChatbotViewModel();
+  });
 
-    /// Helper per montare il Widget
-    Future<void> pumpChatWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<ChatbotViewModel>.value(
-              value: viewModel,
-              child: const ChatWidget(),
-            ),
-          ),
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<ChatbotViewModel>.value(
+          value: mockViewModel,
+          child: const ChatWidget(),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    testWidgets('Stato Iniziale: Deve mostrare il messaggio di benvenuto se la chat è vuota', (WidgetTester tester) async {
-      // 1. Montiamo il widget senza aver creato nessuna chat (messages sarà vuoto)
-      await pumpChatWidget(tester);
+  group('ChatWidget', () {
+    testWidgets('Mostra messaggio placeholder se non c\'è una chat corrente o è vuota', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(null);
 
-      // 2. Verifichiamo che appaia il testo di fallback
+      await tester.pumpWidget(createWidgetUnderTest());
+
       expect(find.text('Inizia una conversazione sicura.'), findsOneWidget);
-      // Assicuriamoci che non ci siano indicatori di caricamento
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(ListView), findsNothing);
     });
 
-    testWidgets('Popolato: Deve mostrare i messaggi con l\'allineamento corretto', (WidgetTester tester) async {
-      // 1. ARRANGE: Prepariamo i dati
-      // Creiamo la chat
-      await viewModel.createChat();
+    testWidgets('Mostra la lista dei messaggi se la chat contiene messaggi', (tester) async {
+      final mockChat = MockChat();
+      final mockMsg1 = MockChatMessage();
+      final mockMsg2 = MockChatMessage();
 
-      // Prepariamo il mock per rispondere al nostro imminente messaggio
-      final aiMessage = ChatMessage(
-        id: 'msg-ai',
-        content: 'Sono il detective AI, come posso aiutarti?',
-        type: MessageType.AI,
-        timestamp: DateTime.now(),
+      when(() => mockMsg1.content).thenReturn('Ciao AI');
+      when(() => mockMsg1.isUserMessage).thenReturn(true);
+
+      when(() => mockMsg2.content).thenReturn('Ciao Umano');
+      when(() => mockMsg2.isUserMessage).thenReturn(false);
+
+      // Usiamo una lista fittizia di messaggi
+      when(() => mockChat.messages).thenReturn([mockMsg1, mockMsg2]);
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.byType(ListView), findsOneWidget);
+      expect(find.text('Ciao AI'), findsOneWidget);
+      expect(find.text('Ciao Umano'), findsOneWidget);
+    });
+
+    testWidgets('Allinea i messaggi correttamente a destra (Utente) o sinistra (AI)', (tester) async {
+      final mockChat = MockChat();
+      final userMsg = MockChatMessage();
+      final aiMsg = MockChatMessage();
+
+      when(() => userMsg.content).thenReturn('Messaggio Utente');
+      when(() => userMsg.isUserMessage).thenReturn(true);
+
+      when(() => aiMsg.content).thenReturn('Messaggio AI');
+      when(() => aiMsg.isUserMessage).thenReturn(false);
+
+      when(() => mockChat.messages).thenReturn([userMsg, aiMsg]);
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Verifica allineamento messaggio utente
+      final userAlignWidget = tester.widget<Align>(
+        find.ancestor(
+          of: find.text('Messaggio Utente'),
+          matching: find.byType(Align),
+        ).first,
       );
-      mockRepo.mockedMessageResponse = MessageResponse(response: aiMessage);
+      expect(userAlignWidget.alignment, Alignment.centerRight);
 
-      // Inviamo il messaggio dell'utente (che scatenerà anche la risposta mockata dell'AI)
-      await viewModel.sendChatMessage('Ciao, ho bisogno di aiuto');
-
-      // 2. ACT: Montiamo l'interfaccia con i dati pronti
-      await pumpChatWidget(tester);
-      await tester.pumpAndSettle(); // Aspettiamo che la UI si stabilizzi
-
-      // 3. ASSERT: Verifiche testuali
-      expect(find.text('Ciao, ho bisogno di aiuto'), findsOneWidget);
-      expect(find.text('Sono il detective AI, come posso aiutarti?'), findsOneWidget);
-
-      // 4. ASSERT: Verifiche di Layout (Il livello "Pro" dei Widget Test)
-      // Troviamo tutti i widget Align usati nel costruttore della ListView
-      final alignWidgets = tester.widgetList<Align>(find.byType(Align));
-
-      // Essendo la lista reverse: true, il primo elemento nell'albero (index 0)
-      // sarà l'ultimo messaggio inviato, ovvero quello dell'AI.
-      // Il secondo elemento (index 1) sarà quello dell'utente.
-
-      final alignAi = alignWidgets.elementAt(0);
-      final alignUser = alignWidgets.elementAt(1);
-
-      // Verifichiamo gli allineamenti
-      expect(alignAi.alignment, Alignment.centerLeft, reason: 'Il messaggio AI deve essere a sinistra');
-      expect(alignUser.alignment, Alignment.centerRight, reason: 'Il messaggio Utente deve essere a destra');
+      // Verifica allineamento messaggio AI
+      final aiAlignWidget = tester.widget<Align>(
+        find.ancestor(
+          of: find.text('Messaggio AI'),
+          matching: find.byType(Align),
+        ).first,
+      );
+      expect(aiAlignWidget.alignment, Alignment.centerLeft);
     });
   });
 }

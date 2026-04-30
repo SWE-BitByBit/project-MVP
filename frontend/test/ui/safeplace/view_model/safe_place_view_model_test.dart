@@ -1,113 +1,151 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/view_model/safe_place_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
-import '../../../../testing/mocks/mock_safe_place_repository.dart';
-import '../../../../testing/mocks/mock_location_service.dart';
+
+import '../../../../testing/mocks/safeplace/mock_safe_place_repository.dart';
+import '../../../../testing/mocks/safeplace/mock_location_service.dart';
+
+class FakePosition extends Fake implements Position {
+  @override
+  final double latitude;
+  @override
+  final double longitude;
+
+  FakePosition({this.latitude = 0.0, this.longitude = 0.0});
+}
+
+class FakeSafePlace extends Fake implements SafePlace {
+  @override
+  final String id;
+  FakeSafePlace({required this.id});
+}
 
 void main() {
-  /// Test unitari per [SafePlaceViewModel].
-  /// 
-  /// Verifica lo stato iniziale, i comandi per il recupero dei dati,
-  /// la selezione di un luogo e la localizzazione dell'utente.
-  group('SafePlaceViewModel Test', () {
-    late MockSafePlaceRepository mockRepository;
-    late SafePlaceViewModel viewModel;
-    late  MockLocationService mockLocation;
+  late SafePlaceViewModel viewModel;
+  late MockSafePlaceRepository mockRepo;
+  late MockLocationService mockLocationService;
 
-    setUp(() {
-      mockRepository = MockSafePlaceRepository();
-      viewModel = SafePlaceViewModel(mockRepository);
-      mockLocation = MockLocationService();
-    });
+  setUp(() {
+    Command.globalExceptionHandler = (error, stackTrace) {};
+    mockRepo = MockSafePlaceRepository();
+    mockLocationService = MockLocationService();
 
-    test('Stato iniziale corretto', () {
-      expect(viewModel.safePlaces, isEmpty);
-      expect(viewModel.selectedPlace, isNull);
-      expect(viewModel.fetchSafePlacesCommand.running, isFalse);
-    });
+    // Comportamenti di default per permettere l'inizializzazione del costruttore
+    when(() => mockRepo.getPlaces()).thenAnswer((_) async {return [];});
+    when(() => mockRepo.cachedPlaces).thenReturn([]);
+    when(() => mockLocationService.isLocationServiceEnabled()).thenAnswer((_) async => true);
+    when(() => mockLocationService.checkPermission()).thenAnswer((_) async => LocationPermission.always);
+    when(() => mockLocationService.getCurrentPosition()).thenAnswer((_) async => FakePosition());
+  });
 
-    /// Verifica che in caso di successo il comando 
-    /// popoli correttamente la lista dei luoghi.
-    test('fetchSafePlacesCommand popola la lista in caso di successo', () async {
-      await viewModel.fetchSafePlacesCommand.execute();
+  /// Inizializza il ViewModel e attende il completamento dei comandi lanciati nel costruttore (.run())
+  Future<void> initViewModel() async {
+    viewModel = SafePlaceViewModel(mockRepo, locationService: mockLocationService);
 
-      expect(viewModel.fetchSafePlacesCommand.completed, isTrue);
-      expect(viewModel.fetchSafePlacesCommand.error, isNull);
-      expect(viewModel.safePlaces.length, 1);
-      expect(viewModel.safePlaces.first.name, 'Centro Test');
-    });
+    // Attendiamo che le esecuzioni avviate dal costruttore terminino
+    // Usiamo runAsync() senza parametri per "agganciarci" all'esecuzione in corso o avviarne una se terminata
+    await viewModel.loadPlaces.runAsync();
+    await viewModel.getUserLocation.runAsync();
+  }
 
-    /// Verifica che in caso di errore il comando 
-    /// gestisca l'eccezione e non popoli la lista.
-    test('fetchSafePlacesCommand gestisce gli errori e non popola la lista', () async {
-      mockRepository.shouldFail = true;
+  group('SafePlaceViewModel - Initialization & Loading', () {
+    test('Costruttore dovrebbe avviare il caricamento dei luoghi e della posizione', () async {
+      await initViewModel();
 
-      await viewModel.fetchSafePlacesCommand.execute();
-
-      expect(viewModel.fetchSafePlacesCommand.completed, isFalse);
-      expect(viewModel.fetchSafePlacesCommand.error, isNotNull);
+      // Verifichiamo che siano stati chiamati (almeno una volta dal costruttore)
+      verify(() => mockRepo.getPlaces()).called(greaterThanOrEqualTo(1));
+      verify(() => mockLocationService.getCurrentPosition()).called(greaterThanOrEqualTo(1));
       expect(viewModel.safePlaces, isEmpty);
     });
 
-    /// Verifica che la selezione di un luogo aggiorni 
-    /// correttamente lo stato del ViewModel.
-    test('selectPlace aggiorna il luogo selezionato', () {
-      const place = SafePlace(
-        id: "2",
-        name: "Ospedale",
-        address: "Via Test 2",
-        latitude: 45.0,
-        longitude: 11.0,
-        category: "Ospedale",
+    test('loadPlaces aggiorna lo stato tramite il repository', () async {
+      final places = [FakeSafePlace(id: '1'), FakeSafePlace(id: '2')];
+      when(() => mockRepo.cachedPlaces).thenReturn(places);
+
+      await initViewModel();
+      // Rieseguiamo per sicurezza
+      await viewModel.loadPlaces.runAsync();
+
+      expect(viewModel.safePlaces.length, 2);
+      expect(viewModel.safePlaces, places);
+    });
+  });
+
+  group('SafePlaceViewModel - Location Logic', () {
+    test('getUserLocation salva la posizione se i permessi sono validi', () async {
+      final pos = FakePosition(latitude: 45.0, longitude: 9.0);
+      when(() => mockLocationService.getCurrentPosition()).thenAnswer((_) async => pos);
+
+      await initViewModel();
+      await viewModel.getUserLocation.runAsync();
+
+      expect(viewModel.userPosition, pos);
+      expect(viewModel.userPosition?.latitude, 45.0);
+    });
+
+    test('getUserLocation solleva eccezione se il GPS è spento', () async {
+      when(() => mockLocationService.isLocationServiceEnabled()).thenAnswer((_) async => false);
+
+      // Inizializzazione manuale per catturare l'errore del comando
+      viewModel = SafePlaceViewModel(mockRepo, locationService: mockLocationService);
+
+      // Il comando lanciato nel costruttore fallirà, lo rieseguiamo per testare l'eccezione
+      expect(
+            () => viewModel.getUserLocation.runAsync(),
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('disabilitati'))),
       );
+    });
+
+    test('getUserLocation richiede i permessi se negati inizialmente', () async {
+      when(() => mockLocationService.checkPermission()).thenAnswer((_) async => LocationPermission.denied);
+      when(() => mockLocationService.requestPermission()).thenAnswer((_) async => LocationPermission.whileInUse);
+
+      await initViewModel();
+      await viewModel.getUserLocation.runAsync();
+
+      verify(() => mockLocationService.requestPermission()).called(greaterThanOrEqualTo(1));
+      expect(viewModel.userPosition, isNotNull);
+    });
+
+    test('getUserLocation fallisce se i permessi sono negati permanentemente', () async {
+      when(() => mockLocationService.checkPermission()).thenAnswer((_) async => LocationPermission.deniedForever);
+
+      viewModel = SafePlaceViewModel(mockRepo, locationService: mockLocationService);
+
+      expect(
+            () => viewModel.getUserLocation.runAsync(),
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('permanentemente'))),
+      );
+    });
+  });
+
+  group('SafePlaceViewModel - UI Actions', () {
+    test('selectPlace aggiorna correttamente il luogo selezionato', () async {
+      await initViewModel();
+      final place = FakeSafePlace(id: 'target');
+
+      bool notified = false;
+      viewModel.addListener(() => notified = true);
 
       viewModel.selectPlace(place);
 
       expect(viewModel.selectedPlace, place);
-      expect(viewModel.selectedPlace?.id, "2");
+      expect(notified, isTrue);
     });
 
-    /// Verifica che venga lanciata un'eccezione 
-    /// se i servizi di localizzazione sono disabilitati.
-    test('getUserLocationCommand lancia eccezione se il GPS è disabilitato', () async {
-      mockLocation.isServiceEnabled = false;
+    test('saveMapSessionState aggiorna la cache del repository senza notificare la UI', () async {
+      await initViewModel();
 
-      final vm = SafePlaceViewModel(mockRepository, locationService: mockLocation);
+      bool notified = false;
+      viewModel.addListener(() => notified = true);
 
-      await vm.getUserLocationCommand.execute();
+      viewModel.saveMapSessionState(10.0, 20.0, 15.0);
 
-      expect(vm.getUserLocationCommand.error, isNotNull);
-      expect(vm.getUserLocationCommand.error.toString(), contains('disabilitati'));
+      verify(() => mockRepo.cachedMapState = (latitude: 10.0, longitude: 20.0, zoom: 15.0)).called(1);
+      expect(notified, isFalse);
     });
-
-    /// Verifica che venga lanciata un'eccezione 
-    /// se i permessi di localizzazione vengono negati.
-    test('getUserLocationCommand lancia eccezione se i permessi vengono negati', () async {
-      mockLocation.permissionStatus = LocationPermission.denied;
-      mockLocation.requestPermissionResult = LocationPermission.denied;
-
-      final vm = SafePlaceViewModel(mockRepository, locationService: mockLocation);
-
-      await vm.getUserLocationCommand.execute();
-
-      expect(vm.getUserLocationCommand.error, isNotNull);
-      expect(vm.getUserLocationCommand.error.toString(), contains('Permessi negati'));
-    });
-
-    /// Verifica che la posizione venga aggiornata
-    /// correttamente se i permessi sono garantiti.
-    test('getUserLocationCommand aggiorna la posizione se i permessi sono garantiti', () async {
-      final vm = SafePlaceViewModel(mockRepository, locationService: mockLocation);
-
-      await vm.getUserLocationCommand.execute();
-
-      expect(vm.getUserLocationCommand.completed, isTrue);
-      expect(vm.getUserLocationCommand.error, isNull);
-      expect(vm.currentPosition, isNotNull);
-      expect(vm.currentPosition!.latitude, 45.0);
-    });
-
   });
-
 }

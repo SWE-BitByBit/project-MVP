@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../view_model/chatbot_view_model.dart';
-import '../../../domain/models/chatbot/chat.dart';
 import 'chatbot_create_chat_widget.dart';
 
 /// Corrisponde a ChatHistoryWidget nell'UML.
@@ -80,7 +79,7 @@ class ChatHistoryWidget extends StatelessWidget {
 
                         // UX: Evidenziazione di background per la chat attiva
                         selected: isSelected,
-                        selectedTileColor: colorScheme.primaryContainer.withOpacity(0.3),
+                        selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
 
                         onTap: () {
                           // Chiudiamo il drawer PRIMA di lanciare il comando (UX più fluida)

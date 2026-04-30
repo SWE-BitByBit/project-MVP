@@ -1,105 +1,114 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
 import 'package:command_it/command_it.dart';
+
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/login_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/header_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/auth/view_model/auth_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/google_login_button_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/logged_in_banner_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/auth/view_model/auth_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/repositories/auth_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/auth/user.dart';
-import '../../../../testing/mocks/auth/mock_auth_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_banner_widget.dart';
+
+import '../../../../testing/mocks/auth/mock_user.dart';
+import '../../../../testing/mocks/auth/mock_auth_view_model.dart';
 
 void main() {
-  final getIt = GetIt.instance;
-  late MockAuthRepository mockRepository;
-  late AuthViewModel viewModel;
+  late MockAuthViewModel mockViewModel;
+  late MockLoginCommand mockLoginCommand;
+  late MockLogoutCommand mockLogoutCommand;
+  late MockUser mockUser;
 
-  setUp(() async {
-    // Svuotiamo GetIt prima di ogni test per evitare conflitti
-    await getIt.reset();
+  late ValueNotifier<bool> loginIsRunningNotifier;
+  late ValueNotifier<CommandError?> loginErrorsNotifier;
 
-    // Inizializziamo i mock
-    mockRepository = MockAuthRepository();
-    viewModel = AuthViewModel(mockRepository);
+  setUp(() {
+    mockViewModel = MockAuthViewModel();
+    mockLoginCommand = MockLoginCommand();
+    mockLogoutCommand = MockLogoutCommand();
+    mockUser = MockUser();
 
-    // Registriamo le dipendenze nel locator che la LoginScreen userà
-    getIt.registerSingleton<AuthRepository>(mockRepository);
-    getIt.registerSingleton<AuthViewModel>(viewModel);
+    loginIsRunningNotifier = ValueNotifier<bool>(false);
+    loginErrorsNotifier = ValueNotifier<CommandError?>(null);
 
-    // Gestore errori globale per evitare il crash del test (come visto prima)
-    Command.globalExceptionHandler = (error, stack) {};
+    // Setup dei command_it
+    when(() => mockLoginCommand.isRunning).thenReturn(loginIsRunningNotifier);
+    when(() => mockLoginCommand.errors).thenReturn(loginErrorsNotifier);
+    when(() => mockLoginCommand.run()).thenAnswer((_) async {});
+    when(() => mockLoginCommand.clearErrors()).thenAnswer((_) {});
+
+    when(() => mockLogoutCommand.run()).thenAnswer((_) async {});
+
+    // Setup del ViewModel
+    when(() => mockViewModel.login).thenReturn(mockLoginCommand);
+    when(() => mockViewModel.logout).thenReturn(mockLogoutCommand);
+    when(() => mockViewModel.currentUser).thenReturn(null);
   });
 
-  Widget createLoginScreen() {
+  Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: LoginScreen(),
+      home: ChangeNotifierProvider<AuthViewModel>.value(
+        value: mockViewModel,
+        child: const LoginScreen(),
+      ),
     );
   }
 
-  group('LoginScreen Widget Test', () {
-    testWidgets('Deve mostrare HeaderWidget e GoogleLoginButtonWidget per utente non loggato', (WidgetTester tester) async {
-      await tester.pumpWidget(createLoginScreen());
-      // pumpAndSettle aspetta che tutte le animazioni e i micro-task siano finiti
-      await tester.pumpAndSettle();
+  group('LoginScreen', () {
+    testWidgets('Mostra GoogleLoginButtonWidget se l\'utente NON è loggato', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(HeaderWidget), findsOneWidget);
       expect(find.byType(GoogleLoginButtonWidget), findsOneWidget);
       expect(find.byType(LoggedInBannerWidget), findsNothing);
+      expect(find.text('Disconnetti'), findsNothing);
     });
 
-    testWidgets('Deve mostrare LoggedInBannerWidget e pulsante Disconnetti per utente già loggato', (WidgetTester tester) async {
-      // Arrange
-      mockRepository.setMockedUser(const User(
-        sub: '1',
-        email: 'logged@example.com',
-        name: 'Logged',
-        surname: 'User',
-        idToken: 'i',
-        accessToken: 'a',
-      ));
+    testWidgets('Passa isLoading=true al bottone se il comando login è in esecuzione', (tester) async {
+      loginIsRunningNotifier.value = true;
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Notifichiamo il viewModel che la sessione esiste
-      viewModel.checkExistingSession();
+      final button = tester.widget<GoogleLoginButtonWidget>(find.byType(GoogleLoginButtonWidget));
+      expect(button.isLoading, isTrue);
+    });
 
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pumpAndSettle();
+    testWidgets('Mostra ErrorBannerWidget se c\'è un errore nel comando di login', (tester) async {
+      loginErrorsNotifier.value = CommandError(error: Exception('Credenziali errate'));
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.byType(ErrorBannerWidget), findsOneWidget);
+      expect(find.text('Credenziali errate'), findsOneWidget);
+    });
+
+    testWidgets('Mostra LoggedInBannerWidget e bottone Disconnetti se l\'utente è loggato', (tester) async {
+      when(() => mockUser.email).thenReturn('mario.rossi@example.com');
+      when(() => mockViewModel.currentUser).thenReturn(mockUser);
+
+      await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byType(LoggedInBannerWidget), findsOneWidget);
-      expect(find.text('logged@example.com'), findsOneWidget);
       expect(find.text('Disconnetti'), findsOneWidget);
+      expect(find.byType(GoogleLoginButtonWidget), findsNothing);
     });
 
-    testWidgets('Il click su GoogleLoginButton avvia la procedura di login', (WidgetTester tester) async {
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pumpAndSettle();
+    testWidgets('Il bottone Disconnetti chiama il comando logout', (tester) async {
+      when(() => mockUser.email).thenReturn('mario.rossi@example.com');
+      when(() => mockViewModel.currentUser).thenReturn(mockUser);
 
-      // Tap sul bottone
-      await tester.tap(find.byType(GoogleLoginButtonWidget));
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Importante: pump() avvia l'operazione, pumpAndSettle() aspetta che finisca
-      await tester.pump();
-      await tester.pumpAndSettle();
-
-      expect(mockRepository.isLoggedIn(), isTrue);
-      expect(find.byType(LoggedInBannerWidget), findsOneWidget);
+      await tester.tap(find.text('Disconnetti'));
+      verify(() => mockLogoutCommand.run()).called(1);
     });
 
-    testWidgets('Mostra messaggio di errore in caso di fallimento login', (WidgetTester tester) async {
-      // Arrange
-      mockRepository.shouldThrowError = true;
+    testWidgets('Il GoogleLoginButtonWidget ha la callback collegata al comando run', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pumpAndSettle();
+      final button = tester.widget<GoogleLoginButtonWidget>(find.byType(GoogleLoginButtonWidget));
 
-      await tester.tap(find.byType(GoogleLoginButtonWidget));
+      // Eseguiamo la callback esposta dal custom widget
+      button.onPressedCallback();
 
-      // Aspettiamo che il comando fallisca e la UI si aggiorni
-      await tester.pumpAndSettle();
-
-      // Verifichiamo che il testo dell'errore (gestito da command_it) appaia
-      expect(find.textContaining('Autenticazione fallita'), findsOneWidget);
+      verify(() => mockLoginCommand.run()).called(1);
     });
   });
 }

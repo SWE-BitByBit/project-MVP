@@ -1,116 +1,169 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/view_model/auth_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/auth/user.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/dead_man_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/utils/cache_manager.dart';
+import 'package:mvp_app_protegge_e_trasforma/utils/locator.dart';
+
 import '../../../../testing/mocks/auth/mock_auth_repository.dart';
+import '../../../../testing/mocks/dead_man/mock_dead_man_repository.dart';
+import '../../../../testing/mocks/core/mock_cache_manager.dart';
+
+class FakeUser extends Fake implements User {}
 
 void main() {
   late AuthViewModel viewModel;
-  late MockAuthRepository mockRepository;
+  late MockAuthRepository mockAuthRepository;
+  late MockDeadManRepository mockDeadManRepository;
+  late MockCacheManager mockCacheManager;
 
   setUp(() {
-    Command.globalExceptionHandler = (error, stackTrace) {
-      // Non facciamo nulla, gestiamo gli errori localmente nei test
-    };
-    mockRepository = MockAuthRepository();
-    viewModel = AuthViewModel(mockRepository);
+    Command.globalExceptionHandler = (error, stackTrace) {};
+
+    mockAuthRepository = MockAuthRepository();
+    mockDeadManRepository = MockDeadManRepository();
+    mockCacheManager = MockCacheManager();
+
+    getIt.registerSingleton<DeadManRepository>(mockDeadManRepository);
+    getIt.registerSingleton<CacheManager>(mockCacheManager);
+
+    viewModel = AuthViewModel(mockAuthRepository);
   });
 
-  group('AuthViewModel - Stato Iniziale', () {
-    test('Lo stato iniziale deve essere corretto', () {
-      // Usiamo .isRunning.value e .errors.value forniti da command_it
-      expect(viewModel.login.isRunning.value, isFalse);
+  tearDown(() {
+    getIt.reset();
+  });
+
+  group('AuthViewModel - Initial State', () {
+    test('isInitializing dovrebbe essere true di default', () {
+      expect(viewModel.isInitializing, isTrue);
+    });
+
+    test('currentUser dovrebbe restituire l\'utente dal repository', () {
+      final fakeUser = FakeUser();
+      when(() => mockAuthRepository.getCurrentUser()).thenReturn(fakeUser);
+
+      final user = viewModel.currentUser;
+
+      expect(user, fakeUser);
+      verify(() => mockAuthRepository.getCurrentUser()).called(1);
+    });
+  });
+
+  group('AuthViewModel - checkExistingSession', () {
+    test('dovrebbe chiamare restoreSession se l\'utente non è loggato e notificare i listener', () async {
+      when(() => mockAuthRepository.isLoggedIn()).thenReturn(false);
+      when(() => mockAuthRepository.restoreSession()).thenAnswer((_) async {return true;});
+
+      bool listenerCalled = false;
+      viewModel.addListener(() => listenerCalled = true);
+
+      await viewModel.checkExistingSession();
+
+      verify(() => mockAuthRepository.isLoggedIn()).called(1);
+      verify(() => mockAuthRepository.restoreSession()).called(1);
+      expect(viewModel.isInitializing, isFalse);
+      expect(listenerCalled, isTrue);
+    });
+
+    test('non dovrebbe chiamare restoreSession se l\'utente è loggato', () async {
+      when(() => mockAuthRepository.isLoggedIn()).thenReturn(true);
+
+      await viewModel.checkExistingSession();
+
+      verify(() => mockAuthRepository.isLoggedIn()).called(1);
+      verifyNever(() => mockAuthRepository.restoreSession());
+      expect(viewModel.isInitializing, isFalse);
+    });
+  });
+
+  group('AuthViewModel - login Command', () {
+    test('dovrebbe eseguire il login con successo e inviare l\'heartbeat', () async {
+      final fakeUser = FakeUser();
+      when(() => mockAuthRepository.login()).thenAnswer((_) async => fakeUser);
+      when(() => mockDeadManRepository.sendHeartbeat()).thenAnswer((_) async {});
+
+      bool listenerCalled = false;
+      viewModel.addListener(() => listenerCalled = true);
+
+      await viewModel.login.runAsync();
+
+      verify(() => mockAuthRepository.login()).called(1);
+      verify(() => mockDeadManRepository.sendHeartbeat()).called(1);
       expect(viewModel.login.errors.value, isNull);
-      expect(viewModel.currentUser, isNull);
+      expect(listenerCalled, isTrue);
     });
-  });
 
-  group('AuthViewModel - Login', () {
-    test('login ha successo e aggiorna l\'utente', () async {
+    test('dovrebbe gestire il fallimento dell\'heartbeat senza fallire il login', () async {
+      final fakeUser = FakeUser();
+      when(() => mockAuthRepository.login()).thenAnswer((_) async => fakeUser);
+      when(() => mockDeadManRepository.sendHeartbeat()).thenThrow(Exception('Errore rete'));
 
-      viewModel.login.run(null);
+      await viewModel.login.runAsync();
 
-      await Future.delayed(const Duration(milliseconds: 50));
+      verify(() => mockAuthRepository.login()).called(1);
+      verify(() => mockDeadManRepository.sendHeartbeat()).called(1);
 
-      // Assert
-      expect(viewModel.currentUser, isNotNull);
-      expect(viewModel.currentUser?.email, 'test@example.com');
-      expect(viewModel.login.isRunning.value, isFalse);
       expect(viewModel.login.errors.value, isNull);
     });
 
-    test('login fallisce (annullato) e imposta un messaggio di errore', () async {
-      // Arrange
-      mockRepository.shouldThrowError = true;
+    test('dovrebbe generare un errore se il login restituisce null', () async {
+      when(() => mockAuthRepository.login()).thenAnswer((_) async => null);
 
-      // Act
-      viewModel.login.run(null);
+      try {
+        await viewModel.login.runAsync();
+      } catch (_) {}
 
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // Assert
-      expect(viewModel.currentUser, isNull);
-      expect(viewModel.login.errors.value?.error.toString(), contains('Autenticazione fallita'));
-      expect(viewModel.login.isRunning.value, isFalse);
+      verify(() => mockAuthRepository.login()).called(1);
+      verifyNever(() => mockDeadManRepository.sendHeartbeat());
+      expect(viewModel.login.errors.value, isNotNull);
+      expect(
+        viewModel.login.errors.value?.error.toString(),
+        contains('Autenticazione fallita o annullata'),
+      );
     });
 
-    test('login lancia eccezione di rete e imposta errore connessione', () async {
-      // Arrange
-      mockRepository.shouldThrowError = true;
+    test('dovrebbe generare un errore se il repository lancia un\'eccezione', () async {
+      when(() => mockAuthRepository.login()).thenThrow(Exception('Errore API'));
 
-      // Act
-      viewModel.login.run(null);
+      try {
+        await viewModel.login.runAsync();
+      } catch (_) {}
 
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // Assert
-      expect(viewModel.currentUser, isNull);
-      expect(viewModel.login.errors.value?.error.toString(), contains('Autenticazione fallita'));
-      expect(viewModel.login.isRunning.value, isFalse);
+      verify(() => mockAuthRepository.login()).called(1);
+      verifyNever(() => mockDeadManRepository.sendHeartbeat());
+      expect(viewModel.login.errors.value, isNotNull);
     });
   });
 
-  group('AuthViewModel - Logout', () {
-    test('logout rimuove l\'utente corrente', () async {
-      // Arrange: Prima facciamo login
-      viewModel.login.run(null);
+  group('AuthViewModel - logout Command', () {
+    test('dovrebbe eseguire il logout dal repository e pulire la cache', () async {
+      when(() => mockAuthRepository.logout()).thenAnswer((_) async {});
+      when(() => mockCacheManager.clearAllCaches()).thenAnswer((_) async {});
 
-      await Future.delayed(const Duration(milliseconds: 50));
+      bool listenerCalled = false;
+      viewModel.addListener(() => listenerCalled = true);
 
-      expect(viewModel.currentUser, isNotNull);
+      await viewModel.logout.runAsync();
 
-      // Act: Eseguiamo il logout
-      viewModel.logout.run(null);
-
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // Assert
-      expect(viewModel.currentUser, isNull);
-      expect(viewModel.logout.isRunning.value, isFalse);
+      verify(() => mockAuthRepository.logout()).called(1);
+      verify(() => mockCacheManager.clearAllCaches()).called(1);
+      expect(viewModel.logout.errors.value, isNull);
+      expect(listenerCalled, isTrue);
     });
-  });
 
-  group('AuthViewModel - Sessione Esistente', () {
-    test('checkExistingSession notifica i listener se l\'utente è già loggato', () {
-      // Arrange
-      mockRepository.setMockedUser(const User(
-        sub: '1',
-        email: 'a@a.com',
-        name: 'A',
-        surname: 'S',
-        idToken: 'i',
-        accessToken: 'a',
-      ));
+    test('dovrebbe generare un errore se il repository di logout fallisce', () async {
+      when(() => mockAuthRepository.logout()).thenThrow(Exception('Logout fallito'));
 
-      bool notified = false;
-      viewModel.addListener(() => notified = true);
+      try {
+        await viewModel.logout.runAsync();
+      } catch (_) {}
 
-      // Act
-      viewModel.checkExistingSession();
-
-      // Assert
-      expect(notified, isTrue);
-      expect(viewModel.currentUser, isNotNull);
+      verify(() => mockAuthRepository.logout()).called(1);
+      verifyNever(() => mockCacheManager.clearAllCaches());
+      expect(viewModel.logout.errors.value, isNotNull);
     });
   });
 }

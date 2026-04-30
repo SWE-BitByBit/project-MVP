@@ -1,70 +1,130 @@
 import 'dart:convert';
-import 'package:flutter/services.dart'; // Per il mock del MethodChannel
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import necessario
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/auth_service.dart';
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  // Inizializziamo l'ambiente una sola volta per tutti i test in questo file
-  setUpAll(() async {
-    // FIX 1: Inizializziamo dotenv con valori finti per i test
-    // testLoad permette di caricare variabili senza leggere un file fisico .env
-    dotenv.loadFromString(envString: '''
-COGNITO_DOMAIN=test.auth.com
-CLIENT_ID=test_id
-CLIENT_SECRET=test_secret
-REDIRECT_URI=test://callback
-CALLBACK_SCHEME=test
-''');
+import '../../../testing/mocks/network/mock_http_client.dart';
 
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('flutter_web_auth_2'),
-          (methodCall) async {
-        if (methodCall.method == 'authenticate') {
-          return 'test://callback?code=mock_auth_code';
-        }
-        return null;
-      },
-    );
+void main() {
+  // Inizializzazione obbligatoria per test che usano canali platform o binding
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late AuthService authService;
+  late MockHttpClient mockHttpClient;
+
+  setUpAll(() async {
+    // Caricamento variabili d'ambiente fittizie per evitare NotInitializedError da AppConfig
+    dotenv.loadFromString(envString: '''
+      COGNITO_DOMAIN=auth.test.com
+      COGNITO_CLIENT_ID=test_client_id
+      COGNITO_CLIENT_SECRET=test_client_secret
+    ''');
+
+    registerFallbackValue(Uri());
   });
 
-  group('AuthService Test', () {
-    test('login() restituisce i token se l\'API risponde 200', () async {
-      final mockResponse = {
-        'access_token': 'test_access',
-        'id_token': 'header.${base64Url.encode(utf8.encode('{"email":"test@test.com"}'))}.signature',
-        'refresh_token': 'test_refresh',
-      };
+  setUp(() {
+    mockHttpClient = MockHttpClient();
+    authService = AuthService(httpClient: mockHttpClient);
+  });
 
-      final mockClient = MockClient((request) async {
-        return http.Response(jsonEncode(mockResponse), 200);
-      });
+  void mockFlutterWebAuth2({String? returnUrl, PlatformException? error}) {
+    const channel = MethodChannel('flutter_web_auth_2');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      if (methodCall.method == 'authenticate') {
+        if (error != null) throw error;
+        return returnUrl;
+      }
+      return null;
+    });
+  }
 
-      final authService = AuthService(httpClient: mockClient);
+  tearDown(() {
+    const channel = MethodChannel('flutter_web_auth_2');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  final Map<String, dynamic> tTokenResponseMap = {
+    "access_token": "eyJhbGciOiJIUzI1...",
+    "id_token": "eyJhbGciOiJIUzI1...",
+    "refresh_token": "mock_refresh_token_123",
+    "expires_in": 3600,
+    "token_type": "Bearer"
+  };
+
+  group('login', () {
+    test('should return token map when web auth succeeds and HTTP returns 200', () async {
+      mockFlutterWebAuth2(returnUrl: 'com.bitbybit.appcheproteggeetrasforma://callback?code=mock_code');
+
+      when(() => mockHttpClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      )).thenAnswer((_) async => http.Response(jsonEncode(tTokenResponseMap), 200));
 
       final result = await authService.login();
 
-      expect(result['access_token'], 'test_access');
+      expect(result['access_token'], tTokenResponseMap['access_token']);
+      verify(() => mockHttpClient.post(any(), headers: any(named: 'headers'), body: any(named: 'body'))).called(1);
     });
 
-    test('login() lancia un\'eccezione se l\'API risponde 400', () async {
-      final mockClient = MockClient((request) async => http.Response('Error', 400));
-      final authService = AuthService(httpClient: mockClient);
+    test('should throw Exception when return url does not contain code', () async {
+      mockFlutterWebAuth2(returnUrl: 'com.bitbybit.appcheproteggeetrasforma://callback?error=access_denied');
 
       expect(() => authService.login(), throwsException);
     });
 
+    test('should throw Exception when HTTP call for token fails (not 200)', () async {
+      mockFlutterWebAuth2(returnUrl: 'com.bitbybit.appcheproteggeetrasforma://callback?code=mock_code');
+      when(() => mockHttpClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      )).thenAnswer((_) async => http.Response('Error', 400));
 
-    test('logout() viene eseguito senza errori', () async {
-      final authService = AuthService(); // Non serve il mock per un metodo vuoto/locale
+      expect(() => authService.login(), throwsException);
+    });
+  });
 
-      // Act & Assert
-      // Assicuriamoci che non lanci eccezioni
-      await expectLater(authService.logout(), completes);
+  group('logout', () {
+    test('should complete without error even if web auth throws (typical for logout redirect)', () async {
+      mockFlutterWebAuth2(error: PlatformException(code: 'CANCELED'));
+
+      await authService.logout();
+
+      // Passa se non solleva eccezioni
+    });
+  });
+
+  group('refreshToken', () {
+    const tRefreshToken = 'old_token';
+
+    test('should return new tokens when HTTP 200', () async {
+      when(() => mockHttpClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      )).thenAnswer((_) async => http.Response(jsonEncode(tTokenResponseMap), 200));
+
+      final result = await authService.refreshToken(tRefreshToken);
+
+      expect(result['access_token'], tTokenResponseMap['access_token']);
+      expect(result['refresh_token'], tTokenResponseMap['refresh_token']);
+    });
+
+    test('should throw Exception when refresh fails', () async {
+      when(() => mockHttpClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      )).thenAnswer((_) async => http.Response('Invalid', 401));
+
+      expect(() => authService.refreshToken(tRefreshToken), throwsException);
     });
   });
 }

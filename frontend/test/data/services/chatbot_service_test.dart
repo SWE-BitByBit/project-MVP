@@ -1,58 +1,148 @@
-///DA RIFARE COMPLETAMENTE
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/chatbot_service.dart';
 
+import '../../../testing/mocks/network/mock_api_client.dart';
+
 void main() {
-  group('ChatbotService (Versione Placeholder)', () {
-    late ChatbotService service;
+  late ChatbotService chatbotService;
+  late MockApiClient mockApiClient;
 
-    setUp(() {
-      service = ChatbotService();
+  setUp(() {
+    mockApiClient = MockApiClient();
+    chatbotService = ChatbotService(apiClient: mockApiClient);
+  });
+
+  final tChatPreviewsResponse = {
+    "items": [
+      {
+        "chat_id": "1",
+        "title": "Discussione su sicurezza",
+        "created_at": "2023-10-27T09:00:00Z",
+        "updated_at": "2023-10-27T10:00:00Z"
+      }
+    ]
+  };
+
+  final tChatDetailResponse = {
+    "chat_id": "1",
+    "title": "Discussione su sicurezza",
+    "created_at": "2023-10-27T09:00:00Z",
+    "updated_at": "2023-10-27T10:00:00Z",
+    "messages": [
+      {
+        "chat_id": "1",
+        "message_id": "m1",
+        "text": "Ciao",
+        "sender": "user",
+        "created_at": "2023-10-27T09:01:00Z"
+      }
+    ]
+  };
+
+  final tMessageResponse = {
+    "response": {
+      "chat_id": "1",
+      "message_id": "m3",
+      "text": "Questo è il mio consiglio.",
+      "sender": "ai",
+      "created_at": "2023-10-27T09:05:00Z"
+    },
+    "updatedTitle": "Nuovo Titolo"
+  };
+
+  group('fetchChatPreviews', () {
+    test('should perform GET request on /chats and return data', () async {
+      when(() => mockApiClient.get(any())).thenAnswer((_) async => tChatPreviewsResponse);
+
+      final result = await chatbotService.fetchChatPreviews();
+
+      expect(result, equals(tChatPreviewsResponse));
+      verify(() => mockApiClient.get('/chats')).called(1);
     });
 
-    test('fetchChatPreviews restituisce una lista vuota', () async {
-      final result = await service.fetchChatPreviews();
-      expect(result, isA<List>());
-      expect(result, isEmpty);
+    test('should rethrow exception if ApiClient throws', () async {
+      when(() => mockApiClient.get(any())).thenThrow(Exception('Network error'));
+
+      expect(() => chatbotService.fetchChatPreviews(), throwsException);
     });
+  });
 
-    test('fetchChat restituisce una mappa vuota', () async {
-      final result = await service.fetchChat('chat-123');
-      expect(result, isA<Map<String, dynamic>>());
-      expect(result, isEmpty);
+  group('fetchChat', () {
+    test('should perform GET request on /chats/{chatId} and return data', () async {
+      const tChatId = '1';
+      when(() => mockApiClient.get(any())).thenAnswer((_) async => tChatDetailResponse);
+
+      final result = await chatbotService.fetchChat(tChatId);
+
+      expect(result, equals(tChatDetailResponse));
+      verify(() => mockApiClient.get('/chats/$tChatId')).called(1);
     });
+  });
 
-    test('createChat restituisce un JSON finto con chiavi valide', () async {
-      final result = await service.createChat();
+  group('createChat', () {
+    test('should perform POST request on /chats with empty body and return data', () async {
+      final tCreateResponse = {
+        "chat_id": "2",
+        "title": "Nuova conversazione",
+        "created_at": "2023-10-28T09:00:00Z",
+        "updated_at": "2023-10-28T09:00:00Z",
+        "messages": []
+      };
+      when(() => mockApiClient.post(any(), body: any(named: 'body')))
+          .thenAnswer((_) async => tCreateResponse);
 
-      // Verifichiamo che la mappa contenga le chiavi che il DTO si aspetta
-      expect(result.containsKey('id'), isTrue);
-      expect(result['id'], startsWith('chat-')); // L'id generato inizia con 'chat-'
-      expect(result['title'], 'Nuova conversazione');
-      expect(result.containsKey('creationDate'), isTrue);
-      expect(result['messages'], isEmpty);
+      final result = await chatbotService.createChat();
+
+      expect(result, equals(tCreateResponse));
+      verify(() => mockApiClient.post('/chats', body: {})).called(1);
     });
+  });
 
-    test('deleteChat completa l\'operazione senza lanciare errori', () async {
-      // Usiamo returnsNormally per assicurarci che il Future.delayed non faccia crashare nulla
-      expect(() async => await service.deleteChat('chat-123'), returnsNormally);
+  group('updateChat', () {
+    test('should perform PUT request on /chats/{chatId} with correct body', () async {
+      const tChatId = '1';
+      final tUpdateData = {'title': 'Updated Title'};
+      when(() => mockApiClient.put(any(), body: any(named: 'body')))
+          .thenAnswer((_) async => tUpdateData);
+
+      final result = await chatbotService.updateChat(tChatId, tUpdateData);
+
+      expect(result, equals(tUpdateData));
+      verify(() => mockApiClient.put('/chats/$tChatId', body: tUpdateData)).called(1);
     });
+  });
 
-    test('sendMessage restituisce un JSON finto che include la modalità', () async {
-      final modeStr = 'DETECTIVE';
-      final result = await service.sendMessage('chat-123', 'Ciao AI', modeStr);
+  group('deleteChat', () {
+    test('should perform DELETE request on /chats/{chatId}', () async {
+      const tChatId = '1';
+      when(() => mockApiClient.delete(any())).thenAnswer((_) async => {});
 
-      expect(result['id'], 'msg-ai-123');
-      expect(result['type'], 'AI');
-      expect(result.containsKey('timestamp'), isTrue);
+      await chatbotService.deleteChat(tChatId);
 
-      // Controlliamo che il testo di risposta mockato contenga effettivamente la modalità richiesta
-      expect(result['content'], contains('DETECTIVE'));
+      verify(() => mockApiClient.delete('/chats/$tChatId')).called(1);
     });
+  });
 
-    test('generateChatTitle restituisce il titolo provvisorio', () async {
-      final result = await service.generateChatTitle('Testo di prova');
-      expect(result, 'Nuova conversazione');
+  group('sendMessage', () {
+    test('should perform POST request on /chats/{chatId}/messages with message and mode', () async {
+      const tChatId = '1';
+      const tContent = 'Ciao chatbot';
+      const tMode = 'detective';
+
+      when(() => mockApiClient.post(any(), body: any(named: 'body')))
+          .thenAnswer((_) async => tMessageResponse);
+
+      final result = await chatbotService.sendMessage(tChatId, tContent, tMode);
+
+      expect(result, equals(tMessageResponse));
+      verify(() => mockApiClient.post(
+        '/chats/$tChatId/messages',
+        body: {
+          'message': tContent,
+          'response_mode': tMode,
+        },
+      )).called(1);
     });
   });
 }

@@ -39,8 +39,11 @@ import '../ui/home/view_model/home_view_model.dart';
 import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
+
+//-----------------MOCKED----------------
 import '../data/services/mock_diary_services.dart';
 import '../data/services/mock_trusted_contact_service.dart';
+import '../data/services/mock_dead_man_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -122,6 +125,7 @@ void _setupSafePlace() {
 
 /// Registra le dipendenze relative al modulo dei Contatti Fidati
 void _setupTrustedContact() {
+  //-----------------MOCKED----------------
   //getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
   getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
 
@@ -161,7 +165,9 @@ void _setupMaterial() {
 
 /// Registra le dipendenze relative al modulo dell'allarme automatico
 void _setupSettings() {
-  getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
+  //-----------------MOCKED----------------
+  //getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<DeadManService>(() => MockDeadManService());
 
   getIt.registerLazySingleton<DeadManRepository>(() => DeadManRepository(getIt<DeadManService>()));
 
@@ -170,13 +176,17 @@ void _setupSettings() {
 
 /// Registra le dipendenze relative al modulo del Diario (Criptato e Fittizio)
 void _setupDiary() {
+
   // Services
-  getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
-  getIt.registerLazySingleton<NoteService>(() => MockNoteService());
+  //-----------------MOCKED----------------
   /*
   getIt.registerLazySingleton<DiaryAccountService>(() => DiaryAccountService(apiClient: getIt<ApiClient>()));
   getIt.registerLazySingleton<NoteService>(() => NoteService(apiClient: getIt<ApiClient>()));
 */
+  getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
+  getIt.registerLazySingleton<NoteService>(() => MockNoteService());
+
+
   // Repositories
   getIt.registerLazySingleton<DiaryAccountRepository>(() => DiaryAccountRepository(getIt<DiaryAccountService>()));
   getIt.registerLazySingleton<NoteRepository>(() => NoteRepository(getIt<NoteService>()));

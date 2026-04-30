@@ -1,113 +1,146 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
-// Sostituisci i percorsi con quelli del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_send_message_widget.dart'; // Nome del file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_send_message_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
 
-// Importiamo la nostra controfigura
-import '../../../../testing/mocks/chatbot/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
+import '../../../../testing/mocks/chatbot/mock_chat.dart';
+
+typedef SendMessageParam = ({Chat chat, String content, ChatMode mode});
+
+class FakeChat extends Fake implements Chat {}
 
 void main() {
-  group('ChatbotSendMessageWidget Widget Test', () {
-    late MockChatbotRepository mockRepo;
-    late ChatbotViewModel viewModel;
+  late MockChatbotViewModel mockViewModel;
+  late MockCommand<SendMessageParam, void> mockSendMessage;
+  late ValueNotifier<bool> isRunningNotifier;
+  late MockChat mockChat;
 
-    setUp(() async {
-      mockRepo = MockChatbotRepository();
-      viewModel = ChatbotViewModel(mockRepo);
+  setUpAll(() {
+    registerFallbackValue(ChatMode.mirror);
+    registerFallbackValue((chat: FakeChat(), content: '', mode: ChatMode.mirror));
+  });
 
-      // 1. Fondamentale: Apriamo/Creiamo una chat, altrimenti il ViewModel
-      // rifiuterà il messaggio dicendo "Nessuna chat attiva"
-      await viewModel.createChat();
+  setUp(() {
+    mockViewModel = MockChatbotViewModel();
+    mockSendMessage = MockCommand<SendMessageParam, void>();
+    isRunningNotifier = ValueNotifier<bool>(false);
+    mockChat = MockChat();
 
-      // 2. Prepariamo il mock in modo che non vada in errore quando riceve il messaggio
-      mockRepo.mockedMessageResponse = MessageResponse(
-        response: ChatMessage(
-          id: 'ai-1',
-          content: 'Ricevuto forte e chiaro',
-          type: MessageType.AI,
-          timestamp: DateTime.now(),
+    when(() => mockViewModel.sendMessage).thenReturn(mockSendMessage);
+    when(() => mockSendMessage.isRunning).thenReturn(isRunningNotifier);
+    when(() => mockSendMessage.run(any())).thenAnswer((_) async {});
+
+    // Valori di default
+    when(() => mockViewModel.mode).thenReturn(ChatMode.detective);
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<ChatbotViewModel>.value(
+          value: mockViewModel,
+          child: const ChatbotSendMessageWidget(),
         ),
-      );
+      ),
+    );
+  }
+
+  group('ChatbotSendMessageWidget', () {
+    testWidgets('Disabilita input e bottone se non c\'è una chat attiva', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(null);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Verifica Testo Placeholder
+      expect(find.text('Seleziona una chat prima'), findsOneWidget);
+
+      // Verifica che il TextField sia disabilitato
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.enabled, isFalse);
+
+      // Verifica che il bottone di invio sia disabilitato
+      final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+      expect(iconButton.onPressed, isNull);
     });
 
-    Future<void> pumpInputWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<ChatbotViewModel>.value(
-              value: viewModel,
-              child: const ChatbotSendMessageWidget(),
-            ),
-          ),
-        ),
-      );
-    }
+    testWidgets('Abilita input ma disabilita bottone se la chat è attiva ma il testo è vuoto', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
 
-    testWidgets('Deve mostrare il campo di testo e il bottone di invio', (WidgetTester tester) async {
-      await pumpInputWidget(tester);
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.byIcon(Icons.send), findsOneWidget);
-      expect(find.text('Scrivi qui...'), findsOneWidget); // Verifica l'hintText
+      // Verifica Testo Placeholder
+      expect(find.text('Scrivi un messaggio...'), findsOneWidget);
+
+      // Verifica che il TextField sia abilitato
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.enabled, isTrue);
+
+      // Verifica che il bottone di invio sia ancora disabilitato (nessun testo)
+      final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+      expect(iconButton.onPressed, isNull);
     });
 
-    testWidgets('Inserendo testo e premendo invio, pulisce il campo e aggiorna la chat', (WidgetTester tester) async {
-      await pumpInputWidget(tester);
+    testWidgets('Abilita il bottone di invio quando c\'è del testo e una chat attiva', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
 
-      // 1. Il robot inserisce il testo nel campo
-      await tester.enterText(find.byType(TextField), 'Ciao AI, sono un test');
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Verifichiamo che il testo sia effettivamente stato digitato
-      expect(find.text('Ciao AI, sono un test'), findsOneWidget);
+      // Inseriamo del testo
+      await tester.enterText(find.byType(TextField), 'Ciao AI');
+      await tester.pump();
 
-      // 2. Il robot preme l'icona "Invia"
-      await tester.tap(find.byIcon(Icons.send));
-      await tester.pumpAndSettle(); // Aspettiamo che finisca la chiamata asincrona finta
-
-      // 3. Verifichiamo che il campo di testo si sia svuotato
-      expect(find.text('Ciao AI, sono un test'), findsNothing);
-
-      // 4. Verifichiamo che il messaggio sia arrivato nel ViewModel
-      final messages = viewModel.currentChat!.getMessages();
-      expect(messages.length, 2, reason: 'Dovrebbero esserci il messaggio inviato e la risposta AI mockata');
-      expect(messages.first.content, 'Ciao AI, sono un test');
+      // Verifica che il bottone di invio sia abilitato
+      final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+      expect(iconButton.onPressed, isNotNull);
     });
 
-    testWidgets('L\'invio tramite tastiera (onSubmitted) funziona come il bottone', (WidgetTester tester) async {
-      await pumpInputWidget(tester);
+    testWidgets('L\'invio del messaggio esegue il comando e svuota il campo di testo', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
 
-      // Inseriamo il testo
-      await tester.enterText(find.byType(TextField), 'Test tastiera');
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Simuliamo la pressione del tasto "Invio/Fine" sulla tastiera del telefono
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Messaggio di prova');
+      await tester.pump();
 
-      // Verifichiamo che abbia pulito il campo (quindi ha fatto l'invio)
-      expect(find.text('Test tastiera'), findsNothing);
-      expect(viewModel.currentChat!.getMessages().first.content, 'Test tastiera');
+      await tester.tap(find.byType(IconButton));
+      await tester.pump();
+
+      // Verifica l'esecuzione del comando con i parametri esatti
+      verify(() => mockSendMessage.run((
+      chat: mockChat,
+      content: 'Messaggio di prova',
+      mode: ChatMode.detective,
+      ))).called(1);
+
+      // Verifica che il campo di testo sia stato svuotato
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller?.text, isEmpty);
     });
 
-    testWidgets('Se il campo è vuoto o fatto solo di spazi, premere invio non fa nulla', (WidgetTester tester) async {
-      await pumpInputWidget(tester);
+    testWidgets('Mostra indicatore di caricamento e disabilita bottone durante l\'invio', (tester) async {
+      when(() => mockViewModel.currentChat).thenReturn(mockChat);
 
-      // Test vuoto puro
-      await tester.tap(find.byIcon(Icons.send));
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.enterText(find.byType(TextField), 'Testo');
+      await tester.pump();
 
-      // Test con spazi
-      await tester.enterText(find.byType(TextField), '    ');
-      await tester.tap(find.byIcon(Icons.send));
-      await tester.pumpAndSettle();
+      // Attiviamo lo stato di caricamento
+      isRunningNotifier.value = true;
+      await tester.pump();
 
-      // Verifichiamo che la chat sia rimasta intonsa
-      expect(viewModel.currentChat!.getMessages(), isEmpty);
+      // Verifica la presenza dell'indicatore di caricamento al posto dell'icona
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byIcon(Icons.send_rounded), findsNothing);
+
+      // Verifica che il bottone sia disabilitato durante l'invio
+      final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+      expect(iconButton.onPressed, isNull);
     });
   });
 }

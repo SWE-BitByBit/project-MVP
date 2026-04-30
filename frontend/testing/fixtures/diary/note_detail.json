@@ -1,0 +1,16 @@
+{
+  "note_id": "1",
+  "title": "Nota di prova 1",
+  "created_at": "2023-10-27T09:00:00Z",
+  "updated_at": "2023-10-27T10:00:00Z",
+  "elements": [
+    {
+      "type": "text",
+      "content": "Questo è il contenuto della nota."
+    },
+    {
+      "type": "image",
+      "content": "path/to/image.jpg"
+    }
+  ]
+}
