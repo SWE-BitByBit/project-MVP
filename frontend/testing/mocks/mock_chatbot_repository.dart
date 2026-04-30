@@ -1,7 +1,6 @@
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/chatbot_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
 
@@ -18,7 +17,7 @@ class MockChatbotRepository implements ChatbotRepository {
   Duration simulatedDelay = Duration.zero;
 
   /// I dati finti che il Mock restituirà quando chiami getChatPreviews()
-  List<ChatPreview> mockedPreviewsToReturn = [];
+  List<Chat> mockedPreviewsToReturn = [];
 
   /// La chat finta che il Mock restituirà quando chiami getChatById()
   Chat? mockedChatToReturn;
@@ -30,7 +29,7 @@ class MockChatbotRepository implements ChatbotRepository {
   // --- IMPLEMENTAZIONE DEI METODI ---
 
   @override
-  Future<List<ChatPreview>> getChatPreviews() async {
+  Future<List<Chat>> getChatPreviews() async {
     if (shouldThrowError) throw Exception('Errore di rete simulato durante getChatPreviews');
     return mockedPreviewsToReturn;
   }

@@ -10,7 +10,7 @@ void main() {
       final userMessage = ChatMessage(
         id: 'user-1',
         content: 'Ciao AI!',
-        type: MessageType.USER,
+        type: MessageType.user,
         timestamp: DateTime.now(),
       );
 
@@ -24,7 +24,7 @@ void main() {
       final aiMessage = ChatMessage(
         id: 'ai-1',
         content: 'Ciao Umano!',
-        type: MessageType.AI,
+        type: MessageType.ai,
         timestamp: DateTime.now(),
       );
 

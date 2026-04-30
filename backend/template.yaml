@@ -4,6 +4,14 @@ Description: >
   This is the template for the deploy of the lambda used for app: "L'app che
   protegge e trasforma"
 
+Parameters:
+  CognitoIssuer:
+    Type: String
+    Default: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_Vf1MMfPoO"
+  CognitoAudience:
+    Type: String
+    Default: "5dlcoa478c3uve9bctpopae4kl"
+
 Globals:
   Function:
     Timeout: 10
@@ -17,11 +25,23 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       Name: app-protegge-trasforma-api-mvp
+      Auth:
+        DefaultAuthorizer: MyJWTAuthorizer
+        Authorizers:
+          MyJWTAuthorizer:
+            JwtConfiguration:
+              Issuer: !Ref CognitoIssuer
+              Audience:
+                - !Ref CognitoAudience
+            IdentitySource: "$request.header.Authorization"
       CorsConfiguration:
         AllowOrigins:
           - "*"
         AllowMethods:
           - GET
+          - POST
+          - PUT
+          - DELETE
           - OPTIONS
         AllowHeaders:
           - Content-Type
@@ -66,6 +86,119 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  # --- CHATBOT ---
+  ChatbotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/chatbot/
+      Handler: lambda_function.lambda_handler
+      FunctionName: lambda-chatbot-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Layers:
+        - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
+      Runtime: python3.12
+      Environment:
+        Variables:
+          PYTHONPATH: "/var/task"
+      Events:
+        GetChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        UpdateChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        ChatMessages:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}/messages
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+
+  ChatsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_mvp
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: user_index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      SSESpecification:
+        SSEEnabled: true
+
+  ChatsMessagesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_messages_mvp
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: message_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+        - AttributeName: message_id
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+
   # --- MATERIALS ---
   GetMaterialsFunction:
     Type: AWS::Serverless::Function
@@ -81,6 +214,8 @@ Resources:
             Path: /materials
             Method: get
             ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
 
   MaterialsBucket:
     Type: AWS::S3::Bucket
@@ -113,6 +248,8 @@ Resources:
             Path: /safe-places
             Method: get
             ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
 
   SafePlacesBucket:
     Type: AWS::S3::Bucket
@@ -136,13 +273,25 @@ Outputs:
     Value: !Sub "https://${AppHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
 
   DiaryFunction:
-    Description: Trusted contacts lambda function ARN
+    Description: Diary notes lambda function ARN
     Value: !GetAtt DiaryFunction.Arn
 
   TrustedContactFunction:
-    Description: Diary notes lambda function ARN
+    Description: Trusted contacts lambda function ARN
     Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
     Description: DynamoDB Table Name
     Value: !Ref TrustedContactsTable
+
+  ChatbotFunction:
+    Description: Chatbot lambda function ARN
+    Value: !GetAtt ChatbotFunction.Arn
+
+  ChatsTable:
+    Description: Chats Table Name
+    Value: !Ref ChatsTable
+
+  ChatsMessagesTable:
+    Description: Chats Messages Table Name
+    Value: !Ref ChatsMessagesTable
