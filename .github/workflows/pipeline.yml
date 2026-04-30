@@ -141,7 +141,7 @@ jobs:
 
       - name: Build Web
         working-directory: frontend
-        run: flutter build web --release --base-href /project-MVP/ --web-renderer html
+        run: flutter build web --release --base-href /project-MVP/
 
       - name: Deploy to GH Pages
         uses: peaceiris/actions-gh-pages@v4
