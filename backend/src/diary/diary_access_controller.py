@@ -3,6 +3,7 @@ from commands.validate_password_command import ValidatePasswordCmd
 from commands.set_password_command import SetPasswordCmd
 from domain.diary_type import DiaryType
 
+
 class DiaryAccessController:
 
     def __init__(self, service):
@@ -13,6 +14,15 @@ class DiaryAccessController:
             "statusCode": status,
             "body": json.dumps(body)
         }
+
+    def _get_user_id(self, event):
+        claims = (
+            event.get("requestContext", {})
+            .get("authorizer", {})
+            .get("jwt", {})
+            .get("claims", {})
+        )
+        return claims.get("sub")
 
     def handle_request(self, event, context):
         route = event.get("routekey")
@@ -32,7 +42,7 @@ class DiaryAccessController:
         body = json.loads(event["body"])
 
         cmd = ValidatePasswordCmd(
-            user_id=body.get("user_id"),
+            user_id=self._get_user_id(event),
             password=body.get("password")
         )
 
@@ -46,12 +56,12 @@ class DiaryAccessController:
         diary_type_raw = body.get("diary_type")
 
         try:
-            diary_type = DiaryType(diary_type_raw) # REAL_DIARY o FAKE_DIARY
+            diary_type = DiaryType(diary_type_raw)  # REAL_DIARY o FAKE_DIARY
         except ValueError:
             return self.response(400, {"error": "Invalid diary_type"})
 
         cmd = SetPasswordCmd(
-            user_id=body.get("user_id"),
+            user_id=self._get_user_id(event),
             password=body.get("password"),
             previous_password=body.get("previous_password"),
             diary_type=diary_type
@@ -75,7 +85,7 @@ class DiaryAccessController:
         body = json.loads(event["body"])
 
         result = self.service.check_password_status(
-            user_id=body.get("user_id"),
+            user_id=self._get_user_id(event),
         )
 
         return self.response(200, result)
