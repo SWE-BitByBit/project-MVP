@@ -1,4 +1,4 @@
-class SetNoteElementCmd:
+class AddNoteElementCmd:
     def __init__(
         self,
         user_id: str,

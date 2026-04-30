@@ -6,9 +6,11 @@ class DeleteNoteElementCmd:
         user_id: str,
         note_id: str,
         note_element_id: str,
-        diary_type: DiaryType
+        type: str,
+        content: str
     ):
         self.user_id = user_id
         self.note_id = note_id
         self.note_element_id = note_element_id
-        self.diary_type = diary_type
+        self.type = type
+        self.content = content

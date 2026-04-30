@@ -152,19 +152,9 @@ class DynamoNoteAdapter(NoteRepositoryPort):
 
 
     def delete_note_element(self, user_id: str, note_id: str, note_element_id: str) -> None:
+        
         try:
-            note_response = self._note_table.get_item(
-                Key={"user_id": user_id, "note_id": note_id}
-            )
-            note_item = note_response.get("Item")
-            if not note_item or note_item.get("user_id") != user_id:
-                raise ValueError("Note not found or missing authorization")
-
-            element_response = self._note_elements_table.get_item(
-                Key={"note_id": note_id, "note_element_id": note_element_id}
-            )
-            if not element_response.get("Item"):
-                raise KeyError(f"Note element {note_element_id} not found")
+            self._get_note_element(user_id, note_id, note_element_id)
 
             self._note_elements_table.delete_item(
                 Key={"note_id": note_id, "note_element_id": note_element_id}
@@ -175,6 +165,24 @@ class DynamoNoteAdapter(NoteRepositoryPort):
         except ClientError as e:
             raise RuntimeError(f"Error deleting note element: {e.response['Error']['Message']}")
     
+
+    def _get_note_element(self, user_id: str, note_id: str, note_element_id: str) -> NoteElement:
+        
+        note_response = self._note_table.get_item(
+            Key={"user_id": user_id, "note_id": note_id}
+        )
+        note_item = note_response.get("Item")
+        if not note_item or note_item.get("user_id") != user_id:
+            raise ValueError("Note not found or missing authorization")
+        
+        element_response = self._note_elements_table.get_item(
+            Key={"note_id": note_id, "note_element_id": note_element_id}
+        )
+        if not element_response.get("Item"):
+            raise KeyError(f"Note element {note_element_id} not found")
+        
+        return element_response.get("Item")
+
 
     def _get_note_elements(self, note_id: str) -> List[NoteElement]:
 

@@ -31,5 +31,4 @@ class S3NoteAdapter:
                 Key=key
             )
         except ClientError as e:
-            print("Error deleting S3 object:", e)
-            raise
+            raise RuntimeError(f"Error in deleting note element media: {e.response['Error']['Message']}")
