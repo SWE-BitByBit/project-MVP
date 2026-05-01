@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 // Sostituisci i percorsi con quelli del tuo progetto
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_history_widget.dart'; // Nome del tuo file
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_preview.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 
 // Importiamo la nostra controfigura
@@ -22,9 +21,8 @@ void main() {
 
       // Prepariamo il mock con un paio di chat fittizie
       mockRepo.mockedPreviewsToReturn = [
-        // NOTA: adatta i parametri del costruttore in base a come è fatto esattamente il tuo ChatPreview
-        ChatPreview(id: '1', title: 'Indagine Omicidio', lastModified: DateTime.now()),
-        ChatPreview(id: '2', title: 'Rapina in Banca', lastModified: DateTime.now()),
+        LocalChat(id: '1', title: 'Indagine Omicidio', creationDate: DateTime.now(), messages: []),
+        LocalChat(id: '2', title: 'Rapina in Banca', creationDate: DateTime.now(), messages: []),
       ];
 
       // Diciamo al ViewModel di caricare questa lista iniziale
@@ -96,7 +94,7 @@ void main() {
       // Così, quando il ViewModel ricaricherà le anteprime dopo aver eliminato,
       // riceverà la nuova lista senza quella chat!
       mockRepo.mockedPreviewsToReturn = [
-        ChatPreview(id: '1', title: 'Indagine Omicidio', lastModified: DateTime.now()),
+        LocalChat(id: '1', title: 'Indagine Omicidio', creationDate: DateTime.now(), messages: []),
       ];
 
       // Troviamo tutti i bottoni "cestino" (ce ne sono 2). Clicchiamo il secondo (indice 1)

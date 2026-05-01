@@ -1,9 +1,8 @@
 import sys
-import os
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-sys.path.insert(0, os.path.join(BASE_DIR, "src"))
-sys.path.insert(0, os.path.join(BASE_DIR, "src/materials"))
-sys.path.insert(0, os.path.join(BASE_DIR, "src/trusted_contact"))
-sys.path.insert(0, os.path.join(BASE_DIR, "src/diary"))
+# Aggiunge la cartella 'src' al PYTHONPATH
+src_path = str(Path(__file__).parent.parent / "src")
+sys.path.insert(0, src_path)
+print(f"✅ Added to PYTHONPATH: {src_path}")  # <-- aggiungi questa riga
+print(f"PYTHONPATH now contains: {src_path in sys.path}")  # <-- e questa

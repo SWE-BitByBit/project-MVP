@@ -20,7 +20,7 @@ Globals:
       LogFormat: JSON
 
 Resources:
-# --- API Gateway ---
+  # --- API Gateway ---
   AppHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -47,6 +47,7 @@ Resources:
           - Content-Type
           - Authorization
 
+  # --- DIARY ---
   DiaryFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -54,7 +55,8 @@ Resources:
       Handler: app.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
-  
+
+  # --- TRUSTED CONTACTS ---
   TrustedContactFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -186,19 +188,216 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
-Outputs:  
+  # --- CHATBOT ---
+  ChatbotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/chatbot/
+      Handler: lambda_function.lambda_handler
+      FunctionName: lambda-chatbot-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Layers:
+        - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
+      Runtime: python3.12
+      Environment:
+        Variables:
+          PYTHONPATH: "/var/task"
+      Events:
+        GetChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        UpdateChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        ChatMessages:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}/messages
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+
+  ChatsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_mvp
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: user_index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      SSESpecification:
+        SSEEnabled: true
+
+  ChatsMessagesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_messages_mvp
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: message_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+        - AttributeName: message_id
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+
+  # --- MATERIALS ---
+  GetMaterialsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/materials/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: fetch-materials-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetMaterials:
+          Type: HttpApi
+          Properties:
+            Path: /materials
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
+
+  MaterialsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-materials-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # --- SAFE PLACES ---
+  GetSafePlacesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/safe_places/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: fetch-safe-places-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetSafePlaces:
+          Type: HttpApi
+          Properties:
+            Path: /safe-places
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
+
+  SafePlacesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-luoghi-sicuri-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+Outputs:
+  ApiUrl:
+    Description: "URL base dell'API da inserire nel file .env del frontend"
+    Value: !Sub "https://${AppHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
   DiaryFunction:
-    Description: Trusted contacts lambda function ARN
-    Value: !GetAtt DiaryFunction.Arn
-  
-  TrustedContactFunction:
     Description: Diary notes lambda function ARN
+    Value: !GetAtt DiaryFunction.Arn
+
+  TrustedContactFunction:
+    Description: Trusted contacts lambda function ARN
     Value: !GetAtt TrustedContactFunction.Arn
 
   TrustedContactsTable:
     Description: Trusted Contact DynamoDB Table Name
     Value: !Ref TrustedContactsTable
-  
+
   DeadManSwitchSettingsTable:
     Description: Dead Man switch DynamoDB Table Name
     Value: !Ref DeadManSwitchSettingsTable
+
+  ChatbotFunction:
+    Description: Chatbot lambda function ARN
+    Value: !GetAtt ChatbotFunction.Arn
+
+  ChatsTable:
+    Description: Chats Table Name
+    Value: !Ref ChatsTable
+
+  ChatsMessagesTable:
+    Description: Chats Messages Table Name
+    Value: !Ref ChatsMessagesTable

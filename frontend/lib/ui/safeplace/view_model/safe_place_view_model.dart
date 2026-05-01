@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart'; // <--- Nuovo import
+import 'package:geolocator/geolocator.dart';
 import '../../../domain/models/safeplace/safe_place.dart';
 import '../../../data/services/location_service.dart';
 import '../../../data/repositories/safe_place_repository.dart';
@@ -12,12 +12,10 @@ class SafePlaceViewModel extends ChangeNotifier {
   List<SafePlace> _safePlaces = [];
   SafePlace? _selectedPlace;
 
-  // Variabile per salvare la posizione dell'utente
   Position? _currentPosition;
 
   late final Command0<void> fetchSafePlacesCommand;
 
-  // Nuovo comando per la geolocalizzazione
   late final Command0<void> getUserLocationCommand;
 
   SafePlaceViewModel(
@@ -30,7 +28,7 @@ class SafePlaceViewModel extends ChangeNotifier {
 
   List<SafePlace> get safePlaces => _safePlaces;
   SafePlace? get selectedPlace => _selectedPlace;
-  Position? get currentPosition => _currentPosition; // <--- Getter pubblico
+  Position? get currentPosition => _currentPosition;
 
   Future<void> _fetchSafePlaces() async {
     _safePlaces = await _repository.getPlaces();
@@ -48,13 +46,11 @@ class SafePlaceViewModel extends ChangeNotifier {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // 1. Controlla se il GPS è acceso
     serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception('I servizi di localizzazione sono disabilitati. Accendi il GPS.');
     }
 
-    // 2. Controlla i permessi dell'app
     permission = await _locationService.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await _locationService.requestPermission();
@@ -67,7 +63,6 @@ class SafePlaceViewModel extends ChangeNotifier {
       throw Exception('Permessi negati permanentemente. Modificali nelle impostazioni del telefono.');
     }
 
-    // 3. Ottieni la posizione e aggiorna lo stato
     _currentPosition = await _locationService.getCurrentPosition();
     notifyListeners();
   }

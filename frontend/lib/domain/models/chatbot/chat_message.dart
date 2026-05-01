@@ -24,11 +24,11 @@ class ChatMessage {
 
   /// Verifica se il messaggio corrente è stato inviato dall'utente.
   bool isUserMessage() {
-    return type == MessageType.USER;
+    return type == MessageType.user;
   }
 
   /// Verifica se il messaggio corrente è stato generato dal Chatbot (AI).
   bool isAiMessage() {
-    return type == MessageType.AI;
+    return type == MessageType.ai;
   }
 }
