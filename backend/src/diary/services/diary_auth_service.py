@@ -1,22 +1,54 @@
 from typing import Optional
 import re
 
-from ports.validate_password_port import ValidatePasswordPort
+from ports.validation_port import ValidationPort
 from ports.set_password_port import SetPasswordPort
 from ports.check_password_status_port import CheckPasswordStatusPort
 from ports.diary_auth_repository_port import DiaryAuthRepositoryPort
+from ports.access_port import AccessPort
+from commands.login_command import LoginCmd
+from commands.logout_command import LogoutCmd
 from commands.validate_password_command import ValidatePasswordCmd
+from commands.validate_token_command import ValidateTokenCmd
 from commands.set_password_command import SetPasswordCmd
 from domain.diary_type import DiaryType
 
 
-class DiaryAuthService(ValidatePasswordPort, SetPasswordPort, CheckPasswordStatusPort):
+class DiaryAuthService(ValidationPort, SetPasswordPort, CheckPasswordStatusPort, AccessPort):
     
     def __init__(self, auth_repository: DiaryAuthRepositoryPort):
         self.auth_repository = auth_repository
 
-    def validate_password(self, cmd: ValidatePasswordCmd) -> str:
-        return self.auth_repository.validate_password(cmd.password, cmd.user_id)
+    def validate_password(self, cmd: ValidatePasswordCmd) -> Optional[DiaryType]:
+        diary_type = self.auth_repository.validate_password(cmd.password, cmd.user_id)
+        return diary_type
+
+    def validate_token(self, cmd: ValidateTokenCmd) -> bool:
+        return self.auth_repository.validate_token(cmd.token, cmd.user_id)
+
+    def login(self, cmd: LoginCmd) -> dict:
+        validate_cmd = ValidatePasswordCmd(
+            cmd.user_id,
+            cmd.password
+        )
+
+        target_diary = self.validate_password(validate_cmd)
+
+        if target_diary is None:
+            return {
+                "diary_type" : None,
+                "access_token" : None
+            }
+        
+        access_token = self.auth_repository.start_session(cmd.user_id)
+        return {
+            "diary_type" : target_diary,
+            "access_token" : access_token
+        }
+
+    def logout(self, cmd: LogoutCmd) -> None:
+        self.auth_repository.end_session(cmd.user_id)
+
     
     def is_valid_password(self, new_password: str) -> bool:
         if len(new_password) < 10:
@@ -95,17 +127,11 @@ class DiaryAuthService(ValidatePasswordPort, SetPasswordPort, CheckPasswordStatu
         if not cmd.previous_password:
             raise ValueError("Previous password is required to change password")
 
-        result = self.auth_repository.validate_password(
-            cmd.previous_password,
-            cmd.user_id
+        result = self.validate_password(
+            ValidatePasswordCmd(cmd.user_id, cmd.previous_password)
         )
 
-        expected_result = (
-            "real" if cmd.diary_type == DiaryType.REAL_DIARY
-            else "fake"
-        )
-
-        if result != expected_result:
+        if result != cmd.diary_type:
             raise ValueError(
-                f"Previous password does not match {cmd.diary_type.value} diary"
+                f"Previous password does not match {cmd.diary_type.value}"
             )
