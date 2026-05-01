@@ -1,4 +1,5 @@
 import json
+import re
 
 from domain.dms_configuration_settings import DmsConfigurationSettings
 from domain.dtos.dms_configuration_settings_dto import DmsConfigurationSettingsDTO
@@ -22,7 +23,7 @@ UNAUTHORIZED = {"message": "Unauthorized"}
 ROUTE_NOT_FOUND = {"message": "Route not found"}
 SERVER_ERROR = {"message": "Internal server error"}
 SCHEDULER_SUCCESS = {"body": "Scheduled job executed"}
-SCHEDULER_ERROR = {"body": "Scheduler failed"}
+SCHEDULER_ERROR = {"message": "Scheduler failed"}
 
 class TrustedContactController:
 
@@ -160,6 +161,22 @@ class TrustedContactController:
 
         return claims.get("email", "")
     
+    def _validate_trusted_contact_input(self, body):
+        errors = {}
+
+        email = body.get("contact_email")
+        phone = body.get("contact_phone_number")
+
+        email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+        if not email or not re.match(email_regex, email):
+            errors["contact_email"] = "Invalid email format"
+
+        phone_regex = r"^[0-9+\-\s]{7,15}$"
+        if not phone or not re.match(phone_regex, phone):
+            errors["contact_phone_number"] = "Invalid phone number format"
+
+        return errors
+    
 
     def _response(self, status_code, body):
         if status_code == 204:
@@ -263,6 +280,14 @@ class TrustedContactController:
     
 
     def _handle_trusted_contact_create(self, user_id, body):
+
+        errors = self._validate_trusted_contact_input(body)
+        if errors:
+            return self._response(400, {
+                "message": "Validation error",
+                "errors": errors
+            })
+    
         new_trusted_contact_cmd = AddTrustedContactCmd(
             user_id=user_id,
             contact_name=body.get("contact_name"),
@@ -279,6 +304,14 @@ class TrustedContactController:
     
 
     def _handle_trusted_contact_update(self, user_id, body):
+
+        errors = self._validate_trusted_contact_input(body)
+        if errors:
+            return self._response(400, {
+                "message": "Validation error",
+                "errors": errors
+            })
+
         to_update_trusted_contact = TrustedContact(
             user_id=user_id,
             contact_id=body.get("contact_id"),
@@ -334,6 +367,10 @@ class TrustedContactController:
             latitude=body.get("latitude"),
             longitude=body.get("longitude")
         )
+
+        trusted_contacts = self._get_trusted_contact_crud_service().get_all_trusted_contact(user_id)
+        if not trusted_contacts:
+            return self._response(400, {"message": "No contacts to send the alert"})
 
         response = self._get_sos_alert_service().send_alert_emails(alert_cmd)
         if response:
