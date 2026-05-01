@@ -31,16 +31,16 @@ class ChatHistoryWidget extends StatelessWidget {
                 final preview = viewModel.chatPreviews[index];
                 return ListTile(
                   leading: const Icon(Icons.history),
-                  title: Text(preview.title),
+                  title: Text(preview.getTitle()),
                   onTap: () {
-                    viewModel.openChat(preview.id);
+                    viewModel.openChat(preview.getId());
                     Navigator.pop(
                       context,
                     ); // Chiude il drawer dopo la selezione
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => viewModel.deleteChat(preview.id),
+                    onPressed: () => viewModel.deleteChat(preview.getId()),
                   ),
                 );
               },

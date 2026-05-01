@@ -15,19 +15,41 @@ class ChatDTO {
 
     // 2. Mappiamo ogni json-messaggio in un vero ChatMessage
     final List<ChatMessage> parsedMessages = rawMessages.map((msgJson) {
+      // Supportiamo sia 'id' che 'message_id' (stile backend)
+      final String id = (msgJson['id'] ?? msgJson['message_id'] ?? '') as String;
+      // Supportiamo sia 'content' che 'text' (stile backend)
+      final String content =
+          (msgJson['content'] ?? msgJson['text'] ?? '') as String;
+      // Supportiamo sia 'type' che 'sender' (stile backend)
+      final String rawType = (msgJson['type'] ?? msgJson['sender'] ?? 'USER')
+          .toString()
+          .toUpperCase();
+      final type = rawType == 'AI' ? MessageType.ai : MessageType.user;
+      // Supportiamo sia 'timestamp' che 'created_at' (stile backend)
+      final String rawDate =
+          (msgJson['timestamp'] ?? msgJson['created_at'] ?? DateTime.now()
+              .toIso8601String()) as String;
+
       return ChatMessage(
-        id: msgJson['id'] as String,
-        content: msgJson['content'] as String,
-        type: msgJson['type'] == 'USER' ? MessageType.USER : MessageType.AI,
-        timestamp: DateTime.parse(msgJson['timestamp'] as String),
+        id: id,
+        content: content,
+        type: type,
+        timestamp: DateTime.parse(rawDate),
       );
     }).toList();
 
     // 3. Ritorniamo la chat completa
+    // Supportiamo sia 'id' che 'chat_id'
+    final String chatId = (json['id'] ?? json['chat_id'] ?? '') as String;
+    // Supportiamo sia 'creationDate' che 'created_at'
+    final String rawCreationDate =
+        (json['creationDate'] ?? json['created_at'] ?? DateTime.now()
+            .toIso8601String()) as String;
+
     return LocalChat(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      creationDate: DateTime.parse(json['creationDate'] as String),
+      id: chatId,
+      title: (json['title'] ?? 'Senza Titolo') as String,
+      creationDate: DateTime.parse(rawCreationDate),
       messages: parsedMessages,
     );
   }
@@ -41,7 +63,7 @@ class ChatDTO {
       return {
         'id': msg.id,
         'content': msg.content,
-        'type': msg.type == MessageType.USER ? 'USER' : 'AI',
+        'type': msg.type == MessageType.user ? 'USER' : 'AI',
         'timestamp': msg.timestamp.toIso8601String(),
       };
     }).toList();

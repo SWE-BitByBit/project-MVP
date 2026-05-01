@@ -11,7 +11,7 @@ class ChatbotModeToggleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ChatbotViewModel>();
-    final isDetective = viewModel.selectedMode == ChatMode.DETECTIVE;
+    final isDetective = viewModel.selectedMode == ChatMode.detective;
 
     return Row(
       children: [
@@ -22,7 +22,7 @@ class ChatbotModeToggleWidget extends StatelessWidget {
         Switch(
           value: isDetective,
           onChanged: (value) {
-            viewModel.setMode(value ? ChatMode.DETECTIVE : ChatMode.MIRROR);
+            viewModel.setMode(value ? ChatMode.detective : ChatMode.mirror);
           },
         ),
       ],
