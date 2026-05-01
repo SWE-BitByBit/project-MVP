@@ -1,7 +1,7 @@
 import json
 from ulid import ULID
 
-from backend.src.diary.commands.add_note_command import AddNoteCmd
+from commands.add_note_command import AddNoteCmd
 from commands.get_note_command import GetNoteCmd
 from commands.get_notes_command import GetNotesCmd
 from commands.add_note_element_command import AddNoteElementCmd
@@ -125,7 +125,7 @@ class DiaryNoteController:
             return self.response(400, {"error": "Invalid diary_type"})
 
         try:
-            self._service.get_note(
+            self._service.delete_note(
                 GetNoteCmd(
                     user_id=self._get_user_id(event),
                     note_id=body.get('note_id'),
