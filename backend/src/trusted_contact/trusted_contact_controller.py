@@ -269,14 +269,15 @@ class TrustedContactController:
             email_body=body.get("email_body")
         )
         self._get_dms_crud_service().update_dms_configuration_settings(new_dms_settings)
+        dms_settings_dto = DmsConfigurationSettingsDTO.from_domain(new_dms_settings)
 
-        return self._response(204, {})
+        return self._response(204, dms_settings_dto.to_dict())
 
 
     def _handle_heartbeat_update(self, user_id):
         self._get_dms_crud_service().send_heartbeat(user_id)
 
-        return self._response(204, {})
+        return self._response(204, {"message": "Heartbeat processed with success"})
     
 
     def _handle_trusted_contact_create(self, user_id, body):
@@ -355,7 +356,7 @@ class TrustedContactController:
         )
         response = self._get_trusted_contact_crud_service().delete_trusted_contact(to_delete_trusted_contact_cmd)
         if response:
-            return self._response(200, {})
+            return self._response(200, {"message": f"Contact {contact_id} deleted"})
         else:
             return self._response(500, SERVER_ERROR)
         
@@ -374,6 +375,6 @@ class TrustedContactController:
 
         response = self._get_sos_alert_service().send_alert_emails(alert_cmd)
         if response:
-            return self._response(200, {})
+            return self._response(200, {"message": "Alert send processed with success"})
         else:
             return self._response(500, SERVER_ERROR)
