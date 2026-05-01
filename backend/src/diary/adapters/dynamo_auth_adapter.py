@@ -2,6 +2,7 @@ import os
 import hashlib
 import hmac
 import boto3
+import secrets
 from typing import Optional, Dict
 from botocore.exceptions import ClientError
 from ports.diary_auth_repository_port import DiaryAuthRepositoryPort
@@ -11,9 +12,10 @@ from domain.diary_type import DiaryType
 class DynamoAuthAdapter(DiaryAuthRepositoryPort):
     
     def __init__(self):
-        self.client = boto3.resource('dynamodb', region_name=os.environ["REGION"])
-        self.table = self.client.Table(os.environ["TABLE_AUTH_NAME"])
-        self.hash_secret = os.environ["HASH_SECRET"]
+        self.client = boto3.resource('dynamodb', region_name="eu-south-1")
+        self.table = self.client.Table("auth_test")
+        
+        self.hash_secret = "38ae6a9f-1c7f-4df8-bfba-53e685ab3729"
     
     def hash_password(self, password: str, user_id: str) -> str:
         key = f"{self.hash_secret}:{user_id}".encode('utf-8')
@@ -21,29 +23,78 @@ class DynamoAuthAdapter(DiaryAuthRepositoryPort):
         
         hash_obj = hmac.new(key, message, hashlib.sha256)
         return hash_obj.hexdigest()
+
+    def start_session(self, user_id: str) -> str:
+        try:
+            access_token = secrets.token_urlsafe(32)
+
+            self.table.update_item(
+                Key={'user_id': user_id},
+                UpdateExpression='SET access_token = :token',
+                ExpressionAttributeValues={
+                    ':token': access_token
+                },
+                ReturnValues='UPDATED_NEW'
+            )
+
+            return access_token
+
+        except ClientError as e:
+            print(f"DynamoDB error during session start: {e}")
+            raise RuntimeError("Failed to start session")
+
+
+    def end_session(self, user_id: str) -> None:
+        try:
+            self.table.update_item(
+                Key={'user_id': user_id},
+                UpdateExpression='REMOVE access_token'
+            )
+
+        except ClientError as e:
+            print(f"DynamoDB error during session termination: {e}")
+            raise RuntimeError("Failed to end session")
     
-    def validate_password(self, password: str, user_id: str) -> str:
+    def validate_password(self, password: str, user_id: str) -> Optional[DiaryType]:
         try:
             response = self.table.get_item(Key={'user_id': user_id})
             
             if 'Item' not in response:
-                return "invalid"
+                return None
             
             user_data = response['Item']
             password_hash = self.hash_password(password, user_id)
             print(password_hash)
             
             if user_data.get('real_password') == password_hash:
-                return "real"
+                return DiaryType.REAL_DIARY
             
             if user_data.get('fake_password') == password_hash:
-                return "fake"
+                return DiaryType.FAKE_DIARY
             
-            return "invalid"
+            return None
             
         except ClientError as e:
             print(f"DynamoDB error during password validation: {e}")
-            return "invalid"
+            return None
+    
+    def validate_token(self, token: str, user_id: str) -> bool:
+        try:
+            response = self.table.get_item(Key={'user_id': user_id})
+            
+            if 'Item' not in response:
+                return False
+            
+            user_data = response['Item']
+            stored_token = user_data.get('access_token')
+            if stored_token is None:
+                return False
+
+            return stored_token == token
+            
+        except ClientError as e:
+            print(f"DynamoDB error during token validation: {e}")
+            return False
     
     def set_password(
         self, 

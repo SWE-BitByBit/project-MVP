@@ -10,7 +10,19 @@ class DiaryAuthRepositoryPort(ABC):
         pass
     
     @abstractmethod
-    def validate_password(self, password: str, user_id: str) -> str:
+    def start_session(self, user_id: str) -> str:
+        pass
+
+    @abstractmethod
+    def end_session(self, user_id: str) -> None:
+        pass
+
+    @abstractmethod
+    def validate_password(self, password: str, user_id: str) -> Optional[DiaryType]:
+        pass
+
+    @abstractmethod
+    def validate_token(self, token: str, user_id: str) -> bool:
         pass
     
     @abstractmethod
