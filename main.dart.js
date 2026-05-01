@@ -32634,7 +32634,7 @@ $S:2}
 A.aMK.prototype={
 $1(a){var s=A.dX().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"https://www.gstatic.com/flutter-canvaskit/59aa584fdf100e6c78c785d8a5b565d1de4b48ab/":s)+a},
+return(s==null?"https://www.gstatic.com/flutter-canvaskit/42d3d75a56efe1a2e9902f52dc8006099c45d937/":s)+a},
 $S:50}
 A.Tp.prototype={
 gu(a){var s=this.a
