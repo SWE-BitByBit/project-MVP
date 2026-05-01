@@ -12,10 +12,9 @@ from domain.diary_type import DiaryType
 class DynamoAuthAdapter(DiaryAuthRepositoryPort):
     
     def __init__(self):
-        self.client = boto3.resource('dynamodb', region_name="eu-south-1")
-        self.table = self.client.Table("auth_test")
-        
-        self.hash_secret = "38ae6a9f-1c7f-4df8-bfba-53e685ab3729"
+        self.client = boto3.resource('dynamodb', region_name=os.environ["REGION"])
+        self.table = self.client.Table(os.environ["TABLE_AUTH_NAME"])
+        self.hash_secret = os.environ["PASSWORD_HASH_SECRET"]
     
     def hash_password(self, password: str, user_id: str) -> str:
         key = f"{self.hash_secret}:{user_id}".encode('utf-8')
@@ -75,9 +74,8 @@ class DynamoAuthAdapter(DiaryAuthRepositoryPort):
             return None
             
         except ClientError as e:
-            print(f"DynamoDB error during password validation: {e}")
-            return None
-    
+            raise RuntimeError(f"DynamoDB error during password validation: {e}")
+                
     def validate_token(self, token: str, user_id: str) -> bool:
         try:
             response = self.table.get_item(Key={'user_id': user_id})
@@ -146,5 +144,4 @@ class DynamoAuthAdapter(DiaryAuthRepositoryPort):
             }
             
         except ClientError as e:
-            print(f"DynamoDB error during password retrieval: {e}")
-            return None
+            raise RuntimeError(f"DynamoDB error during password retrieval: {e}")

@@ -102,7 +102,13 @@ class DiaryAuthService(ValidationPort, SetPasswordPort, CheckPasswordStatusPort,
             raise RuntimeError("Failed to set fake password")
     
     def check_password_status(self, user_id: str) -> dict:
-        user_data = self.auth_repository.get_user_passwords(user_id)
+        if not user_id:
+            raise ValueError("User not found")
+            
+        try:
+            user_data = self.auth_repository.get_user_passwords(user_id)
+        except Exception as e:
+            raise RuntimeError(f"Backend error while checking password status: {e}")
         
         if not user_data:
             return {

@@ -51,20 +51,26 @@ class DiaryAccessController:
             password=body.get("password")
         )
 
-        result = self.service.login(cmd)
-
-        return self.response(200, result)
+        try:
+            result = self.service.login(cmd)
+            return self.response(200, result)
+        except ValueError as e:
+            return self.response(400, {"error": str(e)})
+        except RuntimeError as e:
+            return self.response(500, {"error": str(e)})
 
     def logout(self, event):
-        body = json.loads(event["body"])
-
         cmd = LogoutCmd(
             user_id=self._get_user_id(event),
         )
 
-        result = self.service.logout(cmd)
-
-        return self.response(200, result)
+        try:
+            result = self.service.logout(cmd)
+            return self.response(200, result)
+        except ValueError as e:
+            return self.response(400, {"error": str(e)})
+        except RuntimeError as e:
+            return self.response(500, {"error": str(e)})
 
     def set_password(self, event):
         body = json.loads(event["body"])
@@ -106,11 +112,15 @@ class DiaryAccessController:
         return self.service.validate_token(cmd)
 
 
-    def status(self, event):
-        body = json.loads(event["body"])
+    def status(self, event):        
+        try:
+            result = self.service.check_password_status(
+                user_id=self._get_user_id(event),
+            )
 
-        result = self.service.check_password_status(
-            user_id=self._get_user_id(event),
-        )
+            return self.response(200, result)
+        except ValueError as e:
+            return self.response(400, {"error": str(e)})
 
-        return self.response(200, result)
+        except RuntimeError as e:
+            return self.response(500, {"error": str(e)})
