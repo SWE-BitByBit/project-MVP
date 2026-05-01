@@ -26,7 +26,7 @@ class DiaryAuthService(ValidationPort, SetPasswordPort, CheckPasswordStatusPort,
     def validate_token(self, cmd: ValidateTokenCmd) -> bool:
         return self.auth_repository.validate_token(cmd.token, cmd.user_id)
 
-    def login(self, cmd: LoginCmd) -> dict:
+    def login(self, cmd: LoginCmd) -> Optional[dict]:
         validate_cmd = ValidatePasswordCmd(
             cmd.user_id,
             cmd.password
@@ -35,10 +35,7 @@ class DiaryAuthService(ValidationPort, SetPasswordPort, CheckPasswordStatusPort,
         target_diary = self.validate_password(validate_cmd)
 
         if target_diary is None:
-            return {
-                "diary_type" : None,
-                "access_token" : None
-            }
+            return None
         
         access_token = self.auth_repository.start_session(cmd.user_id)
         return {

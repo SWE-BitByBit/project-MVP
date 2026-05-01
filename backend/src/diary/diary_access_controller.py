@@ -53,9 +53,14 @@ class DiaryAccessController:
 
         try:
             result = self.service.login(cmd)
+            if result is None:
+                return self.response(401, {"error": "Login failed"})
+
             return self.response(200, result)
+
         except ValueError as e:
             return self.response(400, {"error": str(e)})
+
         except RuntimeError as e:
             return self.response(500, {"error": str(e)})
 
@@ -67,8 +72,10 @@ class DiaryAccessController:
         try:
             result = self.service.logout(cmd)
             return self.response(200, result)
+
         except ValueError as e:
             return self.response(400, {"error": str(e)})
+            
         except RuntimeError as e:
             return self.response(500, {"error": str(e)})
 
