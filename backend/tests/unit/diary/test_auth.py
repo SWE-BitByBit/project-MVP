@@ -31,8 +31,8 @@ def setup_auth_stack():
 
         table.wait_until_exists()
 
-        os.environ["DYNAMODB_TABLE_NAME"] = "test-auth-table"
-        os.environ["AWS_REGION"] = "us-east-1"
+        os.environ["TABLE_AUTH_NAME"] = "test-auth-table"
+        os.environ["REGION"] = "us-east-1"
         os.environ["HASH_SECRET"] = "test-secret"
 
         adapter = DynamoAuthAdapter()
