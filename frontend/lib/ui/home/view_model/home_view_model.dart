@@ -10,18 +10,17 @@ class HomeViewModel extends ChangeNotifier {
   late final Command<void, List<DashboardItem>> loadDashboard;
 
   HomeViewModel(this._deadManRepository) {
-    loadDashboard = Command.createAsyncNoParam<List<DashboardItem>>(
+    loadDashboard = Command.createSyncNoParam<List<DashboardItem>>(
       _loadDashboardItems,
       initialValue: [],
     );
     loadDashboard.run();
   }
 
-  bool get isDeadManActive => _deadManRepository.currentSettings?.isActive ?? false;
+  bool get isDeadManActive =>
+      _deadManRepository.currentSettings?.isActive ?? false;
 
-  Future<List<DashboardItem>> _loadDashboardItems() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-
+  List<DashboardItem> _loadDashboardItems() {
     // Solo le 3 card richieste per la Home
     return [
       DashboardItem(
@@ -34,7 +33,8 @@ class HomeViewModel extends ChangeNotifier {
       ),
       DashboardItem(
         title: 'Informazioni',
-        description: 'Risorse, guide e contatti nazionali per la tua sicurezza.',
+        description:
+            'Risorse, guide e contatti nazionali per la tua sicurezza.',
         icon: Icons.menu_book,
         backgroundColor: Colors.orange.shade50,
         iconColor: Colors.orange.shade800,
@@ -42,7 +42,8 @@ class HomeViewModel extends ChangeNotifier {
       ),
       DashboardItem(
         title: 'Luoghi Sicuri',
-        description: 'Trova i centri di supporto e i luoghi sicuri più vicini a te.',
+        description:
+            'Trova i centri di supporto e i luoghi sicuri più vicini a te.',
         icon: Icons.map_outlined,
         backgroundColor: Colors.green.shade50,
         iconColor: Colors.green.shade800,
