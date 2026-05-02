@@ -59,10 +59,10 @@ Resources:
         Variables:
           REGION: eu-south-1
           NOTES_TABLE: note_table
-          NOTES_ELEMENTS_TBALE: note_elements_table
-          S3_BUCKET_NOTES_NAME: note_media_bucket
+          NOTES_ELEMENTS_TABLE: note_elements_table
+          S3_BUCKET_NOTES_NAME: !Ref NoteMediaBucket
           TABLE_AUTH_NAME: diary_auth_table
-          PASSWORD_HASH_SECRET: prova
+          PASSWORD_HASH_SECRET: 38ae6a9f-1c7f-4df8-bfba-53e685ab3729
       Events:
         PostDiaryLogin:
           Type: HttpApi
@@ -148,7 +148,7 @@ Resources:
   NoteMediaBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: note-media-bucket
+      BucketName: !Sub "${AWS::StackName}-diary-media"
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
