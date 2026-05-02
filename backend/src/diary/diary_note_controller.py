@@ -7,6 +7,7 @@ from commands.get_notes_command import GetNotesCmd
 from commands.add_note_element_command import AddNoteElementCmd
 from commands.delete_note_element_command import DeleteNoteElementCmd
 from domain.diary_type import DiaryType
+from domain.dtos.note_dto import NoteDTO
 
 SERVER_ERROR = {"message": "Internal server error"}
 
@@ -49,12 +50,12 @@ class DiaryNoteController:
 
             
     def _note_add(self, event):
-        body = json.loads(event["body"])
+        body = json.loads(event.get("body") or "{}")
 
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"error": "Invalid diary_type"})
+            return self.response(400, {"message": "Invalid diary_type"})
 
         elements = [
             AddNoteElementCmd(
@@ -80,13 +81,14 @@ class DiaryNoteController:
     
 
     def _note_get(self, event):
-        body = json.loads(event["body"])
+        body = json.loads(event.get("body") or "{}")
 
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"error": "Invalid diary_type"})
-
+            return self.response(400, {"message": "Invalid diary_type"})
+        #TODO 
+        # gestione errore del service
         note = self._service.get_note(
             GetNotesCmd(
                 user_id=self._get_user_id(event),
@@ -99,12 +101,12 @@ class DiaryNoteController:
 
 
     def _note_list(self, event):
-        body = json.loads(event["body"])
+        body = json.loads(event.get("body") or "{}")
 
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"error": "Invalid diary_type"})
+            return self.response(400, {"message": "Invalid diary_type"})
 
         notes = self._service.list_notes(
             GetNotesCmd(
@@ -113,57 +115,76 @@ class DiaryNoteController:
             )
         )
 
-        return self.response(200, notes)
+        return self.response(200, {"notes": [NoteDTO.from_domain(n).to_dict() for n in notes]})
 
 
     def _note_delete(self, event):
-        body = json.loads(event["body"])
+        body = json.loads(event.get("body"))
 
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"error": "Invalid diary_type"})
+            return self.response(400, {"message": "Invalid diary_type"})
 
-        try:
-            self._service.delete_note(
-                GetNoteCmd(
-                    user_id=self._get_user_id(event),
-                    note_id=body.get('note_id'),
-                    diary_type=diary_type
-                )
+        
+        result = self._service.delete_note(
+            GetNoteCmd(
+                user_id=self._get_user_id(event),
+                note_id=body.get('note_id'),
+                diary_type=diary_type
             )
-        except ValueError:
-            return self.response(400, {"error": ValueError})
+        )
+        if not result:
+            return self.response(500, SERVER_ERROR)
+        
+        return self.response(200, {"message": "Note deleted successfully"})
         
 
     def _note_element_add(self, event):
-        body = json.loads(event["body"])
+        body = json.loads(event.get("body"))
 
-        return self._service.add_note_element(
-            AddNoteElementCmd(
+        if not body.get("note_id") or not body.get("type"):
+            return self.response(400, {"message": "Missing required fields"})
+
+        try:
+            response = self._service.add_note_element(
+                AddNoteElementCmd(
+                    self._get_user_id(event),
+                    body.get("note_id"),
+                    body.get("type"),
+                    body.get("content")
+                )
+            )
+        
+            return self.response(200, response)
+        
+        except ValueError as e:
+            return self.response(400, {"message": str(e)})
+
+        except Exception:
+            return self.response(500, SERVER_ERROR)
+
+
+    def _note_element_delete(self, event):
+        body = json.loads(event.get("body"))
+
+        if not body.get("note_id") or not body.get("note_element_id"):
+            return self.response(400, {"message": "Missing required fields"})
+
+        result = self._service.delete_note_element(
+            DeleteNoteElementCmd(
                 self._get_user_id(event),
                 body.get("note_id"),
+                body.get("note_element_id"),
                 body.get("type"),
                 body.get("content")
             )
         )
 
-
-    def _note_element_delete(self, event):
-        body = json.loads(event["body"])
-
-        try:
-            self._service.delete_note_element(
-                DeleteNoteElementCmd(
-                    self._get_user_id(event),
-                    body.get("note_id"),
-                    body.get("note_element_id"),
-                    body.get("type"),
-                    body.get("content")
-                )
-            )
-        except RuntimeError:
+        if not result:
             return self.response(500, SERVER_ERROR)
+
+        return self.response(200, {"message": "Note element deleted successfully"})
 
 
 

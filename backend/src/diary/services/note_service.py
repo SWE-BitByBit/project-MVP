@@ -19,6 +19,9 @@ from ports.set_note_element_port import SetNoteElementPort
 from ports.note_repository_port import NoteRepositoryPort
 from ports.file_repository_port import FileRepositoryPort
 
+from domain.dtos.note_dto import NoteDTO
+from domain.dtos.note_element_dto import NoteElementDTO
+
 class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
 
     def __init__(self, note_repository: NoteRepositoryPort, file_repository: FileRepositoryPort):
@@ -26,7 +29,8 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
         self._file_repository = file_repository
 
     def add_note(self, cmd: AddNoteCmd) -> dict:
-
+        #TODO
+        #modificare per andare a ritornare il giusto formato di dict
         note = Note(
             note_id=str(ULID()),
             user_id=cmd.user_id,
@@ -76,31 +80,37 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             "upload_urls": presigned_urls
         }
 
-    def get_note(self, cmd: GetNoteCmd) -> Optional[Note]:
+    def get_note(self, cmd: GetNoteCmd) -> dict:
         note = self._note_repository.get(
             cmd.user_id,
             cmd.note_id,
             cmd.diary_type
         )
+        
+        note_dict = NoteDTO.from_domain(note).to_dict()
 
-        if not note:
-            return None
+        note_dict["message_elements"] = []
 
-        elements = []
+        for element in note.message_elements or []:
 
-        for element in note.get("message_elements", []):
+            note_element_dict = NoteElementDTO.from_domain(element).to_dict()
 
-            if element["type"] in ["image", "audio"]:
-                content = self._file_repository.generate_presigned_url(
-                    "get_object",
-                    {
-                        "Bucket": os.environ["BUCKET_NAME"],
-                        "Key": element["content"],
-                    }
-                )
-                elements.content = content
+            if element.type in ["image", "audio"]:
+                try:
+                    download_url = self._file_repository.generate_presigned_url(
+                        "get_object",
+                        {
+                            "Bucket": os.environ["BUCKET_NAME"],
+                            "Key": element["content"],
+                        }
+                    )
+                    note_element_dict["download_url"] = download_url
+                except Exception as e:
+                    raise RuntimeError(f"Error generating presigned URL for element {element.note_element_id}") from e
+            
+            note_dict["message_elements"].append(note_element_dict)
 
-        return note
+        return note_dict
 
 
     def delete_note(self, cmd: DeleteNoteCmd) -> bool:
@@ -141,6 +151,10 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
         note_element: NoteElement = None
 
         if cmd.type in ["image", "audio"]:
+
+            if cmd.content:
+                raise ValueError("Content must be empty for file upload")
+
             key = f"{cmd.user_id}/{cmd.note_id}/{note_element_id}"
             presigned_url = self._file_repository.generate_presigned_url(
                 "put_object",
@@ -157,6 +171,9 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             )
             response["upload_url"] = presigned_url
         else:
+            if not cmd.content:
+                raise ValueError("Content is required for text type")
+            
             note_element = NoteElement(
                 note_id=cmd.note_id,
                 note_element_id=note_element_id,
@@ -180,7 +197,7 @@ def delete_note_element(self, cmd: DeleteNoteElementCmd) -> bool:
             cmd.note_id,
             cmd.note_element_id
         )
-        if cmd.content["type"] in ["image", "audio"]:
+        if cmd.type in ["image", "audio"]:
             self._file_repository.delete_object(
                 key=cmd.content
             )

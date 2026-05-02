@@ -17,9 +17,8 @@ class S3NoteAdapter:
                 Params=params,
                 ExpiresIn=expires_in
             )
-        except ClientError:
-            print("Couldn't get a presigned URL.")
-            raise
+        except ClientError as e:
+            raise RuntimeError(f"Failed to generate presigned URL: {str(e)}")
 
     def delete_object(self, key: str) -> None:
         """
