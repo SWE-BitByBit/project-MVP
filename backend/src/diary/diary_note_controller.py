@@ -43,9 +43,9 @@ class DiaryNoteController:
             return self._note_get(event)
         elif route == "DELETE /notes/{note_id}":
             return self._note_delete(event)
-        elif route == "PUT note/element":
+        elif route == "PUT note_element":
             return self._note_element_add(event)
-        elif route == "DELETE note/element":
+        elif route == "DELETE note_element":
             return self._note_element_delete(event)
 
             
@@ -73,7 +73,7 @@ class DiaryNoteController:
                 created_at=body.get('created_at'),
                 last_modified_at=body.get('last_modified_at'),
                 diary_type=diary_type,
-                elements=elements
+                note_elements=elements
             )
         )
 
@@ -125,6 +125,8 @@ class DiaryNoteController:
 
 
     def _note_delete(self, event):
+        #TODO
+        #aggiungere 404 Not Found: nota non trovata.
         body = json.loads(event.get("body"))
 
         try:

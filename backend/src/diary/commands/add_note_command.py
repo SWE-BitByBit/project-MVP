@@ -12,11 +12,11 @@ class AddNoteCmd:
         created_at: datetime,
         last_modified_at: datetime,
         diary_type,
-        elements: List[AddElementNewNoteCmd]
+        note_elements: List[AddElementNewNoteCmd]
     ):
         self.user_id = user_id
         self.title = title
         self.created_at = created_at
         self.last_modified_at = last_modified_at
         self.diary_type = diary_type
-        self.elements = elements or []
+        self.note_elements = note_elements or []
