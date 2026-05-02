@@ -15,7 +15,7 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
 
   /// Comando per l'esecuzione del login.
-  /// 
+  ///
   /// Espone lo stato di esecuzione e gli eventuali errori alla View.
   late final Command<void, void> login;
 
@@ -25,7 +25,7 @@ class AuthViewModel extends ChangeNotifier {
   bool isInitializing = true;
 
   /// Inizializza il view model configurando i comandi reattivi.
-  /// 
+  ///
   /// Riceve l'istanza di [_authRepository] tramite Dependency Injection.
   AuthViewModel(this._authRepository) {
     // Usiamo una funzione anonima (_) per ignorare il parametro void richiesto.
@@ -38,7 +38,7 @@ class AuthViewModel extends ChangeNotifier {
   User? get currentUser => _authRepository.getCurrentUser();
 
   /// Verifica se esiste una sessione utente attiva nel repository.
-  /// 
+  ///
   /// Notifica i listener se l'utente è presente per aggiornare la navigazione.
   Future<void> checkExistingSession() async {
     isInitializing = true;
@@ -53,7 +53,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /// Logica interna per la procedura di login.
-  /// 
+  ///
   /// Interagisce con [_authRepository] per ottenere l'oggetto [User].
   /// Solleva un'eccezione in caso di fallimento che verrà catturata dal comando.
   Future<void> _login() async {
@@ -61,8 +61,15 @@ class AuthViewModel extends ChangeNotifier {
     if (user == null) {
       throw Exception('Autenticazione fallita o annullata dall\'utente.');
     }
+    final deadManRepo = getIt<DeadManRepository>();
+
     try {
-      final deadManRepo = getIt<DeadManRepository>();
+      await deadManRepo.createSettings();
+    } catch (e) {
+      debugPrint("Errore creazione settings: $e");
+    }
+
+    try {
       await deadManRepo.sendHeartbeat();
       debugPrint("Heartbeat inviato con successo al login!");
     } catch (e) {

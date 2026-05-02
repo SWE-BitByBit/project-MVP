@@ -6,15 +6,13 @@ import 'dead_man_service.dart';
 ///
 /// Utilizza un [ApiClient] per eseguire le richieste, beneficiando della
 /// gestione automatica dell'AccessToken e della standardizzazione delle eccezioni.
-class MockDeadManService implements DeadManService{
-
- @override
+class MockDeadManService implements DeadManService {
+  @override
   Future<void> sendHeartbeat() async {
     print("Inviato SOS --> richiesta a GET /dms/heartbeat");
   }
 
   @override
-
   Future<Map<String, dynamic>> fetchSettings() async {
     // 1. Simuliamo il tempo di risposta di internet (1.5 secondi)
     await Future.delayed(const Duration(milliseconds: 1500));
@@ -25,17 +23,32 @@ class MockDeadManService implements DeadManService{
       'first_inactivity_timer': 3, // 3 giorni
       'second_inactivity_timer': 2, // 2 giorni
       'message_subject': 'Emergenza Mock!',
-      'message_body': 'Questo è un test visuale per vedere se la UI è bella. Se non rispondo, chiamate Batman.',
+      'message_body':
+          'Questo è un test visuale per vedere se la UI è bella. Se non rispondo, chiamate Batman.',
     };
   }
 
   @override
   /// Invia la nuova configurazione (VERSIONE MOCK PER TESTARE LA UI)
   Future<void> saveSettings(Map<String, dynamic> settingsData) async {
-
     await Future.delayed(const Duration(milliseconds: 1000));
 
     print("Dati che sarebbero andati ad AWS: $settingsData");
+  }
 
+  @override
+  ///Invia segnale per creazione configurazione
+  Future<Map<String, dynamic>> createSettings(
+    Map<String, dynamic> settingsData,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    return {
+      'is_active': false,
+      'first_inactivity_timer': 6, // 3 giorni
+      'second_inactivity_timer': 2, // 2 giorni
+      'message_subject': 'Oggetto mail di default',
+      'message_body': 'Messaggio di defualt.',
+    };
   }
 }

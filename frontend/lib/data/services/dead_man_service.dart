@@ -35,12 +35,16 @@ class DeadManService {
   /// Accetta una mappa [settingsData] serializzata dal DTO.
   /// Restituisce un [Future] void al completamento dell'operazione.
   Future<void> saveSettings(Map<String, dynamic> settingsData) async {
-    await _apiClient.post(_basePath, body: settingsData);
+    await _apiClient.put(_basePath, body: settingsData);
   }
 
-  /* Future<void> updateSettings(Map<String, dynamic> settingsData) async {
-    await _apiClient.put(_basePath, body: settingsData);
-  } */
+  /// Invia al backend la richiesta per la creazione della entry delle impostazioni per l'utente.
+  ///
+  /// Accetta una mappa [settingsData] serializzata dal DTO.
+  /// Restituisce un [Future] void al completamento dell'operazione.
+  Future<void> createSettings() async {
+    await _apiClient.post(_basePath);
+  }
 
   Future<void> sendHeartbeat() async {
     await _apiClient.post('$_basePath/heartbeat');

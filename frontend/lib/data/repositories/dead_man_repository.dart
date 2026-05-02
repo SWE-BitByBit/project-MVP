@@ -23,7 +23,6 @@ class DeadManRepository implements CacheableRepository {
   /// fare chiamate di rete (utile per inizializzare form e draft).
   DeadManSettings? get currentSettings => _cachedSettings;
 
-
   /// Recupera la configurazione del Dead Man's Switch dal Cloud.
   ///
   /// Se la cache locale è vuota o se si forza l'aggiornamento tramite [forceRefresh],
@@ -46,12 +45,17 @@ class DeadManRepository implements CacheableRepository {
   /// Se la chiamata di rete fallisce, la cache non viene modificata e l'eccezione
   /// risale al ViewModel.
   Future<void> saveSettings(DeadManSettings newSettings) async {
-
-    final Map<String, dynamic> settingsData = DeadManSettingsDTO.toJson(newSettings);
+    final Map<String, dynamic> settingsData = DeadManSettingsDTO.toJson(
+      newSettings,
+    );
 
     await _service.saveSettings(settingsData);
 
     _cachedSettings = newSettings;
+  }
+
+  Future<void> createSettings() async {
+    await _service.createSettings();
   }
 
   Future<void> sendHeartbeat() async {

@@ -10,7 +10,7 @@ class TrustedContactService {
   final ApiClient _apiClient;
 
   /// Il percorso base per gli endpoint dei contatti fidati.
-  static const String _basePath = '/trusted_contacts';
+  static const String _basePath = '/trusted_contact';
 
   /// Inizializza il servizio richiedendo un'istanza di [apiClient].
   TrustedContactService({required ApiClient apiClient})
