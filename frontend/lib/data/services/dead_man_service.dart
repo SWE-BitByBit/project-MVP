@@ -11,7 +11,7 @@ class DeadManService {
 
   /// Il percorso base per l'endpoint delle impostazioni.
   /// (Da allineare con la rotta effettiva su API Gateway, es. '/deadman' o '/settings/dms')
-  static const String _basePath = '/dms';
+  static const String _basePath = '/dms_settings';
 
   /// Inizializza il servizio richiedendo un'istanza di [apiClient].
   DeadManService({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -38,8 +38,11 @@ class DeadManService {
     await _apiClient.post(_basePath, body: settingsData);
   }
 
+  /* Future<void> updateSettings(Map<String, dynamic> settingsData) async {
+    await _apiClient.put(_basePath, body: settingsData);
+  } */
+
   Future<void> sendHeartbeat() async {
     await _apiClient.post('$_basePath/heartbeat');
   }
-
 }
