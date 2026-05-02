@@ -30,13 +30,13 @@ class _HomeTabViewBody extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Protegge e Trasforma'),
         centerTitle: true,
-        backgroundColor: theme.primaryColorLight,
+        title: const Text('Homepage'),
 
         // Tasto Profilo / Login (Sinistra)
         leading: IconButton(
-          icon: Icon(Icons.account_circle, size: 30, color: theme.colorScheme.primary),
+          padding: const EdgeInsets.only(left: 12),
+          icon: Icon(Icons.account_circle, size: 36),
           onPressed: () => Navigator.pushNamed(context, '/login'),
           tooltip: 'Profilo / Accesso',
         ),
@@ -44,18 +44,39 @@ class _HomeTabViewBody extends StatelessWidget {
         // Tasto Impostazioni (Destra)
         actions: [
           IconButton(
-            icon: Icon(Icons.settings, size: 28, color: theme.colorScheme.primary),
+            icon: Icon(Icons.settings, size: 36),
             onPressed: () => Navigator.pushNamed(context, '/settings'),
             tooltip: 'Impostazioni',
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
         ],
       ),
-
       // Il corpo centrale (La griglia dei bottoni, i banner di allarme, ecc.)
-      body: const SafeArea(
+      body: SafeArea(
         bottom: false,
-        child: HomeDashboardWidget(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            SizedBox(height: 19),
+
+            Padding(
+              padding: EdgeInsets.only(left: 24),
+              child: Text(
+                'Ciao!',
+                style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            Padding(
+              padding: EdgeInsets.only(left: 24),
+              child: Text('Come stai oggi?', style: TextStyle(fontSize: 22)),
+            ),
+
+            SizedBox(height: 4),
+
+            Expanded(child: HomeDashboardWidget()),
+          ],
+        ),
       ),
     );
   }

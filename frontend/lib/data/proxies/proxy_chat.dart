@@ -14,8 +14,6 @@ class ProxyChat implements Chat {
 
   // Il "Real Subject" (L'oggetto reale nascosto nel proxy)
   LocalChat? _localChat;
-
-  // Riferimento al repository per poter andare su rete a prendere i dati
   final ChatbotRepository _repository;
 
   ProxyChat({
@@ -24,11 +22,11 @@ class ProxyChat implements Chat {
     required DateTime creationDate,
     required DateTime updateDate,
     required ChatbotRepository repository,
-  })  : _id = id,
-        _title = title,
-        _creationDate = creationDate,
-        _updateDate = updateDate,
-        _repository = repository;
+  }) : _id = id,
+       _title = title,
+       _creationDate = creationDate,
+       _updateDate = updateDate,
+       _repository = repository;
 
   @override
   String get id => _id;
@@ -40,7 +38,7 @@ class ProxyChat implements Chat {
   @override
   set title(String newTitle) {
     _title = newTitle;
-    _localChat?.title = newTitle; // Propaga la modifica
+    _localChat?.title = newTitle;
   }
 
   @override
@@ -58,11 +56,10 @@ class ProxyChat implements Chat {
 
   @override
   void addMessage(ChatMessage message) {
-    // Delega l'aggiunta fisica all'oggetto reale
     _localChat?.addMessage(message);
   }
 
-  /// Scarica l'intera cronologia dal database AWS DynamoDB solo se non è già presente.
+  /// Recupera i dati dal backend solo se non sono già caricati.
   Future<void> load() async {
     if (_localChat == null) {
       _localChat = await _repository.getChatById(_id) as LocalChat;

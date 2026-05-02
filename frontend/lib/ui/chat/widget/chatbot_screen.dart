@@ -10,7 +10,6 @@ import 'chatbot_mode_toggle_widget.dart';
 import 'chatbot_send_message_widget.dart';
 import 'chatbot_mode_info_dialog_widget.dart';
 
-
 /// IL WRAPPER: Inietta il ViewModel.
 class ChatbotScreen extends StatelessWidget {
   const ChatbotScreen({super.key});
@@ -55,6 +54,7 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
       });
     });
   }
+
   /// Helper per mostrare il popup informativo sulle modalità
   void _showModeInfoDialog(BuildContext context) {
     showDialog(
@@ -65,15 +65,10 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
 
   /// Helper per creare una SnackBar che non copra la barra dei messaggi
   void _showFloatingSnackBar(String message) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: colorScheme.onError),
-        ),
+        content: Text(message, style: TextStyle(color: colorScheme.onError)),
         backgroundColor: colorScheme.error,
         behavior: SnackBarBehavior.floating,
         // Diamo un margine dal basso (es. 80 pixel) per scavalcare la barra di input
@@ -94,6 +89,8 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
           automaticallyImplyLeading: false,
           title: const Text('Assistente AI'),
           centerTitle: true,
+          leadingWidth: 80,
+          leading: const ChatbotModeToggleWidget(),
           actions: [
             IconButton(
               icon: const Icon(Icons.info_outline),
@@ -108,36 +105,37 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
           child: Column(
             children: [
               // 2. SOTTO-BARRA: Controlli specifici della Chat
-              Builder(builder: (context) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      bottom: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              Builder(
+                builder: (context) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        tooltip: 'Cronologia chat',
-                      ),
-                      Expanded(
-                        child: Consumer<ChatbotViewModel>(
-                          builder: (context, vm, child) => Text(
-                            vm.currentChat?.title ?? 'Nuova Conversazione',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
+                    decoration: BoxDecoration(color: colorScheme.surface),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          tooltip: 'Cronologia chat',
+                        ),
+                        Expanded(
+                          child: Consumer<ChatbotViewModel>(
+                            builder: (context, vm, child) => Text(
+                              vm.currentChat?.title ?? 'Nuova Conversazione',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
-                      ),
-                      const ChatbotModeToggleWidget(),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  );
+                },
+              ),
               // --- INDICATORE DI CARICAMENTO (Transizione Proxy) ---
               // Usiamo ValueListenableBuilder come in Trusted Contacts!
               Consumer<ChatbotViewModel>(

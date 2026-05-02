@@ -32,11 +32,11 @@ class TrustedContactScreenView extends StatefulWidget {
   const TrustedContactScreenView({super.key});
 
   @override
-  State<TrustedContactScreenView> createState() => _TrustedContactScreenViewState();
+  State<TrustedContactScreenView> createState() =>
+      _TrustedContactScreenViewState();
 }
 
 class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
-
   @override
   void initState() {
     super.initState();
@@ -47,7 +47,9 @@ class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
         if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Impossibile eliminare il contatto: errore di rete.'),
+              content: Text(
+                'Impossibile eliminare il contatto: errore di rete.',
+              ),
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -63,44 +65,38 @@ class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
     final viewModel = context.read<TrustedContactViewModel>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contatti Fidati'),
-        centerTitle: true,
-        // Ti suggerisco di usare i colori del Theme per coerenza con l'app_theme!
-        backgroundColor: Theme.of(context).primaryColorLight,
-      ),
+      appBar: AppBar(title: const Text('Contatti Fidati'), centerTitle: true),
       // 3. Reattività Chirurgica: ascoltiamo solo il comando di caricamento
       body: SafeArea(
         top: false,
         child: ValueListenableBuilder<bool>(
-        valueListenable: viewModel.loadContacts.isRunning,
-        builder: (context, isRunning, _) {
+          valueListenable: viewModel.loadContacts.isRunning,
+          builder: (context, isRunning, _) {
+            // Se sta caricando la prima volta
+            if (isRunning) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          // Se sta caricando la prima volta
-          if (isRunning) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            // Se ha finito, controlliamo se ci sono stati errori
+            return ValueListenableBuilder(
+              valueListenable: viewModel.loadContacts.errors,
+              builder: (context, commandError, _) {
+                if (commandError != null) {
+                  return Center(
+                    child: ErrorIndicator(
+                      title: "Errore nel caricamento",
+                      label: "Prego riprovare",
+                      // Passiamo null per rispettare la firma del comando
+                      onPressed: () => viewModel.loadContacts.run(null),
+                    ),
+                  );
+                }
 
-          // Se ha finito, controlliamo se ci sono stati errori
-          return ValueListenableBuilder(
-            valueListenable: viewModel.loadContacts.errors,
-            builder: (context, commandError, _) {
-              if (commandError != null) {
-                return Center(
-                  child: ErrorIndicator(
-                    title: "Errore nel caricamento",
-                    label: "Prego riprovare",
-                    // Passiamo null per rispettare la firma del comando
-                    onPressed: () => viewModel.loadContacts.run(null),
-                  ),
-                );
-              }
-
-              // Se tutto va bene, mostriamo la lista!
-              return const TrustedContactListWidget();
-            },
-          );
-        },
+                // Se tutto va bene, mostriamo la lista!
+                return const TrustedContactListWidget();
+              },
+            );
+          },
         ),
       ),
       floatingActionButton: const TrustedContactActionsWidget(),

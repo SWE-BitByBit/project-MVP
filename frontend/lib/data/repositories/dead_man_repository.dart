@@ -5,9 +5,7 @@ import 'cacheable_repository.dart';
 
 /// Intermediario tra il ViewModel e il livello dati (Service).
 ///
-/// Gestisce la logica di business relativa all'allarme automatico (Dead Man's Switch),
-/// mantenendo una cache in memoria per garantire la Single Source of Truth (SSOT)
-/// e ottimizzare i caricamenti della UI.
+/// Gestisce la logica di business relativa all'allarme automatico (Dead Man's Switch)
 class DeadManRepository implements CacheableRepository {
   /// Il servizio per le chiamate API verso il backend AWS.
   final DeadManService _service;
@@ -20,7 +18,7 @@ class DeadManRepository implements CacheableRepository {
   DeadManRepository(DeadManService service) : _service = service;
 
   /// Permette al ViewModel di leggere la configurazione in modo sincrono senza
-  /// fare chiamate di rete (utile per inizializzare form e draft).
+  /// fare chiamate di rete.
   DeadManSettings? get currentSettings => _cachedSettings;
 
   /// Recupera la configurazione del Dead Man's Switch dal Cloud.
@@ -29,10 +27,7 @@ class DeadManRepository implements CacheableRepository {
   /// interroga il [_service], traduce la risposta tramite DTO e salva in RAM.
   Future<DeadManSettings> getSettings({bool forceRefresh = false}) async {
     if (_cachedSettings == null || forceRefresh) {
-      // 1. Chiamata al Service
       final rawData = await _service.fetchSettings();
-
-      // 2. Traduzione tramite DTO (gestisce anche i fallback se il JSON è vuoto)
       _cachedSettings = DeadManSettingsDTO.fromJson(rawData);
     }
 
@@ -63,7 +58,6 @@ class DeadManRepository implements CacheableRepository {
   }
 
   /// Svuota la cache locale.
-  /// Fondamentale chiamarlo durante il logout per non mostrare il timer del vecchio utente.
   @override
   void clearCache() {
     _cachedSettings = null;

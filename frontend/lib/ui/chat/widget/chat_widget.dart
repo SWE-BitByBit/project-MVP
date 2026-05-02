@@ -26,6 +26,7 @@ class ChatWidget extends StatelessWidget {
               'Inizia una conversazione sicura.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 18,
               ),
             ),
           );
@@ -50,7 +51,10 @@ class ChatWidget extends StatelessWidget {
               alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10.0),
-                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14.0,
+                  vertical: 10.0,
+                ),
 
                 // UX: Evitiamo che le bolle occupino tutto lo schermo se il testo è lunghissimo
                 constraints: BoxConstraints(
@@ -60,9 +64,9 @@ class ChatWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   // Utilizzo dei colori semantici definiti nell'AppTheme
                   color: isUser
-                      ? colorScheme.tertiaryContainer // Teal scuro (Utente)
+                      ? colorScheme
+                            .tertiaryContainer // Teal scuro (Utente)
                       : colorScheme.secondaryContainer, // Grigio (AI)
-
                   // UX: Arrotondamento asimmetrico.
                   // L'angolino in basso verso chi parla diventa a "punta" (0 di raggio).
                   borderRadius: BorderRadius.only(

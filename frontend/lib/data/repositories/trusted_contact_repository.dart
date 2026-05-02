@@ -5,9 +5,7 @@ import 'cacheable_repository.dart';
 
 /// Intermediario tra il ViewModel e il livello dati (Service).
 ///
-/// Gestisce la logica di business relativa ai contatti fidati, occupandosi della
-/// conversione tra DTO e modelli di dominio e mantenendo una cache locale
-/// dei dati per ottimizzare le prestazioni dell'interfaccia utente.
+/// Gestisce la logica di business relativa ai contatti fidati
 class TrustedContactRepository implements CacheableRepository {
   /// Il servizio per le chiamate API verso il backend.
   final TrustedContactService _trustedContactService;
@@ -15,18 +13,14 @@ class TrustedContactRepository implements CacheableRepository {
   /// Cache locale dei contatti per evitare chiamate di rete ridondanti.
   List<TrustedContact> _cachedContacts = [];
 
-  /// Crea un'istanza di [TrustedContactRepository] iniettando il [service].
   TrustedContactRepository(TrustedContactService service)
-      : _trustedContactService = service;
+    : _trustedContactService = service;
 
-  /// Recupera la lista completa dei contatti fidati.
-  ///
-  /// Se la cache è vuota o se viene forzato l'aggiornamento, interroga il
-  /// [_trustedContactService], converte i risultati tramite [TrustedContactDTO]
-  /// e aggiorna la memoria locale.
+  /// Recupera la lista completa dei contatti fidati dalla cache o direttamente dal backend.
   Future<List<TrustedContact>> getContacts({bool forceRefresh = false}) async {
     if (_cachedContacts.isEmpty || forceRefresh) {
-      final List<Map<String, dynamic>> rawData = await _trustedContactService.getContacts();
+      final List<Map<String, dynamic>> rawData = await _trustedContactService
+          .getContacts();
       _cachedContacts = rawData
           .map((json) => TrustedContactDTO.fromJson(json))
           .toList();
@@ -35,29 +29,25 @@ class TrustedContactRepository implements CacheableRepository {
   }
 
   /// Crea un nuovo contatto fidato e lo aggiunge alla cache locale.
-  ///
-  /// Invia il [contact] al backend e, in caso di successo, aggiorna la lista
-  /// in memoria con l'oggetto restituito dal server (comprensivo di ID).
   Future<TrustedContact> createContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
-    final Map<String, dynamic> rawResponse = await _trustedContactService.addContact(contactData);
+    final Map<String, dynamic> rawResponse = await _trustedContactService
+        .addContact(contactData);
 
     final newContact = TrustedContactDTO.fromJson(rawResponse);
     _cachedContacts.add(newContact);
     return newContact;
   }
 
-  /// Aggiorna un contatto esistente sia sul backend che nella cache locale.
-  ///
-  /// Cerca il [contact] nella memoria locale tramite il suo ID e lo sostituisce
-  /// con la versione aggiornata restituita dal server.
+  /// Aggiorna un contatto esistente e sincronizza la cache locale.
   Future<TrustedContact> updateContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
-    final Map<String, dynamic> rawResponse = await _trustedContactService.updateContact(contactData);
+    final Map<String, dynamic> rawResponse = await _trustedContactService
+        .updateContact(contactData);
 
     final updatedContact = TrustedContactDTO.fromJson(rawResponse);
 
-    // Aggiorniamo la cache locale
+    // Aggiornamento della cache
     final index = _cachedContacts.indexWhere((c) => c.id == updatedContact.id);
     if (index != -1) {
       _cachedContacts[index] = updatedContact;
@@ -67,12 +57,13 @@ class TrustedContactRepository implements CacheableRepository {
   }
 
   /// Elimina definitivamente il contatto identificato da [contactId].
-  ///
-  /// Rimuove il contatto dalla cache locale solo dopo aver ricevuto conferma
-  /// dell'eliminazione dal backend.
   Future<void> deleteContact(String contactId) async {
     final deletedContact = _cachedContacts.firstWhere((c) => c.id == contactId);
     final deletedIndex = _cachedContacts.indexOf(deletedContact);
+
+    if (deletedIndex == -1) {
+      return;
+    }
 
     _cachedContacts.removeAt(deletedIndex);
 
@@ -84,12 +75,12 @@ class TrustedContactRepository implements CacheableRepository {
     }
   }
 
-  /// Attiva l'invio dell'SOS ai contatti fidati tramite il livello di rete.
+  /// Attiva l'invio dell'SOS ai contatti fidati.
   Future<void> sendSosAlert() async {
     await _trustedContactService.sendSosAlert();
   }
 
-  /// Svuota la cache locale (utile ad esempio durante il logout).
+  /// Svuota la cache locale.
   @override
   void clearCache() {
     _cachedContacts.clear();

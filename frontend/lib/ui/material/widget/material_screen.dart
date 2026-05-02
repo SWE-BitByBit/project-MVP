@@ -42,7 +42,6 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
       appBar: AppBar(
         title: const Text('Materiale Informativo'),
         // L'AppTheme gestisce già colori ed elevation, ma se vogliamo forzare il colore chiaro:
-        backgroundColor: Theme.of(context).primaryColorLight,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -57,7 +56,6 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
               child: ValueListenableBuilder<bool>(
                 valueListenable: vm.loadMaterials.isRunning,
                 builder: (context, isRunning, _) {
-
                   // A. STATO DI CARICAMENTO INIZIALE (Cache vuota)
                   if (isRunning && vm.materials.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
@@ -66,7 +64,6 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
                   return ValueListenableBuilder(
                     valueListenable: vm.loadMaterials.errors,
                     builder: (context, commandError, _) {
-
                       // B. STATO DI ERRORE BLOCCANTE
                       // Se la rete fallisce e non abbiamo dati in cache
                       if (commandError != null && vm.materials.isEmpty) {
@@ -95,9 +92,14 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
                                     child: Center(
                                       child: Text(
                                         'Nessun materiale trovato.',
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                          color: Theme.of(context).colorScheme.outline,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.outline,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -130,14 +132,16 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(), // Effetto "molla" stile iOS/Android moderno
+            physics:
+                const BouncingScrollPhysics(), // Effetto "molla" stile iOS/Android moderno
             child: Row(
               // Generazione dinamica da Enum! Niente più stringhe hardcodate.
               children: ResourceType.values.map((type) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: FilterChipWidget(
-                    label: type.displayName, // Usa il getter che abbiamo definito nell'Enum
+                    label: type
+                        .displayName, // Usa il getter che abbiamo definito nell'Enum
                     isSelected: viewModel.currentFilter == type,
                     onSelected: () => viewModel.filterByType(type),
                   ),

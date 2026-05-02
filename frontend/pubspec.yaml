@@ -54,6 +54,7 @@ dependencies:
   listen_it: ^5.3.3
   mocktail: ^1.0.5
   shared_preferences: ^2.5.5
+  google_fonts: ^8.1.0
 
 dev_dependencies:
   flutter_test:

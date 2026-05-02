@@ -19,12 +19,14 @@ class LoggedInBannerWidget extends StatelessWidget {
         // Sfondo morbido basato sul colore primario (sostituisce green.shade50)
         color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(10),
-        // Bordo leggermente più marcato
-        border: Border.all(color: colorScheme.primary),
       ),
       child: Column(
         children: [
-          Icon(Icons.check_circle_outline, color: colorScheme.primary, size: 40),
+          Icon(
+            Icons.check_circle_outline,
+            color: colorScheme.primary,
+            size: 40,
+          ),
           const SizedBox(height: 10),
           Text(
             'Sei autenticato con l\'indirizzo:',

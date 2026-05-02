@@ -27,7 +27,8 @@ class _SafePlaceMapScreenBody extends StatefulWidget {
   const _SafePlaceMapScreenBody();
 
   @override
-  State<_SafePlaceMapScreenBody> createState() => _SafePlaceMapScreenBodyState();
+  State<_SafePlaceMapScreenBody> createState() =>
+      _SafePlaceMapScreenBodyState();
 }
 
 class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
@@ -69,7 +70,8 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
       appBar: AppBar(
         title: const Text('Luoghi Sicuri'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColorLight,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.8),
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -85,7 +87,6 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
         child: ValueListenableBuilder<bool>(
           valueListenable: vm.loadPlaces.isRunning,
           builder: (context, isRunning, _) {
-
             // 1. STATO DI CARICAMENTO INIZIALE
             if (isRunning && vm.safePlaces.isEmpty) {
               return const Center(child: CircularProgressIndicator());
@@ -101,7 +102,8 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
                     child: ErrorIndicator(
                       title: "Errore nel caricamento",
                       label: "Prego riprovare",
-                      onPressed: () => vm.loadPlaces.run(null), // Lanciamo la retry!
+                      onPressed: () =>
+                          vm.loadPlaces.run(null), // Lanciamo la retry!
                     ),
                   );
                 }
@@ -125,33 +127,49 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
               return FloatingActionButton(
                 heroTag: "btn_location",
                 backgroundColor: Theme.of(context).colorScheme.surface,
-                onPressed: isRunning ? null : () async {
-                  await vm.getUserLocation.runAsync();
-                  if (vm.getUserLocation.errors.value == null && vm.userPosition != null) {
-                    _mapController.move(
-                      LatLng(vm.userPosition!.latitude, vm.userPosition!.longitude),
-                      15.0,
-                    );
-                  }
-                },
+                onPressed: isRunning
+                    ? null
+                    : () async {
+                        await vm.getUserLocation.runAsync();
+                        if (vm.getUserLocation.errors.value == null &&
+                            vm.userPosition != null) {
+                          _mapController.move(
+                            LatLng(
+                              vm.userPosition!.latitude,
+                              vm.userPosition!.longitude,
+                            ),
+                            15.0,
+                          );
+                        }
+                      },
                 child: isRunning
                     ? const CircularProgressIndicator()
-                    : Icon(Icons.my_location, color: Theme.of(context).colorScheme.primary),
+                    : Icon(
+                        Icons.my_location,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
               );
             },
           ),
           const SizedBox(height: 16),
           Consumer<SafePlaceViewModel>(
             builder: (context, viewModel, child) {
-              if (viewModel.selectedPlace == null) return const SizedBox.shrink();
+              if (viewModel.selectedPlace == null)
+                return const SizedBox.shrink();
               return FloatingActionButton.extended(
                 heroTag: "btn_details",
-                onPressed: () => _showPlaceDetails(context, viewModel.selectedPlace!),
-                icon: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.onPrimary),
+                onPressed: () =>
+                    _showPlaceDetails(context, viewModel.selectedPlace!),
+                icon: Icon(
+                  Icons.info_outline,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 label: Text(
                   viewModel.selectedPlace!.name,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
               );
             },
@@ -163,79 +181,80 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
 
   void _showMapLegend(BuildContext context) {
     showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        builder: (context) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-            // Intestazione
-            Row(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Icon(Icons.map, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 12),
-            Text(
-              'Mappa Luoghi Sicuri',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+              // Intestazione
+              Row(
+                children: [
+                  Icon(Icons.map, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Mappa Luoghi Sicuri',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 16),
+
+              // Spiegazione
+              Text(
+                'Questa mappa mostra i punti di interesse e i luoghi di emergenza nelle tue vicinanze. Fai tap su un\'icona per vedere i dettagli.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Divider(height: 32),
+
+              // Titolo Legenda
+              Text(
+                'Legenda',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              ...SafePlaceCategory.values.map((category) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        category.icon,
+                        color: category.getColor(Theme.of(context).colorScheme),
+                        size: 28,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        category.displayName,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Spiegazione
-          Text(
-              'Questa mappa mostra i punti di interesse e i luoghi di emergenza nelle tue vicinanze. Fai tap su un\'icona per vedere i dettagli.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
         ),
-        const Divider(height: 32),
-
-        // Titolo Legenda
-        Text(
-          'Legenda',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        ...SafePlaceCategory.values.map((category) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Row(
-          children: [
-            Icon(
-              category.icon,
-              color: category.getColor(Theme.of(context).colorScheme),
-              size: 28,
-            ),
-            const SizedBox(width: 16),
-            Text(
-              category.displayName,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ],
-        ),
-      );
-    }),
-    ],
-    ),
-    ),
-    ),
+      ),
     );
   }
 
   void _showPlaceDetails(BuildContext context, SafePlace safePlace) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Permette alla sheet di adattarsi bene al contenuto
+      isScrollControlled:
+          true, // Permette alla sheet di adattarsi bene al contenuto
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -267,12 +286,16 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: safePlace.category.getColor(Theme.of(context).colorScheme).withValues(alpha: 0.1),
+                      color: safePlace.category
+                          .getColor(Theme.of(context).colorScheme)
+                          .withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       safePlace.category.icon,
-                      color: safePlace.category.getColor(Theme.of(context).colorScheme),
+                      color: safePlace.category.getColor(
+                        Theme.of(context).colorScheme,
+                      ),
                       size: 32,
                     ),
                   ),
@@ -306,16 +329,20 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
                       children: [
                         Text(
                           'Indirizzo',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           safePlace.address,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                     ),
@@ -335,7 +362,9 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
                   const SizedBox(width: 12),
                   Chip(
                     label: Text(safePlace.category.displayName),
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
                     labelStyle: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w600,
@@ -367,4 +396,5 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
         ),
       ),
     );
-  }}
+  }
+}

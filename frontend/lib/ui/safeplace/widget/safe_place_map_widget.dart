@@ -15,41 +15,61 @@ class SafePlaceMapWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Il Consumer ascolta la lista dei luoghi dal ViewModel.
-    // Nessun if/else per il caricamento, siamo certi che i dati ci siano!
     return Consumer<SafePlaceViewModel>(
       builder: (context, viewModel, child) {
-
         final markers = viewModel.safePlaces.map((place) {
+          final isSelected = viewModel.selectedPlace?.id == place.id;
+          final baseColor = place.category.getColor(theme.colorScheme);
+
           return Marker(
             point: LatLng(place.latitude, place.longitude),
             width: 45.0,
             height: 45.0,
-            rotate: true, // <-- IMPORTANTE: Mantiene il pin sempre dritto!
+            rotate: true,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => viewModel.selectPlace(place),
-              child: Icon(
-                place.category.icon, // Usa l'icona specifica!
-                color: place.category.getColor(theme.colorScheme), // Usa il colore del tema!
-                size: 40.0,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 100),
+                scale: isSelected ? 1.3 : 1.0,
+                child: Icon(
+                  place.category.icon,
+                  color: isSelected
+                      ? baseColor
+                      : Color.lerp(
+                          baseColor,
+                          const Color.fromARGB(255, 39, 39, 39),
+                          0.5,
+                        )!,
+                  size: 40.0,
+                ),
               ),
             ),
           );
         }).toList();
-
         if (viewModel.userPosition != null) {
           markers.add(
             Marker(
-              point: LatLng(viewModel.userPosition!.latitude, viewModel.userPosition!.longitude),
+              point: LatLng(
+                viewModel.userPosition!.latitude,
+                viewModel.userPosition!.longitude,
+              ),
               width: 20.0,
               height: 20.0,
               child: Container(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary,
                   shape: BoxShape.circle,
-                  border: Border.all(color: theme.colorScheme.onPrimary, width: 3.0),
+                  border: Border.all(
+                    color: theme.colorScheme.onPrimary,
+                    width: 3.0,
+                  ),
                   boxShadow: [
-                    BoxShadow(color: theme.colorScheme.shadow.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1)
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
                   ],
                 ),
               ),
@@ -65,7 +85,10 @@ class SafePlaceMapWidget extends StatelessWidget {
           initialCenter = LatLng(mapState.latitude, mapState.longitude);
           initialZoom = mapState.zoom;
         } else if (viewModel.userPosition != null) {
-          initialCenter = LatLng(viewModel.userPosition!.latitude, viewModel.userPosition!.longitude);
+          initialCenter = LatLng(
+            viewModel.userPosition!.latitude,
+            viewModel.userPosition!.longitude,
+          );
           initialZoom = 14.0;
         } else if (markers.isNotEmpty) {
           initialCenter = markers.first.point;
@@ -82,7 +105,9 @@ class SafePlaceMapWidget extends StatelessWidget {
             initialZoom: initialZoom,
             onPositionChanged: (MapPosition position, bool hasGesture) {
               // Aggiungiamo il controllo "position.zoom != null"
-              if (hasGesture && position.center != null && position.zoom != null) {
+              if (hasGesture &&
+                  position.center != null &&
+                  position.zoom != null) {
                 viewModel.saveMapSessionState(
                   position.center!.latitude,
                   position.center!.longitude,

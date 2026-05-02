@@ -22,11 +22,11 @@ class ProxyNote implements Note {
     required DateTime creationDate,
     required DateTime lastModified,
     required NoteRepository repository,
-  })  : _id = id,
-        _title = title,
-        _creationDate = creationDate,
-        _lastModified = lastModified,
-        _repository = repository;
+  }) : _id = id,
+       _title = title,
+       _creationDate = creationDate,
+       _lastModified = lastModified,
+       _repository = repository;
 
   @override
   String get id => _id;
@@ -38,7 +38,7 @@ class ProxyNote implements Note {
   @override
   set title(String newTitle) {
     _title = newTitle;
-    _realNote?.title = newTitle; // Propaga la modifica alla nota reale se presente
+    _realNote?.title = newTitle;
     updateLastModified();
   }
 

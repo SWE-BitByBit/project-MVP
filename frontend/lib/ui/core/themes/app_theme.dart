@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Classe centralizzata per la gestione dei temi dell'applicazione.
 class AppTheme {
@@ -16,6 +17,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: GoogleFonts.gelasio().fontFamily,
 
       // --- COLOR SCHEME (Palette Semantica) ---
       colorScheme: ColorScheme.fromSeed(
@@ -35,8 +37,8 @@ class AppTheme {
         surface: surfaceColor,
         onSurface: Colors.black87,
         surfaceContainerHighest: Colors.grey.shade100, // Sfondi secondari
-        onSurfaceVariant: Colors.grey.shade700, // Testo secondario (es. Indirizzi)
-
+        onSurfaceVariant:
+            Colors.grey.shade700, // Testo secondario (es. Indirizzi)
         // Errori (Usati per SnackBar, ErrorIndicator, Pin Mappa Ospedali)
         error: errorColor,
         onError: Colors.white,
@@ -52,17 +54,23 @@ class AppTheme {
       // --- TEXT THEMES (Tipografia) ---
       textTheme: const TextTheme(
         // Titoli grandi (es. Nome del luogo nel BottomSheet)
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+        titleLarge: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
         // Testo principale e indirizzi (es. Indirizzo nel BottomSheet)
         bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
         // Testo standard (es. Messaggi chat)
         bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
         // Testi piccoli o label (es. Orari chat, label sotto i bottoni)
-        labelSmall: TextStyle(fontSize: 12, color: Colors.grey),
+        labelSmall: TextStyle(
+          fontSize: 12,
+          color: Color.fromARGB(255, 0, 0, 0),
+        ),
       ),
 
       // --- COMPONENT THEMES (Stili specifici dei Widget) ---
-
       appBarTheme: AppBarTheme(
         backgroundColor: primaryLight,
         centerTitle: true,
@@ -122,7 +130,10 @@ class AppTheme {
         thumbColor: primaryColor,
         overlayColor: primaryColor.withValues(alpha: 0.2),
         valueIndicatorColor: primaryColor,
-        valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        valueIndicatorTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
 
       // Stile globale per i campi di testo (Form)
@@ -133,6 +144,36 @@ class AppTheme {
           borderSide: BorderSide(color: primaryColor, width: 2),
         ),
         labelStyle: TextStyle(color: primaryDark),
+      ),
+
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.teal.shade100,
+        indicatorColor: Colors.teal.shade300,
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            );
+          }
+          return TextStyle(
+            color: Colors.teal.shade800,
+            fontWeight: FontWeight.w400,
+            fontSize: 12,
+          );
+        }),
+
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: Colors.black, size: 28);
+          }
+          return IconThemeData(color: Colors.teal.shade800, size: 24);
+        }),
       ),
     );
   }
