@@ -20,14 +20,26 @@ class ChatbotModeToggleWidget extends StatelessWidget {
         return PopupMenuButton<ChatMode>(
           onSelected: (mode) => vm.setMode(mode),
           itemBuilder: (context) => [
-            const PopupMenuItem(value: ChatMode.mirror, child: Text("Modalità Mirror")),
-            const PopupMenuItem(value: ChatMode.detective, child: Text("Modalità Detective")),
+            const PopupMenuItem(
+              value: ChatMode.mirror,
+              child: Text("Specchio intelligente"),
+            ),
+            const PopupMenuItem(
+              value: ChatMode.detective,
+              child: Text("Detective delle relazioni"),
+            ),
           ],
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 18.0,
+            ),
             child: Row(
               children: [
-                Icon(isDetective ? Icons.psychology : Icons.auto_awesome_motion, size: 20),
+                Icon(
+                  isDetective ? Icons.psychology : Icons.auto_awesome_motion,
+                  size: 20,
+                ),
                 const Icon(Icons.arrow_drop_down),
               ],
             ),

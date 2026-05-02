@@ -57,7 +57,7 @@ class _HomeTabViewBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            SizedBox(height: 16),
+            SizedBox(height: 19),
 
             Padding(
               padding: EdgeInsets.only(left: 24),

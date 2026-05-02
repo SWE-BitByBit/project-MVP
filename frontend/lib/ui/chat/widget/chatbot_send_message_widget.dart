@@ -8,7 +8,8 @@ class ChatbotSendMessageWidget extends StatefulWidget {
   const ChatbotSendMessageWidget({super.key});
 
   @override
-  State<ChatbotSendMessageWidget> createState() => _ChatbotSendMessageWidgetState();
+  State<ChatbotSendMessageWidget> createState() =>
+      _ChatbotSendMessageWidgetState();
 }
 
 class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
@@ -37,11 +38,7 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
     final text = _controller.text.trim();
     if (text.isEmpty || vm.currentChat == null) return;
 
-    vm.sendMessage.run((
-    chat: vm.currentChat!,
-    content: text,
-    mode: vm.mode,
-    ));
+    vm.sendMessage.run((chat: vm.currentChat!, content: text, mode: vm.mode));
 
     _controller.clear();
   }
@@ -54,13 +51,8 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          border: Border(
-            top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha:5.0)),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        decoration: BoxDecoration(color: Colors.teal.shade100),
         // IL CONSUMER: Avvolge SOLO i componenti che dipendono dal ViewModel
         child: Consumer<ChatbotViewModel>(
           builder: (context, vm, child) {
@@ -74,8 +66,7 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(24.0),
-                      border: Border.all(color: colorScheme.outlineVariant),
+                      borderRadius: BorderRadius.circular(18.0),
                     ),
                     child: TextField(
                       controller: _controller,
@@ -87,7 +78,9 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
                         hintText: hasActiveChat
                             ? 'Scrivi un messaggio...'
                             : 'Seleziona una chat prima',
-                        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                        hintStyle: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
@@ -108,24 +101,27 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: canSend ? colorScheme.primary : colorScheme.surface,
+                        color: canSend
+                            ? colorScheme.primary
+                            : colorScheme.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: canSend ? Colors.transparent : colorScheme.outlineVariant,
-                        ),
                       ),
                       child: IconButton(
                         icon: isRunning
                             ? SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2, color: colorScheme.primary,
-                          ),
-                        )
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colorScheme.primary,
+                                ),
+                              )
                             : Icon(
-                          Icons.send_rounded,
-                          color: canSend ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
-                        ),
+                                Icons.send_rounded,
+                                color: canSend
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurfaceVariant,
+                              ),
                         onPressed: canSend ? () => _sendMessage(vm) : null,
                       ),
                     );

@@ -21,10 +21,14 @@ class ChatbotModeInfoDialog extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome_motion, size: 18, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.auto_awesome_motion,
+                size: 18,
+                color: colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Mirror',
+                'Specchio intelligente',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
@@ -40,10 +44,14 @@ class ChatbotModeInfoDialog extends StatelessWidget {
           ),
           Row(
             children: [
-              Icon(Icons.psychology, size: 18, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.psychology,
+                size: 18,
+                color: colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Detective',
+                'Detective delle relazioni',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
@@ -65,9 +73,7 @@ class ChatbotModeInfoDialog extends StatelessWidget {
           child: const Text('Ho capito'),
         ),
       ],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 }

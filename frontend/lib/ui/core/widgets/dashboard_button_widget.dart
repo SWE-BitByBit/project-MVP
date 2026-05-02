@@ -64,7 +64,7 @@ class DashboardButtonWidget extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey.shade700,
+                  color: Color.lerp(iconColor, Colors.black, 0.7),
                   height: 1.4,
                 ),
               ),

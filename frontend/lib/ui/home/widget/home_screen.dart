@@ -67,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Stack(
             children: [
               // 1. IL CORPO (Pagine mantenute in memoria)
-              SizedBox(height: 50),
               PageView(
                 controller: _pageController,
                 // onPageChanged scatta quando l'utente fa lo SWIPE con il dito
