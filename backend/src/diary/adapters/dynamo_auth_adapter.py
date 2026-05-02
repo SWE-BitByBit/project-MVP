@@ -12,7 +12,7 @@ from domain.diary_type import DiaryType
 class DynamoAuthAdapter(DiaryAuthRepositoryPort):
     
     def __init__(self):
-        self.client = boto3.resource('dynamodb', region_name="eu-south-1")
+        self.client = boto3.resource('dynamodb', region_name=os.environ["REGION"])
         self.table = self.client.Table("auth_test")
         
         self.hash_secret = "38ae6a9f-1c7f-4df8-bfba-53e685ab3729"

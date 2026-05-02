@@ -55,7 +55,84 @@ Resources:
       Handler: app.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
+      Environment:
+        Variables:
+          REGION: eu-south-1
+          TABLE_NOTES_NAME: note_table
+          S3_BUCKET_NOTES_NAME: note_media_bucket
 
+  NoteMediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: note-media-bucket
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      
+  DiaryNoteTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: note_table
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: note_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: note_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  DiaryNoteElementTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: note_elements_table
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: note_id
+          KeyType: HASH
+        - AttributeName: note_element_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: note_id
+          AttributeType: S
+        - AttributeName: note_element_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  DiaryAuthTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: diary_auth_table
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+        
   # --- TRUSTED CONTACTS ---
   TrustedContactFunction:
     Type: AWS::Serverless::Function
@@ -377,6 +454,22 @@ Outputs:
   DiaryFunction:
     Description: Diary notes lambda function ARN
     Value: !GetAtt DiaryFunction.Arn
+  
+  NoteMediaBucket:
+    Description: Bucket for storing note's images and audios
+    Value: !Ref NoteMediaBucket
+  
+  DiaryNoteTable:
+    Description: Diary note DynamoDB Table ARN
+    Value: !Ref DiaryNoteTable
+  
+  DiaryNoteElementTable:
+    Description: Diary note elements DynamoDB Table ARN
+    Value: !Ref DiaryNoteElementTable
+  
+  DiaryAuthTable:
+    Description: Diary password DynamoDB Table ARN
+    Value: !Ref DiaryAuthTable
 
   TrustedContactFunction:
     Description: Trusted contacts lambda function ARN
