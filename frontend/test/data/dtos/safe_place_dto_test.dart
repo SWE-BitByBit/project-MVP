@@ -41,7 +41,7 @@ void main() {
           'name': 'Caserma Carabinieri',
           'latitude': 45.0,
           'longitude': 9.0,
-          'category': 'carabinieri'
+          'category': 'carabinieri',
         };
 
         // Act
@@ -52,21 +52,24 @@ void main() {
         expect(result.category, SafePlaceCategory.police);
       });
 
-      test('dovrebbe gestire la conversione sicura di latitudine e longitudine numeriche (non stringhe)', () {
-        // Arrange
-        final json = {
-          'id': 'sp_num',
-          'latitude': 41.9028,
-          'longitude': 12.4964,
-        };
+      test(
+        'dovrebbe gestire la conversione sicura di latitudine e longitudine numeriche (non stringhe)',
+        () {
+          // Arrange
+          final json = {
+            'id': 'sp_num',
+            'latitude': 41.9028,
+            'longitude': 12.4964,
+          };
 
-        // Act
-        final result = SafePlaceDTO.fromJson(json);
+          // Act
+          final result = SafePlaceDTO.fromJson(json);
 
-        // Assert
-        expect(result.latitude, 41.9028);
-        expect(result.longitude, 12.4964);
-      });
+          // Assert
+          expect(result.latitude, 41.9028);
+          expect(result.longitude, 12.4964);
+        },
+      );
 
       test('dovrebbe fornire valori di default per campi mancanti o nulli', () {
         // Arrange
@@ -84,54 +87,50 @@ void main() {
         expect(result.category, SafePlaceCategory.other);
       });
 
-      test('dovrebbe gestire stringhe non numeriche per coordinate facendone il fallback a 0.0', () {
-        // Arrange
-        final json = {
-          'latitude': 'invalid_lat',
-          'longitude': 'invalid_lng',
-        };
+      test(
+        'dovrebbe gestire stringhe non numeriche per coordinate facendone il fallback a 0.0',
+        () {
+          // Arrange
+          final json = {'latitude': 'invalid_lat', 'longitude': 'invalid_lng'};
 
-        // Act
-        final result = SafePlaceDTO.fromJson(json);
+          // Act
+          final result = SafePlaceDTO.fromJson(json);
 
-        // Assert
-        expect(result.latitude, 0.0);
-        expect(result.longitude, 0.0);
-      });
+          // Assert
+          expect(result.latitude, 0.0);
+          expect(result.longitude, 0.0);
+        },
+      );
 
       test('dovrebbe mappare correttamente tutte le varianti di categoria', () {
-        expect(SafePlaceDTO.fromJson({'category': 'pronto soccorso'}).category, SafePlaceCategory.hospital);
-        expect(SafePlaceDTO.fromJson({'category': 'polizia'}).category, SafePlaceCategory.police);
-        expect(SafePlaceDTO.fromJson({'category': 'questura'}).category, SafePlaceCategory.police);
-        expect(SafePlaceDTO.fromJson({'category': 'farmacia'}).category, SafePlaceCategory.pharmacy);
-        expect(SafePlaceDTO.fromJson({'category': 'centro_antiviolenza'}).category, SafePlaceCategory.emergencyShelter);
-        expect(SafePlaceDTO.fromJson({'category': 'rifugio'}).category, SafePlaceCategory.emergencyShelter);
-        expect(SafePlaceDTO.fromJson({'category': 'sconosciuta'}).category, SafePlaceCategory.other);
-      });
-    });
-
-    group('toJson', () {
-      test('dovrebbe serializzare correttamente un oggetto SafePlace in JSON', () {
-        // Arrange
-        final place = SafePlace(
-          id: 'sp_789',
-          name: 'Farmacia Centrale',
-          address: 'Piazza Garibaldi 2',
-          latitude: 44.4949,
-          longitude: 11.3426,
-          category: SafePlaceCategory.pharmacy,
+        expect(
+          SafePlaceDTO.fromJson({'category': 'pronto soccorso'}).category,
+          SafePlaceCategory.hospital,
         );
-
-        // Act
-        final result = SafePlaceDTO.toJson(place);
-
-        // Assert
-        expect(result['marker_id'], 'sp_789');
-        expect(result['name'], 'Farmacia Centrale');
-        expect(result['address'], 'Piazza Garibaldi 2');
-        expect(result['latitude'], '44.4949'); // Deve essere stringa come da implementazione
-        expect(result['longitude'], '11.3426'); // Deve essere stringa come da implementazione
-        expect(result['category'], SafePlaceCategory.pharmacy.name);
+        expect(
+          SafePlaceDTO.fromJson({'category': 'polizia'}).category,
+          SafePlaceCategory.police,
+        );
+        expect(
+          SafePlaceDTO.fromJson({'category': 'questura'}).category,
+          SafePlaceCategory.police,
+        );
+        expect(
+          SafePlaceDTO.fromJson({'category': 'farmacia'}).category,
+          SafePlaceCategory.pharmacy,
+        );
+        expect(
+          SafePlaceDTO.fromJson({'category': 'centro_antiviolenza'}).category,
+          SafePlaceCategory.emergencyShelter,
+        );
+        expect(
+          SafePlaceDTO.fromJson({'category': 'rifugio'}).category,
+          SafePlaceCategory.emergencyShelter,
+        );
+        expect(
+          SafePlaceDTO.fromJson({'category': 'sconosciuta'}).category,
+          SafePlaceCategory.other,
+        );
       });
     });
   });

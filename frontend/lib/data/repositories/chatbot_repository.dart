@@ -38,17 +38,16 @@ class ChatbotRepository implements CacheableRepository {
       return _cachedChats;
     }
 
-    // 1. Riceviamo la mappa cruda dal Service
-    final Map<String, dynamic> rawResponse = await _chatbotService.fetchChatPreviews();
-
+    final Map<String, dynamic> rawResponse = await _chatbotService
+        .fetchChatPreviews();
     final List<dynamic> rawData = rawResponse['chats'] ?? [];
 
     _cachedChats.clear();
     for (var json in rawData) {
-      // Usiamo le chiavi corrette (snake_case)
       final creationStr = json['created_at']?.toString();
       final updateStr = json['updated_at']?.toString();
-      final creationDate = DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
+      final creationDate =
+          DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
 
       final proxy = ProxyChat(
         id: json['chat_id']?.toString() ?? '',
@@ -67,7 +66,9 @@ class ChatbotRepository implements CacheableRepository {
 
   /// Usato dalla [ProxyChat] per scaricare effettivamente i messaggi
   Future<Chat> getChatById(String chatId) async {
-    final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(chatId);
+    final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(
+      chatId,
+    );
     return ChatDTO.fromJson(rawChat);
   }
 
@@ -95,7 +96,11 @@ class ChatbotRepository implements CacheableRepository {
   }
 
   /// Invia un messaggio e decodifica in modo sicuro la risposta del bot
-  Future<MessageResponse> sendMessage(Chat chat, String content, ChatMode mode) async {
+  Future<MessageResponse> sendMessage(
+    Chat chat,
+    String content,
+    ChatMode mode,
+  ) async {
     final String modeString = mode.name.toUpperCase();
 
     final Map<String, dynamic> responseJson = await _chatbotService.sendMessage(
@@ -104,13 +109,17 @@ class ChatbotRepository implements CacheableRepository {
       modeString,
     );
 
-    // FIX DTO: Adattato al JSON reale del backend Python!
     final ChatMessage responseMessage = ChatMessage(
       // Se il backend non restituisce il message_id, ne generiamo uno temporaneo per la UI
-      id: responseJson['message_id']?.toString() ?? 'msg_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          responseJson['message_id']?.toString() ??
+          'msg_${DateTime.now().millisecondsSinceEpoch}',
 
-      // Cerchiamo 'response' (da handle_messages_post) oppure facciamo fallback su 'text'
-      content: responseJson['response']?.toString() ?? responseJson['text']?.toString() ?? '',
+      // Cerchiamo 'response' oppure facciamo fallback su 'text'
+      content:
+          responseJson['response']?.toString() ??
+          responseJson['text']?.toString() ??
+          '',
 
       type: MessageType.ai, // È sicuramente l'AI a rispondere
       timestamp: DateTime.now(),

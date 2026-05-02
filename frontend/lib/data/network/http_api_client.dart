@@ -12,12 +12,19 @@ class HttpApiClient implements ApiClient {
   final Future<String?> Function()? getToken;
 
   final http.Client _httpClient;
+
   /// Inizializza il client con [baseUrl] e un gestore [getToken].
-  HttpApiClient({required this.baseUrl, this.getToken, http.Client? httpClient, // Parametro opzionale per i test
+  HttpApiClient({
+    required this.baseUrl,
+    this.getToken,
+    http.Client? httpClient, // Parametro opzionale per i test
   }) : _httpClient = httpClient ?? http.Client();
 
   /// Prepara gli header di default, iniettando l'Authorization se disponibile.
-  Future<Map<String, String>> _prepareHeaders(Map<String, String>? customHeaders, bool requiresAuth) async {
+  Future<Map<String, String>> _prepareHeaders(
+    Map<String, String>? customHeaders,
+    bool requiresAuth,
+  ) async {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -47,26 +54,26 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> get(String path, {Map<String, String>? headers, bool requiresAuth = true}) async {
-
+  Future<dynamic> get(
+    String path, {
+    Map<String, String>? headers,
+    bool requiresAuth = true,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
-
-    print('[*] CHIAMATA GET A: $uri'); //ELIMINARE IN PRODUZIONE
-    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
-
     final response = await _httpClient.get(uri, headers: mergedHeaders);
     return _handleResponse(response);
   }
 
   @override
-  Future<dynamic> post(String path, {Map<String, String>? headers, dynamic body, bool requiresAuth = true}) async {
+  Future<dynamic> post(
+    String path, {
+    Map<String, String>? headers,
+    dynamic body,
+    bool requiresAuth = true,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
-
-    print('[*] CHIAMATA POST A: $uri'); //ELIMINARE IN PRODUZIONE
-    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
-
     final response = await _httpClient.post(
       uri,
       headers: mergedHeaders,
@@ -76,13 +83,14 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> put(String path, {Map<String, String>? headers, dynamic body, bool requiresAuth = true}) async {
+  Future<dynamic> put(
+    String path, {
+    Map<String, String>? headers,
+    dynamic body,
+    bool requiresAuth = true,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
-
-    print('[*] CHIAMATA PUT A: $uri'); //ELIMINARE IN PRODUZIONE
-    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
-
     final response = await _httpClient.put(
       uri,
       headers: mergedHeaders,
@@ -92,13 +100,13 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> delete(String path, {Map<String, String>? headers, bool requiresAuth = true}) async {
+  Future<dynamic> delete(
+    String path, {
+    Map<String, String>? headers,
+    bool requiresAuth = true,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
-
-    print('[*] CHIAMATA DELETE A: $uri'); //ELIMINARE IN PRODUZIONE
-    print('[*] HEADERS: $mergedHeaders'); //ELIMINARE IN PRODUZIONE
-
     final response = await _httpClient.delete(uri, headers: mergedHeaders);
     return _handleResponse(response);
   }

@@ -1,9 +1,9 @@
 import '../../domain/models/dead_man/dead_man_settings.dart';
 
 /// DTO responsabile della conversione della configurazione del Dead Man's Switch
-/// tra il formato JSON (usato da AWS / Local Storage) e il modello di Dominio.
+/// tra il formato JSON e il modello di Dominio.
 abstract class DeadManSettingsDTO {
-  /// Traduce la mappa [json] proveniente dall'API in un'istanza immutabile di [DeadManSettings].
+  /// Traduce il [json] proveniente dall'API in un'istanza immutabile di [DeadManSettings].
   static DeadManSettings fromJson(Map<String, dynamic> json) {
     return DeadManSettings(
       isActive: _parseBool(json['is_active'] ?? json['isActive']),
@@ -29,8 +29,6 @@ abstract class DeadManSettingsDTO {
       'email_body': settings.messageBody,
     };
   }
-
-  // --- HELPER PRIVATO ---
 
   /// Utility per gestire backend che inviano booleani in formati strani.
   static bool _parseBool(dynamic value) {

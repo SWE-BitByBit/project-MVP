@@ -5,11 +5,10 @@ import '../../domain/models/diary/note_text_element.dart';
 import '../../domain/models/diary/note_audio_element.dart';
 import '../../domain/models/diary/note_image_element.dart';
 
-/// Oggetto di trasferimento dati per la serializzazione delle Note[cite: 57].
+/// Oggetto di trasferimento dati per la serializzazione delle Note.
 /// Mappa in modo sicuro i dati JSON del backend verso il Dominio e viceversa.
 abstract class NoteDTO {
-
-  /// Converte un JSON in un oggetto di Dominio [LocalNote][cite: 58].
+  /// Converte un JSON in un oggetto di Dominio [LocalNote].
   static Note fromJson(Map<String, dynamic> json) {
     final List<dynamic> rawElements = json['elements'] ?? [];
 
@@ -30,7 +29,6 @@ abstract class NoteDTO {
 
     final creationStr = json['created_at']?.toString();
     final updateStr = json['updated_at']?.toString();
-
     final creationDate = DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
     final updateDate = DateTime.tryParse(updateStr ?? '') ?? creationDate;
 
@@ -43,13 +41,12 @@ abstract class NoteDTO {
     );
   }
 
-  /// Converte un oggetto [Note] in un formato JSON per il Backend[cite: 59].
+  /// Converte un oggetto [Note] in un formato JSON per il Backend.
   static Map<String, dynamic> toJson(Note note) {
-    final List<Map<String, dynamic>> elementsJson = note.noteElements.map((elem) {
-      return {
-        'type': elem.type,
-        'content': elem.content,
-      };
+    final List<Map<String, dynamic>> elementsJson = note.noteElements.map((
+      elem,
+    ) {
+      return {'type': elem.type, 'content': elem.content};
     }).toList();
 
     return {

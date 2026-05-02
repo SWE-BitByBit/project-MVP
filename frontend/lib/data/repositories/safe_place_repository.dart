@@ -11,21 +11,17 @@ typedef MapSessionState = ({double latitude, double longitude, double zoom});
 class SafePlaceRepository implements CacheableRepository {
   final SafePlaceService _safePlaceService;
 
-  /// Cache locale dei luoghi sicuri. 
+  /// Cache locale dei luoghi sicuri.
   final List<SafePlace> _cachedPlaces = [];
-
   List<SafePlace> get cachedPlaces => List.unmodifiable(_cachedPlaces);
 
-  // --- STATO DI SESSIONE DELLA MAPPA RAGGRUPPATO ---
-  // Invece di 3 variabili sciolte, usiamo il nostro Record opzionale.
   MapSessionState? cachedMapState;
-
   SafePlaceRepository(this._safePlaceService);
 
   Future<List<SafePlace>> getPlaces({bool forceRefresh = false}) async {
     if (_cachedPlaces.isEmpty || forceRefresh) {
-
-      final Map<String, dynamic> rawData = await _safePlaceService.fetchSafePlaces();
+      final Map<String, dynamic> rawData = await _safePlaceService
+          .fetchSafePlaces();
       final List<dynamic> rawList = rawData['data'] ?? [];
 
       final fetchedPlaces = rawList

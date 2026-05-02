@@ -6,8 +6,7 @@ import '../services/auth_service.dart';
 
 /// Coordina l'accesso ai dati di autenticazione.
 ///
-/// Agisce da tramite tra il livello di servizio ([AuthService]) e il livello UI,
-/// gestendo lo stato dell'utente tramite la variabile privata [_currentUser].
+/// Agisce da tramite tra il livello di servizio ([AuthService]) e il livello UI.
 class AuthRepository {
   /// Servizio per le operazioni di rete con AWS Cognito.
   final AuthService _authService;
@@ -21,13 +20,13 @@ class AuthRepository {
   /// Inizializza il repository con l'istanza di [_authService] iniettata.
   AuthRepository(this._authService);
 
-  /// Restituisce l'utente attualmente memorizzato in [_currentUser].
+  /// Restituisce l'utente attualmente autenticato.
   User? getCurrentUser() => _currentUser;
 
-  /// Verifica se esiste un utente autenticato controllando la presenza di [_currentUser].
+  /// Verifica se esiste un utente autenticato
   bool isLoggedIn() => _currentUser != null;
 
-  /// Avvia il login delegando l'operazione a [_authService].
+  /// Avvia il login.
   ///
   /// In caso di successo, mappa i dati tramite [UserDTO] e aggiorna lo stato.
   /// Restituisce un [Future] con l'oggetto [User] o [null] in caso di fallimento.
@@ -50,9 +49,6 @@ class AuthRepository {
     }
   }
 
-  /// Esegue il logout chiamando il servizio di rete e resettando [_currentUser].
-  ///
-  /// Restituisce un [Future] di tipo [void].
   Future<void> logout() async {
     try {
       await _authService.logout();
@@ -64,15 +60,18 @@ class AuthRepository {
 
   Future<bool> restoreSession() async {
     try {
-      final savedRefreshToken = await _secureStorage.read(key: _refreshTokenKey);
+      final savedRefreshToken = await _secureStorage.read(
+        key: _refreshTokenKey,
+      );
 
       if (savedRefreshToken == null) {
         return false;
       }
-      final Map<String, dynamic> rawData = await _authService.refreshToken(savedRefreshToken);
+      final Map<String, dynamic> rawData = await _authService.refreshToken(
+        savedRefreshToken,
+      );
       _currentUser = UserDTO.fromJson(rawData);
       return true;
-
     } catch (e) {
       debugPrint('Impossibile ripristinare la sessione (token scaduto?): $e');
       await _secureStorage.delete(key: _refreshTokenKey);

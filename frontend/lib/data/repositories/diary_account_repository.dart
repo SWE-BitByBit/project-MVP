@@ -11,23 +11,26 @@ class DiaryAccountRepository {
 
   DiaryAccountRepository(this._service);
 
-  /// Valida la password e mappa l'esito del backend in un enumeratore comprensibile alla UI.
+  /// Valida la password e ritorna l'esito del tentativo di accesso.
   Future<DiaryAccessResult> clarifyAccessResult(String pwd) async {
     try {
-      // Ora il servizio restituisce una Map (es. {'token': '...', 'diary_type': 'REAL_DIARY'})
-      final Map<String, dynamic> response = await _service.validateDiaryPassword(pwd);
+      final Map<String, dynamic> response = await _service
+          .validateDiaryPassword(pwd);
       final String? typeStr = response['diary_type'];
       final String? token = response['token'];
 
       if (token != null && typeStr != null) {
-        final diaryType = typeStr == 'real_diary' ? DiaryType.real_diary : DiaryType.fake_diary;
+        final diaryType = typeStr == 'real_diary'
+            ? DiaryType.real_diary
+            : DiaryType.fake_diary;
         await DiarySession.session.initSession(diaryType, token);
 
-        return typeStr == 'real_diary' ? DiaryAccessResult.real_diary : DiaryAccessResult.fake_diary;
+        return typeStr == 'real_diary'
+            ? DiaryAccessResult.real_diary
+            : DiaryAccessResult.fake_diary;
       }
 
       return DiaryAccessResult.error;
-
     } on ApiException catch (e) {
       if (e.statusCode == 429) {
         return DiaryAccessResult.too_many_attempts;
@@ -49,7 +52,6 @@ class DiaryAccountRepository {
       return "La password non può essere vuota";
     }
 
-    // Validazione robusta lato client
     if (newPassword.length < 10 ||
         !newPassword.contains(RegExp(r"[A-Z]")) ||
         !newPassword.contains(RegExp(r"[a-z]")) ||
@@ -60,7 +62,11 @@ class DiaryAccountRepository {
     }
 
     try {
-      final response = await _service.setPassword(oldPassword, newPassword, diaryType);
+      final response = await _service.setPassword(
+        oldPassword,
+        newPassword,
+        diaryType,
+      );
 
       // Gestione degli errori unificata dal backend
       if (response['error'] == 'IDENTICAL_TO_REAL') {
@@ -80,8 +86,6 @@ class DiaryAccountRepository {
     try {
       return await _service.checkHasRealPassword();
     } catch (e) {
-      // In caso di errore di rete, assumiamo che non ci sia per mostrare il form di setup
-      // (oppure potresti rilanciare l'errore per mostrare un banner "Connessione assente")
       return false;
     }
   }

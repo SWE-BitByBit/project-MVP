@@ -24,13 +24,12 @@ class AuthService {
   final List<String> _scopes = const ['profile', 'email', 'openid'];
 
   final http.Client _httpClient;
-  AuthService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
-  /// Avvia il flusso di login OAuth 2.0 tramite browser sicuro.
+  AuthService({http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
+
+  /// Avvia il flusso di login OAuth 2.0 tramite browser sicuro, Google e Amazon Cognito.
   ///
-  /// Esegue la chiamata all'endpoint di autorizzazione di Google tramite Cognito.
-  /// Se l'utente conferma l'accesso, scambia il codice ottenuto con i token reali.
-  ///
-  /// Restituisce un [Future] che contiene una [Map] con i token grezzi (id_token, access_token, ecc.).
+  /// Restituisce un [Future] che contiene un JSON con i token grezzi (access_token, refresh_token, ecc.).
   /// Solleva un [Exception] in caso di errore nel recupero del codice o dei token.
   Future<Map<String, dynamic>> login() async {
     final authUrl = Uri.https(_cognitoDomain, '/oauth2/authorize', {
@@ -79,10 +78,7 @@ class AuthService {
     return jsonDecode(tokenResponse.body) as Map<String, dynamic>;
   }
 
-  /// Esegue la procedura di logout richiamando l'endpoint dedicato di Cognito.
-  ///
-  /// Tenta di invalidare la sessione lato server aprendo brevemente l'URL di logout.
-  /// Restituisce un [Future] di tipo [void].
+  /// Esegue la procedura di logout
   Future<void> logout() async {
     final url = Uri.https(_cognitoDomain, '/logout', {
       'client_id': _clientId,
@@ -95,14 +91,12 @@ class AuthService {
         callbackUrlScheme: AppConfig.callbackScheme,
       );
     } catch (e) {
-      // In caso di errore durante il redirect, logghiamo per il debug
       debugPrint('Errore durante il logout di rete: $e');
     }
   }
 
   /// Tenta di rinnovare i token di sessione usando un refresh token precedentemente salvato.
   ///
-  /// Restituisce la mappa dei nuovi token se il refresh ha successo.
   /// Solleva un'eccezione se il refresh token è scaduto o invalido.
   Future<Map<String, dynamic>> refreshToken(String storedRefreshToken) async {
     final basicAuth = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
@@ -119,7 +113,9 @@ class AuthService {
       },
     );
     if (tokenResponse.statusCode != 200) {
-      throw Exception('Refresh token scaduto o non valido: ${tokenResponse.body}');
+      throw Exception(
+        'Refresh token scaduto o non valido: ${tokenResponse.body}',
+      );
     }
     final rawData = jsonDecode(tokenResponse.body) as Map<String, dynamic>;
     if (!rawData.containsKey('refresh_token')) {

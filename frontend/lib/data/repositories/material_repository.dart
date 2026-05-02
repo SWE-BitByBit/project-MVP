@@ -10,23 +10,14 @@ import 'cacheable_repository.dart';
 class MaterialRepository implements CacheableRepository {
   final MaterialService _service;
 
-  /// Cache privata: l'unica vera "fonte di verità" dei dati.
   final List<Resource> _cachedResources = [];
-
   MaterialRepository({required MaterialService service}) : _service = service;
-
-
-  /// Espone la cache in sola lettura.
-  /// Impedisce a chiunque (es. il ViewModel) di fare .add() o .remove() accidentalmente.
   List<Resource> get cachedResources => UnmodifiableListView(_cachedResources);
 
-  // --- METODI DI RETE ---
-
   /// Recupera i materiali.
-  /// Se [forceRefresh] è true, ignora la cache e scarica dati freschi.
+  /// Se [forceRefresh] è true, ignora la cache e scarica i dati aggiornati.
   Future<List<Resource>> fetchMaterials({bool forceRefresh = false}) async {
     if (_cachedResources.isEmpty || forceRefresh) {
-
       final Map<String, dynamic> rawData = await _service.fetchMaterials();
       final List<dynamic> rawList = rawData['data'] ?? [];
 
@@ -39,7 +30,6 @@ class MaterialRepository implements CacheableRepository {
     }
     return cachedResources;
   }
-
 
   @override
   void clearCache() {
