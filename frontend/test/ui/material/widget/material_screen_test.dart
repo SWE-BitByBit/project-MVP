@@ -11,7 +11,6 @@ import 'package:mvp_app_protegge_e_trasforma/ui/material/widget/material_list_wi
 import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/filter_chip_widget.dart';
 
 import '../../../../testing/mocks/material/mock_material_view_model.dart';
 
