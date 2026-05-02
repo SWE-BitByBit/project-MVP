@@ -9,8 +9,6 @@ import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/auth/user.dart';
-import 'package:command_it/command_it.dart' hide MockCommand;
 
 // Import dei Mock (Assicurati che esistano o creali come mostrato sotto)
 import '../../../../testing/mocks/auth/mock_auth_view_model.dart';
