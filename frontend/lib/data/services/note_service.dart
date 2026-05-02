@@ -1,0 +1,97 @@
+import 'dart:io';
+
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+
+/// Servizio responsabile della comunicazione HTTP/REST con il backend
+/// per la funzionalità dei diari.
+class NoteService {
+  final _placeHolderComplete = <Map<String, dynamic>>[
+    {
+      "id": "0",
+      "title": "Nota test 1",
+      "creationDate": "2026-04-11 10:00:30",
+      "lastModified": "2026-04-14 18:00:30",
+      "elements": [
+        {"type": "text", "content": "Nota di prova"},
+      ],
+    },
+    {
+      "id": "1",
+      "title": "Nota test 2",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 16:00:30",
+      "elements": [
+        {"type": "text", "content": "Nota di prova con due elementi"},
+        {"type": "text", "content": "Secondo elemento"},
+      ],
+    },
+    {
+      "id": "2",
+      "title": "Nota test 3",
+      "creationDate": "2026-04-12 10:00:30",
+      "lastModified": "2026-04-14 15:00:30",
+      "elements": [],
+    },
+  ];
+
+  final _placeHolderQuick = <Map<String, dynamic>>[
+    {
+      "id": "0",
+      "title": "Nota test 1",
+      "creationDate": "2026-03-14 10:10:30",
+      "lastModified": "2026-04-14 18:00:30",
+    },
+    {
+      "id": "1",
+      "title": "Nota test 2",
+      "creationDate": "2026-02-14 10:30:30",
+      "lastModified": "2026-04-14 16:00:30",
+    },
+    {
+      "id": "2",
+      "title": "Nota test 3",
+      "creationDate": "2026-04-14 10:00:30",
+      "lastModified": "2026-04-14 15:00:30",
+    },
+  ];
+
+  Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
+    //PLACEHOLDER
+    //TODO: implementare chiamata reale
+    await Future.delayed(const Duration(milliseconds: 100));
+    return _placeHolderQuick;
+  }
+
+  Future<Map<String, dynamic>> fetchNoteById(String noteId) async {
+    //PLACEHOLDER
+    //TODO: implementare chiamata reale
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    ///Workaround data la mancanza della logica backend
+    Map<String, dynamic> out = _placeHolderComplete
+        .where((json) => (json["id"] == noteId))
+        .toList()[0];
+    return out;
+  }
+
+  ///Recupera una lista di [File] appartenenti alla nota di cui viene passato l'id.
+  /*Future<List<File>> fetchNoteMedia(
+    DiaryType targetDiary,
+    String noteId,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    return [];
+  }*/
+
+  Future<void> saveNote(Map<String, dynamic> json) async {
+    //PLACEHOLDER
+    //TODO: implementare chiamata reale
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+
+  Future<void> deleteNote(String noteId) async {
+    //PLACEHOLDER
+    //TODO: implementare chiamata reale
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+}

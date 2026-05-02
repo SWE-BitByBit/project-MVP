@@ -30,7 +30,7 @@ void main() {
         response: ChatMessage(
           id: 'ai-1',
           content: 'Ricevuto forte e chiaro',
-          type: MessageType.AI,
+          type: MessageType.ai,
           timestamp: DateTime.now(),
         ),
       );

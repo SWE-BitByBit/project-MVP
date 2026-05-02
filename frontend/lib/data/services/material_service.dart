@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../utils/app_config.dart';
 
 /// Servizio responsabile del recupero dei materiali informativi tramite chiamata API.
 ///
 /// Gestisce le richieste HTTP verso l'endpoint AWS Lambda configurato.
 class MaterialService {
   final String _apiUrl =
-      'https://xm4wjxrmn1.execute-api.eu-south-1.amazonaws.com/mvp/materials';
+      '${AppConfig.apiBaseUrl}/materials';
 
   /// Effettua una richiesta GET per recuperare la lista dei materiali.
   ///

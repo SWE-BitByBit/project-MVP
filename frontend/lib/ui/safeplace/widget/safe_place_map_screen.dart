@@ -41,7 +41,6 @@ class _SafePlaceMapScreenState extends State<SafePlaceMapScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('Luoghi Sicuri')),
 
-        // 2. Passiamo il controller al nostro widget mappa
         body: SafePlaceMapWidget(mapController: _mapController),
 
         floatingActionButton: Consumer<SafePlaceViewModel>(
@@ -57,39 +56,46 @@ class _SafePlaceMapScreenState extends State<SafePlaceMapScreen> {
                       ? const CircularProgressIndicator()
                       : const Icon(Icons.my_location, color: Colors.blue),
 
-                  // 3. Modifichiamo l'azione del bottone per renderla asincrona (aggiungendo async)
                   onPressed: () async {
-                    // Aspettiamo che il comando finisca di cercare il segnale GPS
                     await viewModel.getUserLocationCommand.execute();
 
                     if (viewModel.getUserLocationCommand.error != null) {
-                      // Se c'è un errore, mostriamo lo snackbar (aggiunto context.mounted per sicurezza in Flutter)
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(viewModel.getUserLocationCommand.error.toString())),
                         );
                       }
                     } else if (viewModel.currentPosition != null) {
-                      // SE È ANDATO TUTTO BENE E ABBIAMO LA POSIZIONE: SPOSTIAMO LA MAPPA!
                       _mapController.move(
                         LatLng(
                             viewModel.currentPosition!.latitude,
                             viewModel.currentPosition!.longitude
                         ),
-                        13.0, // Questo è il livello di zoom. Aumentalo (es. 16.0 o 17.0) se vuoi avvicinarti di più.
+                        13.0,
                       );
                     }
                   },
                 ),
                 const SizedBox(height: 16),
 
-                // Il bottone dei dettagli del luogo che avevamo fatto prima
                 if (viewModel.selectedPlace != null)
                   FloatingActionButton.extended(
                     heroTag: "btn_details",
                     onPressed: () => _showPlaceDetails(context, viewModel.selectedPlace!),
                     icon: const Icon(Icons.info_outline),
-                    label: Text(viewModel.selectedPlace!.name),
+                    label: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          viewModel.selectedPlace!.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const Text(
+                          'Clicca per maggiori informazioni',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             );

@@ -4,7 +4,7 @@ import '../dtos/safe_place_dto.dart';
 
 /// Repository per la gestione dei dati relativi ai luoghi sicuri.
 ///
-/// Rappresenta la fonte di verità e orchestra l'accesso al [SafePlaceService][cite: 323].
+/// Rappresenta la fonte di verità e orchestra l'accesso al [SafePlaceService].
 class SafePlaceRepository {
   /// Il servizio utilizzato per le chiamate di rete.
   final SafePlaceService _service;
@@ -18,24 +18,16 @@ class SafePlaceRepository {
   /// la risposta in una lista di oggetti di dominio [SafePlace].
   Future<List<SafePlace>> getPlaces() async {
     try {
-      // 1. Recupera i dati grezzi dal Service
-      final rawData = await _service.fetchSafePlaces();
+      final List<Map<String, dynamic>> rawList = await _service
+          .fetchSafePlaces();
 
-      // NOTA: Poiché l'UML indica che il Service ritorna una Map<String, dynamic>,
-      // assumiamo che il JSON del backend abbia un contenitore (es. una chiave 'data' o 'places')
-      // che racchiude la vera e propria lista di oggetti.
-      // Se il tuo backend restituisce direttamente un array JSON, dovremmo aggiornare il Service.
-      final List<dynamic> rawList = rawData['data'] ?? [];
-
-      // 2. Converte ogni elemento della lista grezza in un oggetto di Dominio tramite il DTO
-      final List<SafePlace> places = rawList.map((jsonItem) {
-        return SafePlaceDTO.fromJson(jsonItem as Map<String, dynamic>);
+      return rawList.map((jsonItem) {
+        return SafePlaceDTO.fromJson(jsonItem);
       }).toList();
-
-      return places;
     } catch (e) {
-      // Qui potresti loggare l'errore in un sistema di crashlytics
-      throw Exception("Errore nel repository durante l'elaborazione dei luoghi sicuri: $e");
-      }
-      }
+      throw Exception(
+        "Errore nel repository durante l'elaborazione dei luoghi sicuri: $e",
+      );
+    }
+  }
 }
