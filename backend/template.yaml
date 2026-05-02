@@ -148,7 +148,7 @@ Resources:
   NoteMediaBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-diary-media"
+      BucketName: app-protegge-trasforma-diary-medias-mvp
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
