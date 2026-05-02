@@ -58,10 +58,10 @@ Resources:
       Environment:
         Variables:
           REGION: eu-south-1
-          NOTES_TABLE: note_table
-          NOTES_ELEMENTS_TABLE: note_elements_table
+          NOTES_TABLE: !Ref DiaryNoteTable
+          NOTES_ELEMENTS_TABLE: !Ref DiaryNoteElementTable
           S3_BUCKET_NOTES_NAME: !Ref NoteMediaBucket
-          TABLE_AUTH_NAME: diary_auth_table
+          TABLE_AUTH_NAME: !Ref DiaryAuthTable
           PASSWORD_HASH_SECRET: 38ae6a9f-1c7f-4df8-bfba-53e685ab3729
       Events:
         PostDiaryLogin:
@@ -166,7 +166,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: note_table
+      TableName: !Sub "${AWS::StackName}_note_table"
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -186,7 +186,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: note_elements_table
+      TableName: !Sub "${AWS::StackName}_note_elements_table"
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: note_id
@@ -206,7 +206,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: diary_auth_table
+      TableName: !Sub "${AWS::StackName}_diary_auth_table"
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
