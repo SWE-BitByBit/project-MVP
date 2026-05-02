@@ -85,19 +85,25 @@ class DiaryNoteController:
 
         try:
             diary_type = DiaryType(body.get("diary_type"))
+            
+            note = self._service.get_note(
+                GetNoteCmd(
+                    user_id=self._get_user_id(event),
+                    note_id=body.get('note_id'),
+                    diary_type=diary_type
+                )
+            )
+
+            if not note:
+                return self.response(404, {"message": "Note not found"})
+            
+            return self.response(200, note)
+
         except ValueError:
             return self.response(400, {"message": "Invalid diary_type"})
-        #TODO 
-        # gestione errore del service
-        note = self._service.get_note(
-            GetNotesCmd(
-                user_id=self._get_user_id(event),
-                note_id=body.get('note_id'),
-                diary_type=diary_type
-            )
-        )
-
-        return self.response(200, note)
+        
+        except Exception:
+            return self.response(500, SERVER_ERROR)
 
 
     def _note_list(self, event):

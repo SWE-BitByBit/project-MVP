@@ -1,6 +1,6 @@
 from ulid import ULID
 import os
-from typing import List, Optional
+from typing import List
 from botocore.exceptions import ClientError
 
 from domain.note import Note
@@ -101,11 +101,11 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
                         "get_object",
                         {
                             "Bucket": os.environ["BUCKET_NAME"],
-                            "Key": element["content"],
+                            "Key": element.content,
                         }
                     )
                     note_element_dict["download_url"] = download_url
-                except Exception as e:
+                except ClientError as e:
                     raise RuntimeError(f"Error generating presigned URL for element {element.note_element_id}") from e
             
             note_dict["message_elements"].append(note_element_dict)
@@ -204,12 +204,4 @@ def delete_note_element(self, cmd: DeleteNoteElementCmd) -> bool:
         
         return True
     except RuntimeError:
-        return False
-
-    
-
-
-
-
-
-        
+        return False        
