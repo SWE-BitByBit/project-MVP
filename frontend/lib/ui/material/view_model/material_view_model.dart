@@ -6,9 +6,6 @@ import '../../../domain/models/material/resource_type.dart';
 import '../../../data/repositories/material_repository.dart';
 
 /// Gestisce lo stato della UI per il Materiale Informativo.
-///
-/// Interagisce con [MaterialRepository] per i dati e usa [command_it]
-/// per esporre stati reattivi di caricamento ed errore alla UI.
 class MaterialViewModel extends ChangeNotifier {
   final MaterialRepository _repository;
 
@@ -47,18 +44,13 @@ class MaterialViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- AZIONI UI (Sincrone & Asincrone) ---
-
   /// Applica o rimuove un filtro basato su [type].
-  ///
-  /// Funziona come un toggle: se il filtro selezionato è già quello attivo,
-  /// lo rimuove (impostandolo a null).
   void filterByType(ResourceType type) {
     _currentFilter = (_currentFilter == type) ? null : type;
     notifyListeners();
   }
 
-  /// Forza il ricaricamento dei dati dal server (es. per il Pull to Refresh).
+  /// Forza il ricaricamento dei dati dal server.
   Future<void> refreshMaterials() async {
     await _repository.fetchMaterials(forceRefresh: true);
     notifyListeners();
