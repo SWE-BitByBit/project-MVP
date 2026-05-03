@@ -1,7 +1,6 @@
 import 'chat_enums.dart';
 
 /// Rappresenta un singolo messaggio all'interno della chat.
-/// Essendo un DTO/Value Object, i suoi campi sono finali (immutabili).
 class ChatMessage {
   final String id;
   final String content;

@@ -2,7 +2,6 @@ import 'chat.dart';
 import 'chat_message.dart';
 
 /// Implementazione concreta dell'interfaccia [Chat].
-/// Contiene fisicamente la lista dei messaggi in RAM.
 class LocalChat implements Chat {
   final String _id;
   String _title;
@@ -40,8 +39,6 @@ class LocalChat implements Chat {
   @override
   DateTime get updateDate => _updateDate;
 
-  // Restituiamo una vista non modificabile per impedire che qualcuno
-  // faccia chat.messages.add() bypassando il metodo addMessage().
   @override
   List<ChatMessage> get messages => List.unmodifiable(_messages);
 

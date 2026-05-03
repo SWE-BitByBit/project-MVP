@@ -1,7 +1,4 @@
 /// Rappresenta un contatto fidato nel dominio dell'applicazione.
-///
-/// Contiene le informazioni anagrafiche essenziali per identificare e
-/// contattare una persona di fiducia in caso di emergenza.
 class TrustedContact {
   /// L'identificativo univoco del contatto (generato dal backend).
   final String id;
@@ -16,8 +13,6 @@ class TrustedContact {
   String phoneNumber;
 
   /// Crea un'istanza di [TrustedContact].
-  ///
-  /// Richiede [id], [name], [email] e [phoneNumber] come parametri obbligatori.
   TrustedContact({
     required this.id,
     required this.name,
@@ -26,8 +21,6 @@ class TrustedContact {
   });
 
   /// Crea una copia di questo contatto con alcuni campi sostituiti.
-  ///
-  /// Metodo utile per aggiornare il contatto in modo immutabile se necessario.
   TrustedContact copyWith({
     String? id,
     String? name,
