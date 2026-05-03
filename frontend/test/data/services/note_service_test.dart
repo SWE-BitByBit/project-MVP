@@ -182,7 +182,7 @@ void main() {
         expect(result, equals(tUpdateResponse));
         verify(
           () => mockApiClient.put(
-            '/notes/real_diary/1/',
+            '/note',
             body: tUpdateData,
             headers: {'X-Diary-Token': 'mock_valid_token'},
           ),
