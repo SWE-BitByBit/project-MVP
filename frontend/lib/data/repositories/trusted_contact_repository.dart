@@ -1,7 +1,11 @@
+import 'package:mvp_app_protegge_e_trasforma/data/services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
+
 import '../../domain/models/trusted_contact/trusted_contact.dart';
 import '../dtos/trusted_contact_dto.dart';
 import '../services/trusted_contact_service.dart';
 import 'cacheable_repository.dart';
+
 
 /// Intermediario tra il ViewModel e il livello dati (Service).
 ///
@@ -9,12 +13,13 @@ import 'cacheable_repository.dart';
 class TrustedContactRepository implements CacheableRepository {
   /// Il servizio per le chiamate API verso il backend.
   final TrustedContactService _trustedContactService;
+  final LocationService _locationService;
 
   /// Cache locale dei contatti per evitare chiamate di rete ridondanti.
   List<TrustedContact> _cachedContacts = [];
 
-  TrustedContactRepository(TrustedContactService service)
-    : _trustedContactService = service;
+  TrustedContactRepository(TrustedContactService service, {required LocationService locationService})
+    : _trustedContactService = service, _locationService = locationService;
 
   /// Recupera la lista completa dei contatti fidati dalla cache o direttamente dal backend.
   Future<List<TrustedContact>> getContacts({bool forceRefresh = false}) async {
@@ -78,7 +83,12 @@ class TrustedContactRepository implements CacheableRepository {
 
   /// Attiva l'invio dell'SOS ai contatti fidati.
   Future<void> sendSosAlert() async {
-    await _trustedContactService.sendSosAlert();
+    Position? userPosition = await _locationService.getCurrentPosition();
+    Map<String, dynamic> body = {
+      'latitude': userPosition.latitude,
+      'longitude': userPosition.longitude,
+    };
+    await _trustedContactService.sendSosAlert(body);
   }
 
   /// Svuota la cache locale.

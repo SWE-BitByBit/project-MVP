@@ -119,7 +119,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                   Expanded(
                     child: Slider(
                       value: draft.firstInactivityTimer.toDouble(),
-                      min: 1,
+                      min: 0,
                       max: 10,
                       divisions: 9,
                       label: '${draft.firstInactivityTimer} giorni',
@@ -141,7 +141,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                   Expanded(
                     child: Slider(
                       value: draft.secondInactivityTimer.toDouble(),
-                      min: 1,
+                      min: 0,
                       max: 5,
                       divisions: 4,
                       label: '${draft.secondInactivityTimer} giorni',

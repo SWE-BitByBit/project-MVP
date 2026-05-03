@@ -49,7 +49,7 @@ class TrustedContactService {
     await _apiClient.delete('$_basePath/$contactId');
   }
 
-  Future<void> sendSosAlert() async {
-    await _apiClient.post('/alert');
+  Future<void> sendSosAlert(Map<String, dynamic> position) async {
+    await _apiClient.put('/alert', body: position);
   }
 }

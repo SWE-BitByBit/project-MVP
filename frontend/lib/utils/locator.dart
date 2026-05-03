@@ -39,6 +39,8 @@ import '../ui/home/view_model/home_view_model.dart';
 import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
+
+
 final getIt = GetIt.instance;
 
 void setupLocator() {
@@ -84,33 +86,25 @@ void _setupCore() {
     ),
   );
 
-  getIt.registerLazySingleton<CacheManager>(
-    () => CacheManager([
-      getIt<TrustedContactRepository>(),
-      getIt<ChatbotRepository>(),
-      getIt<SafePlaceRepository>(),
-      getIt<MaterialRepository>(),
-      getIt<DeadManRepository>(),
-      getIt<NoteRepository>(),
-    ]),
-  );
+  getIt.registerLazySingleton<CacheManager>(() => CacheManager([
+    getIt<TrustedContactRepository>(),
+    getIt<ChatbotRepository>(),
+    getIt<SafePlaceRepository>(),
+    getIt<MaterialRepository>(),
+    getIt<DeadManRepository>(),
+    getIt<NoteRepository>(),
+  ]));
 }
 
 void _setupHome() {
-  getIt.registerFactory<HomeViewModel>(
-    () => HomeViewModel(getIt<DeadManRepository>()),
-  );
+  getIt.registerFactory<HomeViewModel>(() => HomeViewModel(getIt<DeadManRepository>()));
 }
 
 /// Registra le dipendenze relative al modulo dell' autenticazione
 void _setupAuth() {
   getIt.registerLazySingleton<AuthService>(() => AuthService());
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepository(getIt<AuthService>()),
-  );
-  getIt.registerFactory<AuthViewModel>(
-    () => AuthViewModel(getIt<AuthRepository>()),
-  );
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository(getIt<AuthService>()));
+  getIt.registerFactory<AuthViewModel>(() => AuthViewModel(getIt<AuthRepository>()));
 }
 
 /// Registra le dipendenze relative al modulo dei Luoghi Sicuri
@@ -139,9 +133,7 @@ void _setupTrustedContact() {
   );
   //getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
 
-  getIt.registerLazySingleton<TrustedContactRepository>(
-    () => TrustedContactRepository(getIt<TrustedContactService>()),
-  );
+  getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>(), locationService: getIt<LocationService>()));
 
   getIt.registerFactory<TrustedContactViewModel>(
     () => TrustedContactViewModel(
@@ -213,6 +205,7 @@ void _setupSettings() {
 
 /// Registra le dipendenze relative al modulo del Diario (Criptato e Fittizio)
 void _setupDiary() {
+
   // Services
   //-----------------MOCKED----------------
 
