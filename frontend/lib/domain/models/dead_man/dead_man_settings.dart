@@ -19,8 +19,8 @@ class DeadManSettings {
 
   const DeadManSettings({
     this.isActive = false,
-    this.firstInactivityTimer = 5, // Default 1 ora
-    this.secondInactivityTimer = 2, // Default 15 minuti per rispondere
+    this.firstInactivityTimer = 5,
+    this.secondInactivityTimer = 2,
     this.messageSubject = 'Emergenza: Mancato Check-in',
     this.messageBody = 'Non ho confermato il mio stato di sicurezza sull\'app. Per favore controlla la mia ultima posizione.',
   });
