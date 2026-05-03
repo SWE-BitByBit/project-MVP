@@ -44,8 +44,10 @@ class DynamoDmsAdapter(DmsRepositoryPort):
             )
 
         except ClientError as e:
-            raise RuntimeError(f"Error adding DMS config: {e.response['Error']['Message']}")
-        return config
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                return self.get_dms_config(user_id)
+            else:
+                raise RuntimeError(f"Error adding DMS config: {e.response['Error']['Message']}")
 
     def get_dms_config(self, user_id: str) -> DmsConfigurationSettings:
 
