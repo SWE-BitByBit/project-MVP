@@ -35,6 +35,11 @@ void main() {
     "phoneNumber": "+393331234567",
   };
 
+  final Map<String, dynamic> tPosition = {
+    "latitude": 45.4642,
+    "longitude": 9.1900,
+  };
+
   group('getContacts', () {
     test(
       'should perform GET request on /trusted_contact and return a list of maps',
@@ -128,15 +133,17 @@ void main() {
   });
 
   group('sendSosAlert', () {
-    test('should perform POST request on /alert', () async {
+    test('should perform PUT request on /alert', () async {
       // arrange
-      when(() => mockApiClient.post(any())).thenAnswer((_) async => {});
+      when(
+        () => mockApiClient.put(any(), body: any(named: 'body')),
+      ).thenAnswer((_) async => {});
 
       // act
-      await service.sendSosAlert();
+      await service.sendSosAlert(tPosition);
 
       // assert
-      verify(() => mockApiClient.post('/alert')).called(1);
+      verify(() => mockApiClient.put('/alert', body: tPosition)).called(1);
     });
   });
 }

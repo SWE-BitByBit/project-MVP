@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/trusted_contact_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/services/location_service.dart';
 import '../../../testing/mocks/core/mock_location_service.dart';
 import '../../../testing/mocks/trusted_contacts/mock_trusted_contact_service.dart';
 import 'package:geolocator/geolocator.dart';
