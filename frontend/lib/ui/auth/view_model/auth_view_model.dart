@@ -37,6 +37,23 @@ class AuthViewModel extends ChangeNotifier {
       await _authRepository.restoreSession();
     }
 
+    if (!_authRepository.isLoggedIn()) {
+      final deadManRepo = getIt<DeadManRepository>();
+
+      try {
+        await deadManRepo.createSettings();
+      } catch (e) {
+        debugPrint("Errore creazione settings: $e");
+      }
+
+      try {
+        await deadManRepo.sendHeartbeat();
+        debugPrint("Heartbeat inviato con successo al login!");
+      } catch (e) {
+        debugPrint("Attenzione: Impossibile inviare l'Heartbeat al login: $e");
+      }
+    }
+
     isInitializing = false;
     notifyListeners();
   }
@@ -46,20 +63,6 @@ class AuthViewModel extends ChangeNotifier {
     final user = await _authRepository.login();
     if (user == null) {
       throw Exception('Autenticazione fallita o annullata dall\'utente.');
-    }
-    final deadManRepo = getIt<DeadManRepository>();
-
-    try {
-      await deadManRepo.createSettings();
-    } catch (e) {
-      debugPrint("Errore creazione settings: $e");
-    }
-
-    try {
-      await deadManRepo.sendHeartbeat();
-      debugPrint("Heartbeat inviato con successo al login!");
-    } catch (e) {
-      debugPrint("Attenzione: Impossibile inviare l'Heartbeat al login: $e");
     }
 
     notifyListeners();
