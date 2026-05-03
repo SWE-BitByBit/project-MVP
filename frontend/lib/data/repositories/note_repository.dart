@@ -118,16 +118,45 @@ class NoteRepository implements CacheableRepository {
     }
   }
 
-  /// Aggiunta di un elemento ad una nota già esistente nel backend
-  Future<void> addNoteElement(NoteElement element) async {
-    final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(element);
-    final Map<String, dynamic> response = await _noteService.saveNoteElement(
-      jsonNoteElement,
+  /// Aggiunta di un elemento alla nota nel backend
+  Future<void> addNoteElement(Note note, NoteElement element) async {
+    note.addElement(element, note.getElementCount());
+
+    try {
+      final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(
+        element,
+      );
+      final Map<String, dynamic> response = await _noteService.saveNoteElement(
+        jsonNoteElement,
+      );
+
+      element.noteElementId = response['note_element_id']?.toString();
+      final uploadUrl = response['upload_url']?.toString();
+      if (uploadUrl != null && element.file != null) {
+        await _noteService.uploadFileFromUrl(uploadUrl, element.file!);
+      }
+    } catch (e) {
+      // rollback
+      note.noteElements.removeWhere((e2) => e2 == element);
+      rethrow;
+    }
+  }
+
+  /// Eliminazione di un elemento dalla nota nel backend
+  Future<void> deleteNoteElement(Note note, NoteElement element) async {
+    note.noteElements.removeWhere(
+      (e) => e.noteElementId == element.noteElementId,
     );
 
-    final uploadUrl = response['upload_url']?.toString();
-    if (uploadUrl != null && element.file != null) {
-      await _noteService.uploadFileFromUrl(uploadUrl, element.file!);
+    try {
+      _noteService.deleteNoteElement(
+        element.noteParentId!,
+        element.noteElementId!,
+      );
+    } catch (e) {
+      // rollback
+      note.addElement(element, note.getElementCount());
+      rethrow;
     }
   }
 }

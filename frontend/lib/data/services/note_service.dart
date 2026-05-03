@@ -84,9 +84,9 @@ class NoteService {
     );
   }
 
-  Future<void> deleteNoteElement(String noteElementId) async {
+  Future<void> deleteNoteElement(String noteId, String noteElementId) async {
     await _apiClient.delete(
-      '$_basePath/note_element/$noteElementId/',
+      '$_basePath/note_element/$noteId/$noteElementId/',
       headers: _buildAuthHeaders(),
     );
   }
