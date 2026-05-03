@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../utils/locator.dart';
 import '../../core/widgets/error_indicator.dart';
 import '../../../domain/models/material/resource_type.dart';
@@ -9,16 +8,12 @@ import '../view_model/material_view_model.dart';
 import 'material_list_widget.dart';
 
 /// Schermata principale per la consultazione del materiale informativo.
-///
-/// Implementa un'architettura reattiva basata su [command_it] e Provider.
-/// Gestisce in automatico stati di caricamento, errore, successo e Pull-to-Refresh.
 class MaterialScreen extends StatelessWidget {
   const MaterialScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MaterialViewModel>(
-      // Usiamo il locator globale per istanziare il ViewModel, mantenendo coerenza con i Luoghi Sicuri.
       create: (_) => getIt<MaterialViewModel>(),
       child: const _MaterialScreenBody(),
     );
@@ -35,28 +30,27 @@ class _MaterialScreenBody extends StatefulWidget {
 class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
   @override
   Widget build(BuildContext context) {
-    // Leggiamo il ViewModel per associarlo ai controlli della UI
+    // Legge il ViewModel per associarlo ai controlli della UI
     final vm = context.read<MaterialViewModel>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Materiale Informativo'),
-        // L'AppTheme gestisce già colori ed elevation, ma se vogliamo forzare il colore chiaro:
         centerTitle: true,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // --- 1. SEZIONE FILTRI ---
+            // --- SEZIONE FILTRI ---
             _buildFilters(context),
             const Divider(height: 1),
 
-            // --- 2. SEZIONE LISTA REATTIVA ---
+            // --- SEZIONE LISTA REATTIVA ---
             Expanded(
               child: ValueListenableBuilder<bool>(
                 valueListenable: vm.loadMaterials.isRunning,
                 builder: (context, isRunning, _) {
-                  // A. STATO DI CARICAMENTO INIZIALE (Cache vuota)
+                  // STATO DI CARICAMENTO INIZIALE
                   if (isRunning && vm.materials.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -64,8 +58,7 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
                   return ValueListenableBuilder(
                     valueListenable: vm.loadMaterials.errors,
                     builder: (context, commandError, _) {
-                      // B. STATO DI ERRORE BLOCCANTE
-                      // Se la rete fallisce e non abbiamo dati in cache
+                      // STATO DI ERRORE BLOCCANTE
                       if (commandError != null && vm.materials.isEmpty) {
                         return Center(
                           child: ErrorIndicator(
@@ -76,7 +69,7 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
                         );
                       }
 
-                      // C. STATO DI SUCCESSO E PULL-TO-REFRESH
+                      // STATO DI SUCCESSO E PULL-TO-REFRESH
                       return RefreshIndicator(
                         color: Theme.of(context).colorScheme.primary,
                         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -107,7 +100,7 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
                               );
                             }
 
-                            // Passiamo il ViewModel al widget puro che disegna le Card
+                            // Passa il ViewModel al widget puro che disegna le Card
                             return MaterialListWidget(viewModel: viewModel);
                           },
                         ),
@@ -128,20 +121,19 @@ class _MaterialScreenBodyState extends State<_MaterialScreenBody> {
     return Consumer<MaterialViewModel>(
       builder: (context, viewModel, child) {
         return Container(
-          color: Theme.of(context).colorScheme.surface, // Sfondo uniforme
+          color: Theme.of(context).colorScheme.surface,
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics:
-                const BouncingScrollPhysics(), // Effetto "molla" stile iOS/Android moderno
+                const BouncingScrollPhysics(),
             child: Row(
-              // Generazione dinamica da Enum! Niente più stringhe hardcodate.
               children: ResourceType.values.map((type) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: FilterChipWidget(
                     label: type
-                        .displayName, // Usa il getter che abbiamo definito nell'Enum
+                        .displayName,
                     isSelected: viewModel.currentFilter == type,
                     onSelected: () => viewModel.filterByType(type),
                   ),

@@ -15,7 +15,6 @@ extension ResourceTypeUI on ResourceType {
     }
   }
 
-  /// Restituisce un colore semantico pescando dal tema dell'app.
   Color getColor(ColorScheme scheme) {
     switch (this) {
       case ResourceType.community:
