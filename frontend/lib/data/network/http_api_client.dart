@@ -48,7 +48,7 @@ class HttpApiClient implements ApiClient {
     } else {
       throw ApiException(
         statusCode: response.statusCode,
-        message: 'Errore di rete: ${response.body}',
+        message: response.body,
       );
     }
   }

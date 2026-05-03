@@ -19,6 +19,7 @@ import 'ui/settings/widget/settings_screen.dart';
 import 'ui/trusted_contacts/widget/trusted_contact_screen.dart';
 import 'ui/material/widget/material_screen.dart';
 import 'ui/safeplace/widget/safe_place_map_screen.dart';
+import 'ui/core/widgets/auth_placeholder_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,9 +63,24 @@ class MainApp extends StatelessWidget {
             routes: {
           '/login': (context) => const LoginScreen(),
           '/settings': (context) => const SettingsScreen(),
-          '/contacts': (context) => const TrustedContactScreen(),
           '/materials': (context) => const MaterialScreen(),
           '/safeplace': (context) => const SafePlaceMapScreen(),
+          '/contacts': (context) {
+            final authVm = context.watch<AuthViewModel>();
+            final isLoggedIn = authVm.currentUser != null;
+
+            return isLoggedIn
+                ? const TrustedContactScreen()
+                : AuthPlaceholderScreen(
+              appBar: AppBar(
+                title: const Text('Contatti fidati'),
+                centerTitle: true,
+              ),
+              title: 'Contatti non disponibili',
+              message: 'Effettua l\'accesso per visualizzare la lista dei contatti',
+              icon: Icons.group,
+            );
+          },
         },
           builder: (context, child) {
             return Stack(

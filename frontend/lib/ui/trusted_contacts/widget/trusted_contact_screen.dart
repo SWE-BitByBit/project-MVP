@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-// Importiamo il nostro locator!
 import '../../../utils/locator.dart';
 import '../../core/widgets/error_indicator.dart';
 import '../view_model/trusted_contact_view_model.dart';
@@ -9,9 +7,6 @@ import 'trusted_contact_list_widget.dart';
 import 'trusted_contact_actions_widget.dart';
 
 /// Schermata principale dedicata alla gestione dei contatti fidati.
-///
-/// Funge da compositore: inietta il [TrustedContactViewModel] tramite il locator
-/// e lo fornisce all'albero dei widget sottostanti.
 class TrustedContactScreen extends StatelessWidget {
   const TrustedContactScreen({super.key});
 
@@ -25,9 +20,6 @@ class TrustedContactScreen extends StatelessWidget {
 }
 
 /// Vista pura della schermata dei contatti fidati.
-///
-/// Ascolta i comandi reattivi del ViewModel per mostrare caricamenti, errori
-/// e notificare all'utente eventuali fallimenti in background (Rollback).
 class TrustedContactScreenView extends StatefulWidget {
   const TrustedContactScreenView({super.key});
 
@@ -61,23 +53,19 @@ class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
 
   @override
   Widget build(BuildContext context) {
-    // Usiamo read per prendere il viewModel senza ascoltare le notifiche globali qui
     final viewModel = context.read<TrustedContactViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Contatti Fidati'), centerTitle: true),
-      // 3. Reattività Chirurgica: ascoltiamo solo il comando di caricamento
       body: SafeArea(
         top: false,
         child: ValueListenableBuilder<bool>(
           valueListenable: viewModel.loadContacts.isRunning,
           builder: (context, isRunning, _) {
-            // Se sta caricando la prima volta
             if (isRunning) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // Se ha finito, controlliamo se ci sono stati errori
             return ValueListenableBuilder(
               valueListenable: viewModel.loadContacts.errors,
               builder: (context, commandError, _) {
@@ -86,13 +74,11 @@ class _TrustedContactScreenViewState extends State<TrustedContactScreenView> {
                     child: ErrorIndicator(
                       title: "Errore nel caricamento",
                       label: "Prego riprovare",
-                      // Passiamo null per rispettare la firma del comando
                       onPressed: () => viewModel.loadContacts.run(null),
                     ),
                   );
                 }
 
-                // Se tutto va bene, mostriamo la lista!
                 return const TrustedContactListWidget();
               },
             );

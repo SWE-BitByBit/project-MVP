@@ -5,8 +5,7 @@ import '../../../domain/models/material/resource.dart';
 import '../view_model/material_view_model.dart';
 import '../utils/resource_type_ui.dart';
 
-/// Widget "Puro" responsabile ESCLUSIVAMENTE del disegno della lista.
-/// Gli stati di caricamento, errore e lista vuota sono già gestiti dal genitore [MaterialScreen].
+/// Widget responsabile della visualizzazione della lista dei materiali informativi, con supporto per il pull-to-refresh e l'espansione dei dettagli.
 class MaterialListWidget extends StatelessWidget {
   final MaterialViewModel viewModel;
 
@@ -17,8 +16,6 @@ class MaterialListWidget extends StatelessWidget {
     final materials = viewModel.materials;
 
     return ListView.builder(
-      // Importante: AlwaysScrollableScrollPhysics permette il "Pull to Refresh"
-      // anche se ci sono solo 1 o 2 elementi nella lista.
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       itemCount: materials.length,
@@ -44,13 +41,11 @@ class _ResourceCardWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 0,
-      // Usiamo il colore surfaceContainerHighest del tuo AppTheme per uno sfondo leggero
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       child: ExpansionTile(
-        // Icona dinamica tramite estensione
         leading: Icon(
           resource.type.icon,
           color: resource.type.getColor(colorScheme),
@@ -63,14 +58,13 @@ class _ResourceCardWidget extends StatelessWidget {
             color: colorScheme.onSurface,
           ),
         ),
-        // Nome della categoria tradotto
         subtitle: Text(
           resource.type.displayName,
           style: theme.textTheme.labelSmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
-        // Togliamo le linee di default dell'ExpansionTile per un look più pulito
+
         shape: const Border(),
         children: [
           Padding(
@@ -86,7 +80,7 @@ class _ResourceCardWidget extends StatelessWidget {
                   Text(
                     resource.content!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.5, // Migliora la leggibilità dei paragrafi
+                      height: 1.5,
                       color: colorScheme.onSurface,
                     ),
                   ),

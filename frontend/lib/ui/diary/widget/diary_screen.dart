@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../utils/locator.dart';
 import '../../../../domain/models/diary/diary_session.dart';
 import '../../../../domain/models/diary/diary_enums.dart';
-
 import '../view_model/diary_view_model.dart';
 import '../view_model/diary_access_view_model.dart';
-
 import 'diary_access_screen.dart';
 import 'diary_security_menu_widget.dart';
 import 'note_actions_widget.dart';
 import 'note_list_widget.dart';
 
-/// IL WRAPPER: Inietta i ViewModel.
-/// Usiamo MultiProvider perché questa schermata gestisce sia l'accesso che la lista.
+/// Inietta il DiaryViewModel e mostra il [DiaryStateSwitcher] che decide se mostrare il login o le note.
 class DiaryScreen extends StatelessWidget {
   const DiaryScreen({super.key});
 
@@ -52,7 +48,7 @@ class DiaryStateSwitcher extends StatelessWidget {
   }
 }
 
-/// LA VISTA PURA (Le Note): Ascolta gli eventi per gli errori e carica i dati iniziali.
+/// Ascolta gli eventi per gli errori e carica i dati iniziali.
 class DiaryScreenView extends StatefulWidget {
   const DiaryScreenView({super.key});
 
@@ -69,7 +65,7 @@ class _DiaryScreenViewState extends State<DiaryScreenView> {
       final vm = context.read<DiaryViewModel>();
       final session = DiarySession.session;
 
-      // 1. Ascolto errori (come nel Chatbot)
+      // Ascolto errori (come nel Chatbot)
       vm.asyncError.addListener(() {
         if (vm.asyncError.value != null) {
           _showFloatingSnackBar(vm.asyncError.value!);
@@ -77,7 +73,7 @@ class _DiaryScreenViewState extends State<DiaryScreenView> {
         }
       });
 
-      // 2. Carica le note automaticamente all'apertura del tab
+      // Carica le note automaticamente all'apertura del tab
       if (session.loggedDiary != null) {
         vm.loadNotes.run(session.loggedDiary!);
       }

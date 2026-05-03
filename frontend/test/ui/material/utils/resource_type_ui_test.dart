@@ -13,8 +13,6 @@ void main() {
     onSecondary: Colors.white,
     error: Colors.red,
     onError: Colors.white,
-    background: Colors.white,
-    onBackground: Colors.black,
     surface: Colors.white,
     onSurface: Colors.black,
     tertiaryContainer: Colors.orange,

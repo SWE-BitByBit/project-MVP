@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /// Tipologie di diario a cui l'utente può accedere
 enum DiaryType { real_diary, fake_diary }
 

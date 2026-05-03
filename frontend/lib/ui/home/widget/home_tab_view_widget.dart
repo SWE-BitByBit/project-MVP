@@ -6,13 +6,11 @@ import '../view_model/home_view_model.dart';
 import 'home_dashboard_widget.dart';
 
 /// La schermata dedicata esclusivamente alla Tab "Home".
-/// Ha la sua AppBar indipendente per non intaccare le altre Tab.
 class HomeTabView extends StatelessWidget {
   const HomeTabView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Inietto il ViewModel della Home SOLO per questa tab.
     // Se l'utente è nella Chat, la memoria usata da HomeViewModel viene liberata/congelata.
     return ChangeNotifierProvider(
       create: (_) => getIt<HomeViewModel>(),
@@ -26,8 +24,6 @@ class _HomeTabViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -51,7 +47,8 @@ class _HomeTabViewBody extends StatelessWidget {
           const SizedBox(width: 12),
         ],
       ),
-      // Il corpo centrale (La griglia dei bottoni, i banner di allarme, ecc.)
+      
+      // Il corpo centrale
       body: SafeArea(
         bottom: false,
         child: Column(

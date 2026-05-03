@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../view_model/trusted_contact_view_model.dart';
 import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Visualizza l'elenco dei contatti fidati salvati.
-///
-/// Implementa il pattern Observer tramite il widget [Consumer], che ascolta
-/// il [TrustedContactViewModel] e ricostruisce la lista ad ogni notifica di cambiamento.
 class TrustedContactListWidget extends StatelessWidget {
   const TrustedContactListWidget({super.key});
 
@@ -19,7 +15,6 @@ class TrustedContactListWidget extends StatelessWidget {
     // Usiamo il Consumer come richiesto dall'UML
     return Consumer<TrustedContactViewModel>(
       builder: (context, viewModel, child) {
-
         // STATO: Lista Vuota
         if (viewModel.contacts.isEmpty) {
           return Center(
@@ -74,12 +69,18 @@ class TrustedContactListWidget extends StatelessWidget {
               ),
               title: Text(
                 contact.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               subtitle: Text('${contact.email}\n${contact.phoneNumber}'),
               isThreeLine: true,
               trailing: IconButton(
-                icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                ),
                 onPressed: () => _showDeleteConfirmation(
                   context,
                   viewModel,
@@ -96,10 +97,10 @@ class TrustedContactListWidget extends StatelessWidget {
 
   /// Apre il modulo di modifica per un contatto esistente.
   void _openEditForm(
-      BuildContext context,
-      TrustedContactViewModel viewModel,
-      TrustedContact contact,
-      ) {
+    BuildContext context,
+    TrustedContactViewModel viewModel,
+    TrustedContact contact,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -108,6 +109,7 @@ class TrustedContactListWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
+        viewModel.clearInputErrors();
         // Usiamo .value perché il ViewModel esiste già ed è gestito dal Provider padre
         return ChangeNotifierProvider.value(
           value: viewModel,
@@ -117,7 +119,9 @@ class TrustedContactListWidget extends StatelessWidget {
             ),
             child: TrustedContactFormWidget(
               initialContact: contact,
-              onDismiss: () => Navigator.pop(sheetContext),
+              onDismiss: () {
+                Navigator.pop(sheetContext);
+              },
             ),
           ),
         );
@@ -127,11 +131,11 @@ class TrustedContactListWidget extends StatelessWidget {
 
   /// Mostra un dialogo di conferma prima dell'eliminazione ottimistica.
   void _showDeleteConfirmation(
-      BuildContext context,
-      TrustedContactViewModel viewModel,
-      String contactId,
-      String contactName,
-      ) {
+    BuildContext context,
+    TrustedContactViewModel viewModel,
+    String contactId,
+    String contactName,
+  ) {
     final theme = Theme.of(context);
 
     showDialog(
@@ -148,7 +152,6 @@ class TrustedContactListWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-                // Il comando attiva la logica nel ViewModel/Repo
                 viewModel.deleteContact.runAsync(contactId);
               },
               style: ElevatedButton.styleFrom(

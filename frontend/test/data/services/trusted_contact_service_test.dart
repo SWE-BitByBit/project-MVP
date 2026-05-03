@@ -18,81 +18,108 @@ void main() {
       "contactId": "1",
       "name": "Mario Rossi",
       "email": "mario.rossi@example.com",
-      "phoneNumber": "+393331234567"
+      "phoneNumber": "+393331234567",
     },
     {
       "contactId": "2",
       "name": "Giulia Bianchi",
       "email": "giulia.bianchi@example.com",
-      "phoneNumber": "+393337654321"
-    }
+      "phoneNumber": "+393337654321",
+    },
   ];
 
   final tContactData = {
     "contactId": "1",
     "name": "Mario Rossi",
     "email": "mario.rossi@example.com",
-    "phoneNumber": "+393331234567"
+    "phoneNumber": "+393331234567",
+  };
+
+  final Map<String, dynamic> tPosition = {
+    "latitude": 45.4642,
+    "longitude": 9.1900,
   };
 
   group('getContacts', () {
-    test('should perform GET request on /contacts and return a list of maps', () async {
-      // arrange
-      when(() => mockApiClient.get(any())).thenAnswer((_) async => tContactsJsonList);
+    test(
+      'should perform GET request on /trusted_contact and return a list of maps',
+      () async {
+        // arrange
+        when(
+          () => mockApiClient.get(any()),
+        ).thenAnswer((_) async => tContactsJsonList);
 
-      // act
-      final result = await service.getContacts();
+        // act
+        final result = await service.getContacts();
 
-      // assert
-      expect(result, equals(tContactsJsonList));
-      verify(() => mockApiClient.get('/contacts')).called(1);
-    });
+        // assert
+        expect(result, equals(tContactsJsonList));
+        verify(() => mockApiClient.get('/trusted_contact')).called(1);
+      },
+    );
 
-    test('should return empty list if ApiClient returns something that is not a List', () async {
-      // arrange
-      when(() => mockApiClient.get(any())).thenAnswer((_) async => {'error': 'not a list'});
+    test(
+      'should return empty list if ApiClient returns something that is not a List',
+      () async {
+        // arrange
+        when(
+          () => mockApiClient.get(any()),
+        ).thenAnswer((_) async => {'error': 'not a list'});
 
-      // act
-      final result = await service.getContacts();
+        // act
+        final result = await service.getContacts();
 
-      // assert
-      expect(result, isEmpty);
-    });
+        // assert
+        expect(result, isEmpty);
+      },
+    );
   });
 
   group('addContact', () {
-    test('should perform POST request on /contacts with correct body', () async {
-      // arrange
-      when(() => mockApiClient.post(any(), body: any(named: 'body')))
-          .thenAnswer((_) async => tContactData);
+    test(
+      'should perform POST request on /trusted_contact with correct body',
+      () async {
+        // arrange
+        when(
+          () => mockApiClient.post(any(), body: any(named: 'body')),
+        ).thenAnswer((_) async => tContactData);
 
-      // act
-      final result = await service.addContact(tContactData);
+        // act
+        final result = await service.addContact(tContactData);
 
-      // assert
-      expect(result, equals(tContactData));
-      verify(() => mockApiClient.post('/contacts', body: tContactData)).called(1);
-    });
+        // assert
+        expect(result, equals(tContactData));
+        verify(
+          () => mockApiClient.post('/trusted_contact', body: tContactData),
+        ).called(1);
+      },
+    );
   });
 
   group('updateContact', () {
-    test('should perform PUT request on /contacts/{id} with correct body', () async {
-      // arrange
-      const tId = "1";
-      when(() => mockApiClient.put(any(), body: any(named: 'body')))
-          .thenAnswer((_) async => tContactData);
+    test(
+      'should perform PUT request on /trusted_contact/{id} with correct body',
+      () async {
+        // arrange
+        const tId = "1";
+        when(
+          () => mockApiClient.put(any(), body: any(named: 'body')),
+        ).thenAnswer((_) async => tContactData);
 
-      // act
-      final result = await service.updateContact(tContactData);
+        // act
+        final result = await service.updateContact(tContactData);
 
-      // assert
-      expect(result, equals(tContactData));
-      verify(() => mockApiClient.put('/contacts/$tId', body: tContactData)).called(1);
-    });
+        // assert
+        expect(result, equals(tContactData));
+        verify(
+          () => mockApiClient.put('/trusted_contact/$tId', body: tContactData),
+        ).called(1);
+      },
+    );
   });
 
   group('deleteContact', () {
-    test('should perform DELETE request on /contacts/{id}', () async {
+    test('should perform DELETE request on /trusted_contact/{id}', () async {
       // arrange
       const tId = "1";
       when(() => mockApiClient.delete(any())).thenAnswer((_) async => {});
@@ -101,20 +128,22 @@ void main() {
       await service.deleteContact(tId);
 
       // assert
-      verify(() => mockApiClient.delete('/contacts/$tId')).called(1);
+      verify(() => mockApiClient.delete('/trusted_contact/$tId')).called(1);
     });
   });
 
   group('sendSosAlert', () {
-    test('should perform POST request on /contacts/sos/', () async {
+    test('should perform PUT request on /alert', () async {
       // arrange
-      when(() => mockApiClient.post(any())).thenAnswer((_) async => {});
+      when(
+        () => mockApiClient.put(any(), body: any(named: 'body')),
+      ).thenAnswer((_) async => {});
 
       // act
-      await service.sendSosAlert();
+      await service.sendSosAlert(tPosition);
 
       // assert
-      verify(() => mockApiClient.post('/contacts/sos/')).called(1);
+      verify(() => mockApiClient.put('/alert', body: tPosition)).called(1);
     });
   });
 }

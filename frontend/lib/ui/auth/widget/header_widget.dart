@@ -12,12 +12,10 @@ class HeaderWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Usiamo il colore primario del tema invece di Colors.teal fisso
         Icon(Icons.lock_outline, size: 64, color: colorScheme.primary),
         const SizedBox(height: 16),
         Text(
           'Accedi al tuo account',
-          // Usiamo la tipografia del tema per mantenere coerenza nei font
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,

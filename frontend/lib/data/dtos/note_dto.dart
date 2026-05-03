@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../domain/models/diary/note.dart';
 import '../../domain/models/diary/local_note.dart';
 import '../../domain/models/diary/note_element.dart';
@@ -18,9 +20,9 @@ abstract class NoteDTO {
 
       switch (type) {
         case 'image':
-          return NoteImageElement(content);
+          return NoteImageElement(content, File(content));
         case 'audio':
-          return NoteAudioElement(content);
+          return NoteAudioElement(content, File(content));
         case 'text':
         default:
           return NoteTextElement(content);

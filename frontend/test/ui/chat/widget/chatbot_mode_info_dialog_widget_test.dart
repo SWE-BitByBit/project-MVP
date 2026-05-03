@@ -36,8 +36,8 @@ void main() {
 
       // Verifica i testi principali
       expect(find.text('Modalità Chatbot'), findsOneWidget);
-      expect(find.text('Mirror'), findsOneWidget);
-      expect(find.text('Detective'), findsOneWidget);
+      expect(find.text('Specchio intelligente'), findsOneWidget);
+      expect(find.text('Detective delle relazioni'), findsOneWidget);
       expect(find.text('Ho capito'), findsOneWidget);
 
       // Verifica icone

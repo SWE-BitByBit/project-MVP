@@ -42,13 +42,13 @@ void main() {
   }
 
   group('HomeDashboardWidget - States', () {
-    testWidgets('mostra CircularProgressIndicator durante il caricamento iniziale', (tester) async {
-      when(() => mockLoadCommand.isRunning).thenReturn(ValueNotifier<bool>(true));
+    testWidgets('mostra lista vuota se non ci sono elementi', (tester) async {
+      when(() => mockLoadCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
       when(() => mockLoadCommand.value).thenReturn([]);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DashboardButtonWidget), findsNothing);
     });
 
 

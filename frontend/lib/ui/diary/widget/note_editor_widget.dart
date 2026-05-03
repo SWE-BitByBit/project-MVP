@@ -15,13 +15,9 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_mode
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/options_menu_widget.dart';
 
 /// Widget che gestisce la modifica delle note
-///
-/// Essendo consumer di [DiaryViewModel] si aggiorna in seguito a cambiamenti di stato del ViewModel
 class NoteEditorWidget extends StatefulWidget {
-  // Callback per quando l'editor viene chiuso
   final VoidCallback onDismiss;
 
-  // Nota da modificare
   final Note selectedNote;
 
   const NoteEditorWidget({
@@ -115,7 +111,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     maxLines: null,
                     decoration: const InputDecoration(border: InputBorder.none),
                     onChanged: (value) {
-                      // Aggiorniamo direttamente il modello locale
                       widget.selectedNote.editNoteElement(element, value);
 
                       setState(() {
@@ -149,9 +144,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: Image.file(
-                      File(element.content),
-                    ), // Usa property Dart
+                    child: Image.file(element.file!),
                   ),
                 ),
 
@@ -181,7 +174,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     onDismiss: () {
                       dispose();
                     },
-                    trackUrl: element.content, // Usa property Dart
+                    trackUrl: element.file!.path,
                   ),
                 ),
 
@@ -207,10 +200,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(
-      text: widget.selectedNote.title, // Usa property Dart
-    );
-    _lastUpdated = widget.selectedNote.updateDate; // Usa property Dart
+    _titleController = TextEditingController(text: widget.selectedNote.title);
+    _lastUpdated = widget.selectedNote.updateDate;
 
     loadNote();
   }
@@ -234,7 +225,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     if (image != null) {
       File pickedImage = File(image.path);
 
-      final newElement = NoteImageElement(pickedImage.path);
+      final newElement = NoteImageElement(
+        pickedImage.path,
+        File(pickedImage.path),
+      );
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
@@ -249,7 +243,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     if (pickResult != null) {
       final File audioFile = File(pickResult.files.single.path!);
 
-      final newElement = NoteAudioElement(audioFile.path);
+      final newElement = NoteAudioElement(audioFile.path, File(audioFile.path));
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
@@ -262,12 +256,12 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   /// Aggiorna il titolo della nota
   void _updateNoteTitle(String title) {
     setState(() {
-      widget.selectedNote.title = title; // Setter nativo di Dart
+      widget.selectedNote.title = title;
       _lastUpdated = widget.selectedNote.updateDate;
     });
   }
 
-  // Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
+  /// Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
   void _showOptions(BuildContext context, Note note) async {
     showMenu(
       position: const RelativeRect.fromLTRB(100, 1000, 0, 0),
@@ -319,7 +313,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
-  // Metodo per popolare la UI con gli elementi della nota
+  /// Metodo per popolare la UI con gli elementi della nota
   void loadNote() {
     List<NoteElement> elems = widget.selectedNote.noteElements;
     for (int i = 0; i < elems.length; i++) {
@@ -348,13 +342,18 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               widget.selectedNote.removeElement(emptyElement);
             }
             if (DiarySession.session.loggedDiary != null) {
-
               bool isTitleEmpty = widget.selectedNote.title.isEmpty;
               bool isBodyEmpty = widget.selectedNote.noteElements.isEmpty;
               if (isTitleEmpty && isBodyEmpty) {
-                vm.deleteNote.run((noteId: widget.selectedNote.id, diary: DiarySession.session.loggedDiary!));
+                vm.deleteNote.run((
+                  noteId: widget.selectedNote.id,
+                  diary: DiarySession.session.loggedDiary!,
+                ));
               } else {
-                vm.saveNote.run((note: widget.selectedNote, diary: DiarySession.session.loggedDiary!));
+                vm.saveNote.run((
+                  note: widget.selectedNote,
+                  diary: DiarySession.session.loggedDiary!,
+                ));
               }
             }
           },
@@ -423,7 +422,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                       builder: (context) {
                         if (_elements.isEmpty == false) {
                           return ListView.builder(
-                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
                             padding: const EdgeInsetsGeometry.directional(
                               start: 8,
                               end: 8,

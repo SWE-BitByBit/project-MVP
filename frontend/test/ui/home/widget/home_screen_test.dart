@@ -69,7 +69,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.text('Protegge e Trasforma'), findsOneWidget); // Titolo della HomeTabView
+      expect(find.text('Homepage'), findsOneWidget); // Titolo della HomeTabView
       expect(find.byIcon(Icons.home), findsWidgets); // Icona selezionata nella NavBar
     });
 

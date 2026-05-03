@@ -1,3 +1,5 @@
+import 'dart:io';
+
 /// Classe base astratta per gli elementi delle note.
 abstract class NoteElement {
   /// Contenuto dell'elemento (testo, path dell'immagine o dell'audio).
@@ -9,4 +11,8 @@ abstract class NoteElement {
   /// Getter astratto che definisce il tipo dell'elemento.
   /// Ogni sottoclasse DEVE implementarlo.
   String get type;
+
+  void setFile(File file);
+
+  File? get file;
 }

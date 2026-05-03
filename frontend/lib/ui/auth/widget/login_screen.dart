@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../utils/locator.dart';
 import '../view_model/auth_view_model.dart';
 import 'header_widget.dart';
 import 'google_login_button_widget.dart';

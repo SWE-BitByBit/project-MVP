@@ -2,9 +2,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../domain/models/diary/diary_enums.dart';
 
 /// Classe che gestisce la sessione della funzionalità dei diari
-///
-/// Implementa il pattern Singleton tramite il campo statico _session e il suo getter statico, in modo da rendere
-/// le informazioni sulla sessione accessibili dalle altre parti della funzionalità e fare in modo che esista solo una sessione attiva in un dato momento.
 class DiarySession {
   static final DiarySession _session = DiarySession._internal();
 
@@ -21,8 +18,6 @@ class DiarySession {
 
   /// Getter per la sessione
   static DiarySession get session => _session;
-
-  /// Metodi
 
   /// Inizializza la sessione per il [DiaryType] specificato
   Future<void> initSession(DiaryType diaryType, String sessionToken) async {

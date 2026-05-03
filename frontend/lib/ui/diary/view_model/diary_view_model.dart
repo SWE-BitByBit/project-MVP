@@ -14,7 +14,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_elem
 
 class DiaryViewModel extends ChangeNotifier {
   final NoteRepository _noteRepo;
-  final DiaryAccountRepository _accRepo;
 
   // --- STATO DELLA UI ---
   List<Note> get notes => _noteRepo.cachedNotes;
@@ -24,21 +23,26 @@ class DiaryViewModel extends ChangeNotifier {
 
   final ValueNotifier<String?> asyncError = ValueNotifier(null);
 
-
-  // --- COMANDI REATTIVI ---
   late final Command<DiaryType, void> loadNotes;
   late final Command<String, void> openNote;
   late final Command<({Note note, DiaryType diary}), void> saveNote;
   late final Command<({String noteId, DiaryType diary}), void> deleteNote;
 
-  DiaryViewModel(this._noteRepo, this._accRepo) {
-    loadNotes = Command.createAsync<DiaryType, void>(_loadNotes, initialValue: null);
+  DiaryViewModel(this._noteRepo, DiaryAccountRepository accRepo) {
+    loadNotes = Command.createAsync<DiaryType, void>(
+      _loadNotes,
+      initialValue: null,
+    );
     openNote = Command.createAsync<String, void>(_openNote, initialValue: null);
-    saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(_saveNote, initialValue: null);
-    deleteNote = Command.createAsync<({String noteId, DiaryType diary}), void>(_deleteNote, initialValue: null);
+    saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(
+      _saveNote,
+      initialValue: null,
+    );
+    deleteNote = Command.createAsync<({String noteId, DiaryType diary}), void>(
+      _deleteNote,
+      initialValue: null,
+    );
   }
-
-  // --- GESTIONE NOTE (LOGICA LOCALE) ---
 
   void createNewNote(DiaryType diary) {
     final newNote = LocalNote(
@@ -53,23 +57,25 @@ class DiaryViewModel extends ChangeNotifier {
 
   void addTextElement(String text) {
     if (_currentNote != null) {
-      _currentNote!.addElement(NoteTextElement(text), _currentNote!.getElementCount());
+      _currentNote!.addElement(
+        NoteTextElement(text),
+        _currentNote!.getElementCount(),
+      );
       notifyListeners();
     }
   }
 
-  void addMediaElement(File file, String type) {
-    if (_currentNote == null) return;
+  NoteElement addMediaElement(File file, String type) {
+    if (_currentNote == null) throw "Errore nell'aggiunta dell'elemento nota";
 
     NoteElement elem = (type == "image")
-        ? NoteImageElement(file.path)
-        : NoteAudioElement(file.path);
-
+        ? NoteImageElement(file.path, file)
+        : NoteAudioElement(file.path, file);
+    elem.setFile(file);
     _currentNote!.addElement(elem, _currentNote!.getElementCount());
     notifyListeners();
+    return elem;
   }
-
-  // --- IMPLEMENTAZIONE DEI COMANDI ---
 
   Future<void> _loadNotes(DiaryType diary) async {
     await _noteRepo.getNotes(diary, forceRefresh: true);
@@ -80,7 +86,7 @@ class DiaryViewModel extends ChangeNotifier {
     final note = notes.firstWhere((n) => n.id == noteId);
 
     if (note is ProxyNote) {
-      await note.load(); // Caricamento pigro dei contenuti pesanti
+      await note.load();
     }
 
     _currentNote = note;
@@ -95,7 +101,6 @@ class DiaryViewModel extends ChangeNotifier {
   Future<void> _deleteNote(({String noteId, DiaryType diary}) args) async {
     final noteToDelete = notes.firstWhere((n) => n.id == args.noteId);
 
-    // La rimozione dalla lista 'notes' nel repo è istantanea (ottimistica)
     final deleteFuture = _noteRepo.deleteNote(args.diary, noteToDelete);
 
     if (_currentNote?.id == args.noteId) _currentNote = null;
@@ -106,7 +111,6 @@ class DiaryViewModel extends ChangeNotifier {
       notifyListeners();
     });
   }
-
 
   @override
   void dispose() {

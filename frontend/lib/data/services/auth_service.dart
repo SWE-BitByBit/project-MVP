@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 import '../../utils/app_config.dart';
 
 /// Gestisce la comunicazione di rete con AWS Cognito per il flusso di autenticazione.
-///
-/// Questa classe implementa il protocollo OAuth 2.0 per ottenere i token di sessione.
 class AuthService {
   /// Dominio di autenticazione configurato in [AppConfig].
   final String _cognitoDomain = AppConfig.cognitoDomain;

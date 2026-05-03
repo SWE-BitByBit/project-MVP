@@ -11,14 +11,12 @@ class ChatHistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Recuperiamo il colorScheme centralizzato per non avere colori hardcoded
     final colorScheme = Theme.of(context).colorScheme;
 
     return Drawer(
       child: SafeArea(
         child:Column(
           children: [
-            // 1. HEADER STATICO: Non avendo dati dinamici, sta fuori dal Consumer!
             DrawerHeader(
               decoration: BoxDecoration(color: colorScheme.primaryContainer),
               child: Center(
@@ -38,11 +36,9 @@ class ChatHistoryWidget extends StatelessWidget {
               child: const ChatbotCreateChatWidget(),
             ),
             const Divider(),
-            // 2. LISTA DINAMICA: Avvolta nel Consumer per isolare i re-build
             Expanded(
               child: Consumer<ChatbotViewModel>(
                 builder: (context, vm, child) {
-                  // Usiamo la nuova proprietà 'chats' che contiene i ProxyChat
                   final chats = vm.chats;
 
                   if (chats.isEmpty) {
@@ -57,7 +53,6 @@ class ChatHistoryWidget extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final chat = chats[index];
 
-                      // Controlliamo se questa riga è la chat che stiamo guardando ora
                       final isSelected = vm.currentChat?.id == chat.id;
 
                       return ListTile(
@@ -71,29 +66,25 @@ class ChatHistoryWidget extends StatelessWidget {
                           maxLines: 1, // Previene che titoli troppo lunghi rompano il layout
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            // UX: Il testo diventa grassetto se la chat è attiva
+                            // Il testo diventa grassetto se la chat è attiva
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             color: isSelected ? colorScheme.primary : colorScheme.onSurface,
                           ),
                         ),
 
-                        // UX: Evidenziazione di background per la chat attiva
+                        // Evidenziazione di background per la chat attiva
                         selected: isSelected,
                         selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
 
                         onTap: () {
-                          // Chiudiamo il drawer PRIMA di lanciare il comando (UX più fluida)
                           Navigator.pop(context);
 
-                          // 3. ESECUZIONE COMANDI: Usiamo .run() di command_it
                           vm.openChat.run(chat.id);
                         },
 
                         trailing: IconButton(
-                          // Usiamo colorScheme.error invece di Colors.red
                           icon: Icon(Icons.delete_outline, color: colorScheme.error),
                           onPressed: () {
-                            // ESECUZIONE COMANDI: Usiamo .run()
                             vm.deleteChat.run(chat.id);
                           },
                         ),

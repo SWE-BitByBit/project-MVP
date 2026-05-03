@@ -2,26 +2,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/trusted_contact_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
-
+import '../../../testing/mocks/core/mock_location_service.dart';
 import '../../../testing/mocks/trusted_contacts/mock_trusted_contact_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   late TrustedContactRepository repository;
   late MockTrustedContactService mockService;
+  late MockLocationService mockLocationService;
 
   final List<Map<String, dynamic>> tContactsListJson = [
     {
       "contactId": "1",
       "name": "Mario Rossi",
       "email": "mario.rossi@example.com",
-      "phoneNumber": "+393331234567"
+      "phoneNumber": "+393331234567",
     },
     {
       "contactId": "2",
       "name": "Giulia Bianchi",
       "email": "giulia.bianchi@example.com",
-      "phoneNumber": "+393337654321"
-    }
+      "phoneNumber": "+393337654321",
+    },
   ];
 
   final tContactJson = tContactsListJson.first;
@@ -32,36 +34,58 @@ void main() {
     phoneNumber: "+393331234567",
   );
 
+  final Map<String, dynamic> tPosition = {
+    "latitude": 45.4642,
+    "longitude": 9.1900,
+  };
+
   setUp(() {
     mockService = MockTrustedContactService();
-    repository = TrustedContactRepository(mockService);
+    mockLocationService = MockLocationService();
+    mockLocationService.setPosition(Position.fromMap(tPosition));
+    repository = TrustedContactRepository(
+      mockService,
+      locationService: mockLocationService,
+    );
     registerFallbackValue(tContactModel);
   });
 
   group('getContacts', () {
-    test('should return list of contacts from service and cache them', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+    test(
+      'should return list of contacts from service and cache them',
+      () async {
+        when(
+          () => mockService.getContacts(),
+        ).thenAnswer((_) async => tContactsListJson);
 
-      final result = await repository.getContacts();
+        final result = await repository.getContacts();
 
-      expect(result.length, 2);
-      expect(result.first.id, "1");
-      expect(result.first.name, "Mario Rossi");
-      verify(() => mockService.getContacts()).called(1);
-    });
+        expect(result.length, 2);
+        expect(result.first.id, "1");
+        expect(result.first.name, "Mario Rossi");
+        verify(() => mockService.getContacts()).called(1);
+      },
+    );
 
-    test('should return cached contacts without calling service if cache is not empty', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
-      await repository.getContacts();
+    test(
+      'should return cached contacts without calling service if cache is not empty',
+      () async {
+        when(
+          () => mockService.getContacts(),
+        ).thenAnswer((_) async => tContactsListJson);
+        await repository.getContacts();
 
-      final result = await repository.getContacts();
+        final result = await repository.getContacts();
 
-      expect(result.length, 2);
-      verify(() => mockService.getContacts()).called(1);
-    });
+        expect(result.length, 2);
+        verify(() => mockService.getContacts()).called(1);
+      },
+    );
 
     test('should call service when forceRefresh is true', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
       await repository.getContacts();
 
       await repository.getContacts(forceRefresh: true);
@@ -73,7 +97,9 @@ void main() {
   group('createContact', () {
     test('should call service and add new contact to cache', () async {
       repository.clearCache();
-      when(() => mockService.addContact(any())).thenAnswer((_) async => tContactJson);
+      when(
+        () => mockService.addContact(any()),
+      ).thenAnswer((_) async => tContactJson);
 
       final result = await repository.createContact(tContactModel);
 
@@ -86,19 +112,25 @@ void main() {
 
   group('updateContact', () {
     test('should update contact in cache after service success', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
       await repository.getContacts();
 
       final updatedJson = {
         "contactId": "1",
         "name": "Mario Rossi Updated",
         "email": "mario.rossi@example.com",
-        "phoneNumber": "+393331234567"
+        "phoneNumber": "+393331234567",
       };
 
-      when(() => mockService.updateContact(any())).thenAnswer((_) async => updatedJson);
+      when(
+        () => mockService.updateContact(any()),
+      ).thenAnswer((_) async => updatedJson);
 
-      final result = await repository.updateContact(tContactModel.copyWith(name: "Mario Rossi Updated"));
+      final result = await repository.updateContact(
+        tContactModel.copyWith(name: "Mario Rossi Updated"),
+      );
 
       expect(result.name, "Mario Rossi Updated");
       final list = await repository.getContacts();
@@ -108,7 +140,9 @@ void main() {
 
   group('deleteContact', () {
     test('should remove contact from cache if service success', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
       await repository.getContacts();
       when(() => mockService.deleteContact(any())).thenAnswer((_) async => {});
 
@@ -120,9 +154,13 @@ void main() {
     });
 
     test('should rollback cache if service fails during deletion', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
       await repository.getContacts();
-      when(() => mockService.deleteContact(any())).thenThrow(Exception("Network Error"));
+      when(
+        () => mockService.deleteContact(any()),
+      ).thenThrow(Exception("Network Error"));
 
       expect(() => repository.deleteContact("1"), throwsException);
 
@@ -133,17 +171,21 @@ void main() {
 
   group('sendSosAlert', () {
     test('should call service sendSosAlert', () async {
-      when(() => mockService.sendSosAlert()).thenAnswer((_) async => {});
+      when(
+        () => mockService.sendSosAlert(tPosition),
+      ).thenAnswer((_) async => {});
 
       await repository.sendSosAlert();
 
-      verify(() => mockService.sendSosAlert()).called(1);
+      verify(() => mockService.sendSosAlert(tPosition)).called(1);
     });
   });
 
   group('clearCache', () {
     test('should empty the local cache', () async {
-      when(() => mockService.getContacts()).thenAnswer((_) async => tContactsListJson);
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
       await repository.getContacts();
 
       repository.clearCache();

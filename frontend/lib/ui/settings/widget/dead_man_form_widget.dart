@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../core/widgets/error_indicator.dart';
 import '../view_model/dead_man_view_model.dart';
 
-/// Widget specializzato che gestisce il Form dell'Allarme Automatico.
+/// Widget principale per la schermata di configurazione del Dead Man's Switch.
 class DeadManFormWidget extends StatefulWidget {
   const DeadManFormWidget({super.key});
 
@@ -41,7 +40,6 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
     super.dispose();
   }
 
-  /// Allinea i controller di testo con la bozza del ViewModel.
   void _syncTextControllers(DeadManViewModel vm) {
     final draft = vm.draftSettings;
     if (draft == null) return;
@@ -60,7 +58,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
 
     return Consumer<DeadManViewModel>(
       builder: (context, vm, child) {
-        // 1. STATO DI CARICAMENTO INIZIALE
+        // STATO DI CARICAMENTO INIZIALE
         if (vm.loadSettings.isRunning.value && vm.draftSettings == null) {
           return const Padding(
             padding: EdgeInsets.all(32.0),
@@ -68,7 +66,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
           );
         }
 
-        // 2. STATO DI ERRORE
+        // STATO DI ERRORE
         if (vm.loadSettings.errors.value != null && vm.draftSettings == null) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -83,10 +81,9 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
         final draft = vm.draftSettings;
         if (draft == null) return const SizedBox.shrink();
 
-        // Sincronizziamo i testi
         _syncTextControllers(vm);
 
-        // 3. IL FORM INTERATTIVO
+        // IL FORM INTERATTIVO
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Column(
@@ -122,7 +119,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                   Expanded(
                     child: Slider(
                       value: draft.firstInactivityTimer.toDouble(),
-                      min: 1,
+                      min: 0,
                       max: 10,
                       divisions: 9,
                       label: '${draft.firstInactivityTimer} giorni',
@@ -144,7 +141,7 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                   Expanded(
                     child: Slider(
                       value: draft.secondInactivityTimer.toDouble(),
-                      min: 1,
+                      min: 0,
                       max: 5,
                       divisions: 4,
                       label: '${draft.secondInactivityTimer} giorni',
