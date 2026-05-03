@@ -31,17 +31,17 @@ class DiaryAccessScreenView extends StatelessWidget {
 
   // Funzione helper snella per decidere cosa mostrare nel body
   Widget _buildBody(DiaryAccessViewModel vm) {
-    // 1. Spinner per check iniziale o operazioni in corso
+    // Spinner per check iniziale o operazioni in corso
     if (vm.isCheckingStatus || vm.login.isRunning.value || vm.createInitialPassword.isRunning.value) {
       return const CircularProgressIndicator();
     }
 
-    // 2. Se serve il setup, mostra il nuovo widget dedicato
+    // Se serve il setup, mostra il nuovo widget dedicato
     if (vm.needsInitialSetup) {
       return const DiaryFirstSetupWidget();
     }
 
-    // 3. Altrimenti, mostra il form di login classico
+    // Altrimenti, mostra il form di login classico
     return PasswordFormWidget(onDismiss: () {});
   }
 }

@@ -15,13 +15,9 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_mode
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/options_menu_widget.dart';
 
 /// Widget che gestisce la modifica delle note
-///
-/// Essendo consumer di [DiaryViewModel] si aggiorna in seguito a cambiamenti di stato del ViewModel
 class NoteEditorWidget extends StatefulWidget {
-  // Callback per quando l'editor viene chiuso
   final VoidCallback onDismiss;
 
-  // Nota da modificare
   final Note selectedNote;
 
   const NoteEditorWidget({
@@ -115,7 +111,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     maxLines: null,
                     decoration: const InputDecoration(border: InputBorder.none),
                     onChanged: (value) {
-                      // Aggiorniamo direttamente il modello locale
                       widget.selectedNote.editNoteElement(element, value);
 
                       setState(() {
@@ -151,7 +146,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     borderRadius: BorderRadius.circular(5),
                     child: Image.file(
                       File(element.content),
-                    ), // Usa property Dart
+                    ),
                   ),
                 ),
 
@@ -181,7 +176,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     onDismiss: () {
                       dispose();
                     },
-                    trackUrl: element.content, // Usa property Dart
+                    trackUrl: element.content,
                   ),
                 ),
 
@@ -208,9 +203,9 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(
-      text: widget.selectedNote.title, // Usa property Dart
+      text: widget.selectedNote.title,
     );
-    _lastUpdated = widget.selectedNote.updateDate; // Usa property Dart
+    _lastUpdated = widget.selectedNote.updateDate;
 
     loadNote();
   }
@@ -262,12 +257,12 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   /// Aggiorna il titolo della nota
   void _updateNoteTitle(String title) {
     setState(() {
-      widget.selectedNote.title = title; // Setter nativo di Dart
+      widget.selectedNote.title = title;
       _lastUpdated = widget.selectedNote.updateDate;
     });
   }
 
-  // Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
+  /// Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
   void _showOptions(BuildContext context, Note note) async {
     showMenu(
       position: const RelativeRect.fromLTRB(100, 1000, 0, 0),
@@ -319,7 +314,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     );
   }
 
-  // Metodo per popolare la UI con gli elementi della nota
+  /// Metodo per popolare la UI con gli elementi della nota
   void loadNote() {
     List<NoteElement> elems = widget.selectedNote.noteElements;
     for (int i = 0; i < elems.length; i++) {

@@ -23,8 +23,6 @@ class DiaryViewModel extends ChangeNotifier {
 
   final ValueNotifier<String?> asyncError = ValueNotifier(null);
 
-
-  // --- COMANDI REATTIVI ---
   late final Command<DiaryType, void> loadNotes;
   late final Command<String, void> openNote;
   late final Command<({Note note, DiaryType diary}), void> saveNote;
@@ -36,8 +34,6 @@ class DiaryViewModel extends ChangeNotifier {
     saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(_saveNote, initialValue: null);
     deleteNote = Command.createAsync<({String noteId, DiaryType diary}), void>(_deleteNote, initialValue: null);
   }
-
-  // --- GESTIONE NOTE (LOGICA LOCALE) ---
 
   void createNewNote(DiaryType diary) {
     final newNote = LocalNote(
@@ -68,8 +64,6 @@ class DiaryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- IMPLEMENTAZIONE DEI COMANDI ---
-
   Future<void> _loadNotes(DiaryType diary) async {
     await _noteRepo.getNotes(diary, forceRefresh: true);
     notifyListeners();
@@ -79,7 +73,7 @@ class DiaryViewModel extends ChangeNotifier {
     final note = notes.firstWhere((n) => n.id == noteId);
 
     if (note is ProxyNote) {
-      await note.load(); // Caricamento pigro dei contenuti pesanti
+      await note.load();
     }
 
     _currentNote = note;
@@ -94,7 +88,6 @@ class DiaryViewModel extends ChangeNotifier {
   Future<void> _deleteNote(({String noteId, DiaryType diary}) args) async {
     final noteToDelete = notes.firstWhere((n) => n.id == args.noteId);
 
-    // La rimozione dalla lista 'notes' nel repo è istantanea (ottimistica)
     final deleteFuture = _noteRepo.deleteNote(args.diary, noteToDelete);
 
     if (_currentNote?.id == args.noteId) _currentNote = null;

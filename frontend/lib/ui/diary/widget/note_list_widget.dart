@@ -6,9 +6,6 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.
 import 'package:provider/provider.dart';
 
 /// Widget che visualizza la lista delle note appartenenti al diario in cui l'utente ha effettuato il login
-///
-/// Il pattern Consumer è implementato tramite l'utilizzo di [context.watch] per osservare il [DiaryViewModel] e
-/// aggiornare l'interfaccia in seguito a notifiche tramite notifyListeners().
 class NoteListWidget extends StatelessWidget {
   const NoteListWidget({super.key});
 
@@ -16,7 +13,6 @@ class NoteListWidget extends StatelessWidget {
   final String timeFormat = "H:mm";
 
   /// Apre la schermata [NoteEditorWidget] per la nota cliccata nella ListView
-  /// Ora è asincrono per permettere al ProxyNote di caricare i dati prima di aprire il BottomSheet
   Future<void> _openNoteEditor(BuildContext context, DiaryViewModel vm, String noteId) async {
     await vm.openNote.runAsync(noteId);
 
@@ -75,7 +71,6 @@ class NoteListWidget extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // Utilizziamo il nuovo comando passandogli il Record richiesto
                   viewModel.deleteNote.run((noteId: noteId, diary: diarySession.loggedDiary!));
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -98,7 +93,6 @@ class NoteListWidget extends StatelessWidget {
           if (viewModel.loadNotes.isRunning.value) {
             return const Center(child: CircularProgressIndicator());
           } else {
-            // Accediamo alla lista pubblica tramite il getter nativo
             if (viewModel.notes.isEmpty) {
               return Center(
                 child: Column(
@@ -121,7 +115,6 @@ class NoteListWidget extends StatelessWidget {
             return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: viewModel.notes.length,
-              // Usiamo length invece di getNoteListSize()
               separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 final note = viewModel.notes[index];

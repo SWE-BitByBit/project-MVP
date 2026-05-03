@@ -8,9 +8,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.d
 class DiaryAccessViewModel extends ChangeNotifier {
   final DiaryAccountRepository _accRepo;
 
-  // ==========================================
-  // --- STATO DELLA UI (ACCESSO) ---
-  // ==========================================
   bool _isAuthenticated = false;
   bool get isAuthenticated => _isAuthenticated;
 
@@ -20,18 +17,12 @@ class DiaryAccessViewModel extends ChangeNotifier {
 
   final ValueNotifier<String?> asyncError = ValueNotifier(null);
 
-  // ==========================================
-  // --- STATO DELLA UI (MODIFICA PASSWORD) ---
-  // ==========================================
   String _passwordError = "";
   String get passwordError => _passwordError;
 
   bool _setupSuccess = false;
   bool get setupSuccess => _setupSuccess;
 
-  // ==========================================
-  // --- COMANDI REATTIVI ---
-  // ==========================================
   late final Command<String, void> login;
   late final Command<void, void> logout;
   late final Command<String, void> createInitialPassword; // Per la prima attivazione
@@ -52,16 +43,16 @@ class DiaryAccessViewModel extends ChangeNotifier {
     if (DiarySession.session.isDiaryAuth == true) {
       _isAuthenticated = true;
     } else {
-      // 1. Controlla prima se c'è una sessione salvata
+      // Controlla prima se c'è una sessione salvata
       final hasSession = await DiarySession.session.restoreSession();
       if (hasSession) {
         _isAuthenticated = true;
       } else {
-        // 2. Se non c'è sessione, interroga il backend: l'utente ha mai creato la password?
+        // Se non c'è sessione, interroga il backend.
         try {
           needsInitialSetup = !(await _accRepo.checkHasRealPassword());
         } catch (e) {
-          needsInitialSetup = false; // Fallback sicuro
+          needsInitialSetup = false;
         }
       }
     }
@@ -69,10 +60,6 @@ class DiaryAccessViewModel extends ChangeNotifier {
     isCheckingStatus = false;
     notifyListeners();
   }
-
-  // ==========================================
-  // --- IMPLEMENTAZIONE LOGIN / LOGOUT (ORIGINALI) ---
-  // ==========================================
 
   Future<void> _login(String pwd) async {
     asyncError.value = null;
@@ -100,10 +87,6 @@ class DiaryAccessViewModel extends ChangeNotifier {
     _isAuthenticated = false;
     notifyListeners();
   }
-
-  // ==========================================
-  // --- LOGICA PASSWORD (PRIMA ATTIVAZIONE E MODIFICA) ---
-  // ==========================================
 
   /// Crea la password per la prima volta (nessuna vecchia password)
   Future<void> _createInitialPassword(String newPassword) async {
@@ -172,10 +155,6 @@ class DiaryAccessViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ==========================================
-  // --- HELPERS E VALIDAZIONE ---
-  // ==========================================
-
   void resetFormState() {
     _passwordError = "";
     _setupSuccess = false;
@@ -189,7 +168,7 @@ class DiaryAccessViewModel extends ChangeNotifier {
 
   String _validatePasswordLocally(String pwd) {
     String error = "";
-    if (pwd.length < 10) return "Minimo 10 caratteri.\n"; // Ritorno rapido
+    if (pwd.length < 10) return "Minimo 10 caratteri.\n";
     if (!pwd.contains(RegExp(r"[A-Z]")) || !pwd.contains(RegExp(r"[a-z]"))) error += "Deve contenere maiuscole e minuscole.\n";
     if (!pwd.contains(RegExp(r"[0-9]"))) error += "Deve contenere almeno un numero.\n";
     if (!pwd.contains(RegExp(r'[!@#%^&*(),.?":{}|<>]'))) error += "Deve contenere un carattere speciale.\n";

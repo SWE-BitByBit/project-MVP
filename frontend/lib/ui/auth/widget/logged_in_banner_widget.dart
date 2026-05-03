@@ -16,7 +16,6 @@ class LoggedInBannerWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // Sfondo morbido basato sul colore primario (sostituisce green.shade50)
         color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(10),
       ),
@@ -31,7 +30,6 @@ class LoggedInBannerWidget extends StatelessWidget {
           Text(
             'Sei autenticato con l\'indirizzo:',
             textAlign: TextAlign.center,
-            // Testo scuro contrastato per la leggibilità (sostituisce green.shade800)
             style: TextStyle(color: colorScheme.onPrimaryContainer),
           ),
           const SizedBox(height: 4),

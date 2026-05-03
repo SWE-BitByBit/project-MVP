@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart'; // Importa l'editor
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 import 'package:provider/provider.dart';
 
 class NoteActionsWidget extends StatelessWidget {
@@ -11,7 +11,7 @@ class NoteActionsWidget extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true, // SOLUZIONE: Rispetta la barra di stato
+      useSafeArea: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

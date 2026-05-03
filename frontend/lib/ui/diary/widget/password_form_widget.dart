@@ -17,10 +17,8 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
   @override
   void initState() {
     super.initState();
-    // Otteniamo il ViewModel una sola volta all'avvio del widget
     _vm = context.read<DiaryAccessViewModel>();
 
-    // Mettiamoci in ascolto degli errori!
     _vm.asyncError.addListener(_onErrorChanged);
   }
 
@@ -28,7 +26,6 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
   void _onErrorChanged() {
     final error = _vm.asyncError.value;
 
-    // 1. CONTROLLO FONDAMENTALE: Il widget è ancora vivo sullo schermo?
     if (!mounted) return;
 
     // Se c'è un errore, mostra lo SnackBar
@@ -42,15 +39,13 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
         ),
       );
 
-      // Resettiamo subito la variabile per evitare che lo SnackBar
-      // ricompaia se il widget viene ricostruito
+      // Resettiamo subito la variabile per evitare che lo SnackBar ricompaia se il widget viene ricostruito
       _vm.asyncError.value = null;
     }
   }
 
   @override
   void dispose() {
-    // Importante: rimuoviamo l'ascoltatore quando usciamo dalla pagina
     _vm.asyncError.removeListener(_onErrorChanged);
     _passwordController.dispose();
     super.dispose();
