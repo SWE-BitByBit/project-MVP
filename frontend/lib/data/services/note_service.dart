@@ -15,11 +15,11 @@ class NoteService {
   Map<String, String> _buildAuthHeaders() {
     final sessionToken = DiarySession.session.token;
     if (sessionToken == null || sessionToken.isEmpty) {
-      throw Exception("Accesso al diario non autorizzato: Session Token mancante.");
+      throw Exception(
+        "Accesso al diario non autorizzato: Session Token mancante.",
+      );
     }
-    return {
-      'X-Diary-Token': sessionToken,
-    };
+    return {'X-Diary-Token': sessionToken};
   }
 
   /// Recupera le preview di tutte le note di un determinato diario.
@@ -36,7 +36,10 @@ class NoteService {
   }
 
   /// Recupera il contenuto completo di una singola nota.
-  Future<Map<String, dynamic>> fetchNoteById(DiaryType targetDiary, String noteId) async {
+  Future<Map<String, dynamic>> fetchNoteById(
+    DiaryType targetDiary,
+    String noteId,
+  ) async {
     final response = await _apiClient.get(
       '$_basePath/${targetDiary.name}/$noteId/',
       headers: _buildAuthHeaders(),
@@ -45,9 +48,12 @@ class NoteService {
   }
 
   /// Crea una nuova nota o aggiorna una esistente nel database.
-  Future<Map<String, dynamic>> saveNote(DiaryType targetDiary, Map<String, dynamic> noteData) async {
+  Future<Map<String, dynamic>> saveNote(
+    DiaryType targetDiary,
+    Map<String, dynamic> noteData,
+  ) async {
     final String? noteId = noteData['note_id'];
-
+    noteData["diary_type"] = DiarySession.session.loggedDiary!.name;
     if (noteId == null) {
       // POST /diary/{diary_type}/ - Creazione nuova nota
       return await _apiClient.post(

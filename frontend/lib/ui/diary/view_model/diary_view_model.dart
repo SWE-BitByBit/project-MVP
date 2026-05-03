@@ -29,10 +29,19 @@ class DiaryViewModel extends ChangeNotifier {
   late final Command<({String noteId, DiaryType diary}), void> deleteNote;
 
   DiaryViewModel(this._noteRepo, DiaryAccountRepository accRepo) {
-    loadNotes = Command.createAsync<DiaryType, void>(_loadNotes, initialValue: null);
+    loadNotes = Command.createAsync<DiaryType, void>(
+      _loadNotes,
+      initialValue: null,
+    );
     openNote = Command.createAsync<String, void>(_openNote, initialValue: null);
-    saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(_saveNote, initialValue: null);
-    deleteNote = Command.createAsync<({String noteId, DiaryType diary}), void>(_deleteNote, initialValue: null);
+    saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(
+      _saveNote,
+      initialValue: null,
+    );
+    deleteNote = Command.createAsync<({String noteId, DiaryType diary}), void>(
+      _deleteNote,
+      initialValue: null,
+    );
   }
 
   void createNewNote(DiaryType diary) {
@@ -48,7 +57,10 @@ class DiaryViewModel extends ChangeNotifier {
 
   void addTextElement(String text) {
     if (_currentNote != null) {
-      _currentNote!.addElement(NoteTextElement(text), _currentNote!.getElementCount());
+      _currentNote!.addElement(
+        NoteTextElement(text),
+        _currentNote!.getElementCount(),
+      );
       notifyListeners();
     }
   }
@@ -59,7 +71,7 @@ class DiaryViewModel extends ChangeNotifier {
     NoteElement elem = (type == "image")
         ? NoteImageElement(file.path)
         : NoteAudioElement(file.path);
-
+    elem.setFile(file);
     _currentNote!.addElement(elem, _currentNote!.getElementCount());
     notifyListeners();
   }
@@ -98,7 +110,6 @@ class DiaryViewModel extends ChangeNotifier {
       notifyListeners();
     });
   }
-
 
   @override
   void dispose() {

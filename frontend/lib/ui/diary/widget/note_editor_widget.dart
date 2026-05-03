@@ -144,9 +144,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: Image.file(
-                      File(element.content),
-                    ),
+                    child: Image.file(File(element.content)),
                   ),
                 ),
 
@@ -202,9 +200,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(
-      text: widget.selectedNote.title,
-    );
+    _titleController = TextEditingController(text: widget.selectedNote.title);
     _lastUpdated = widget.selectedNote.updateDate;
 
     loadNote();
@@ -230,6 +226,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
       File pickedImage = File(image.path);
 
       final newElement = NoteImageElement(pickedImage.path);
+      newElement.setFile(pickedImage);
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
@@ -245,6 +242,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
       final File audioFile = File(pickResult.files.single.path!);
 
       final newElement = NoteAudioElement(audioFile.path);
+      newElement.setFile(audioFile);
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
@@ -343,13 +341,18 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               widget.selectedNote.removeElement(emptyElement);
             }
             if (DiarySession.session.loggedDiary != null) {
-
               bool isTitleEmpty = widget.selectedNote.title.isEmpty;
               bool isBodyEmpty = widget.selectedNote.noteElements.isEmpty;
               if (isTitleEmpty && isBodyEmpty) {
-                vm.deleteNote.run((noteId: widget.selectedNote.id, diary: DiarySession.session.loggedDiary!));
+                vm.deleteNote.run((
+                  noteId: widget.selectedNote.id,
+                  diary: DiarySession.session.loggedDiary!,
+                ));
               } else {
-                vm.saveNote.run((note: widget.selectedNote, diary: DiarySession.session.loggedDiary!));
+                vm.saveNote.run((
+                  note: widget.selectedNote,
+                  diary: DiarySession.session.loggedDiary!,
+                ));
               }
             }
           },
@@ -418,7 +421,8 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                       builder: (context) {
                         if (_elements.isEmpty == false) {
                           return ListView.builder(
-                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
                             padding: const EdgeInsetsGeometry.directional(
                               start: 8,
                               end: 8,
