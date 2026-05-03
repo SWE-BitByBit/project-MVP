@@ -65,15 +65,16 @@ class DiaryViewModel extends ChangeNotifier {
     }
   }
 
-  void addMediaElement(File file, String type) {
-    if (_currentNote == null) return;
+  NoteElement addMediaElement(File file, String type) {
+    if (_currentNote == null) throw "Errore nell'aggiunta dell'elemento nota";
 
     NoteElement elem = (type == "image")
-        ? NoteImageElement(file.path)
-        : NoteAudioElement(file.path);
+        ? NoteImageElement(file.path, file)
+        : NoteAudioElement(file.path, file);
     elem.setFile(file);
     _currentNote!.addElement(elem, _currentNote!.getElementCount());
     notifyListeners();
+    return elem;
   }
 
   Future<void> _loadNotes(DiaryType diary) async {

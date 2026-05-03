@@ -144,7 +144,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: Image.file(File(element.content)),
+                    child: Image.file(element.file!),
                   ),
                 ),
 
@@ -174,7 +174,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     onDismiss: () {
                       dispose();
                     },
-                    trackUrl: element.content,
+                    trackUrl: element.file!.path,
                   ),
                 ),
 
@@ -225,8 +225,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     if (image != null) {
       File pickedImage = File(image.path);
 
-      final newElement = NoteImageElement(pickedImage.path);
-      newElement.setFile(pickedImage);
+      final newElement = NoteImageElement(
+        pickedImage.path,
+        File(pickedImage.path),
+      );
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
@@ -241,8 +243,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     if (pickResult != null) {
       final File audioFile = File(pickResult.files.single.path!);
 
-      final newElement = NoteAudioElement(audioFile.path);
-      newElement.setFile(audioFile);
+      final newElement = NoteAudioElement(audioFile.path, File(audioFile.path));
       note.addElement(newElement, note.getElementCount());
 
       setState(() {
