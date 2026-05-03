@@ -30,13 +30,13 @@ class DiaryAccountService {
     DiaryType diaryType,
   ) async {
     final body = <String, dynamic>{
-      'new_password': newPassword,
+      'password': newPassword,
       'diary_type': diaryType == DiaryType.real_diary
-          ? 'real_diary'
-          : 'fake_diary',
+          ? 'REAL_DIARY'
+          : 'FAKE_DIARY',
     };
     if (oldPassword != null) {
-      body['old_password'] = oldPassword;
+      body['previous_password'] = oldPassword;
     }
 
     final response = await _apiClient.post(
@@ -57,7 +57,7 @@ class DiaryAccountService {
         requiresAuth: true,
       );
 
-      return response['has_password'] == true;
+      return response['has_real_password'] == true;
     } catch (e) {
       return false;
     }

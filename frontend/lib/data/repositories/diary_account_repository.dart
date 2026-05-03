@@ -17,15 +17,15 @@ class DiaryAccountRepository {
       final Map<String, dynamic> response = await _service
           .validateDiaryPassword(pwd);
       final String? typeStr = response['diary_type'];
-      final String? token = response['token'];
+      final String? token = response['access_token'];
 
       if (token != null && typeStr != null) {
-        final diaryType = typeStr == 'real_diary'
+        final diaryType = typeStr == 'REAL_DIARY'
             ? DiaryType.real_diary
             : DiaryType.fake_diary;
         await DiarySession.session.initSession(diaryType, token);
 
-        return typeStr == 'real_diary'
+        return typeStr == 'REAL_DIARY'
             ? DiaryAccessResult.real_diary
             : DiaryAccessResult.fake_diary;
       }
@@ -81,6 +81,14 @@ class DiaryAccountRepository {
       }
       return "";
     } catch (e) {
+      if (e is ApiException) {
+        print(e.message);
+        if (e.message.toString().startsWith(
+          "Previous password does not match",
+        )) {
+          return "La password inserita non è corretta";
+        }
+      }
       return "Errore imprevisto durante la registrazione della password.";
     }
   }
