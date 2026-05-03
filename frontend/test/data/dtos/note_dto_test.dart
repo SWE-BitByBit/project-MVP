@@ -125,7 +125,7 @@ void main() {
         expect(result['note_id'], 'note_456');
         expect(result['title'], 'Appunti');
         expect(result['created_at'], '2023-11-20T09:00:00.000Z');
-        expect(result['updated_at'], '2023-11-20T10:00:00.000Z');
+        expect(result['last_modified_at'], '2023-11-20T10:00:00.000Z');
 
         final elementsJson = result['elements'] as List<Map<String, dynamic>>;
         expect(elementsJson.length, 2);
