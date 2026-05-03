@@ -39,12 +39,6 @@ import '../ui/home/view_model/home_view_model.dart';
 import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
-
-//-----------------MOCKED----------------
-import '../data/services/mock_diary_services.dart';
-import '../data/services/mock_trusted_contact_service.dart';
-import '../data/services/mock_dead_man_service.dart';
-
 final getIt = GetIt.instance;
 
 void setupLocator() {
@@ -90,108 +84,165 @@ void _setupCore() {
     ),
   );
 
-  getIt.registerLazySingleton<CacheManager>(() => CacheManager([
-    getIt<TrustedContactRepository>(),
-    getIt<ChatbotRepository>(),
-    getIt<SafePlaceRepository>(),
-    getIt<MaterialRepository>(),
-    getIt<DeadManRepository>(),
-    getIt<NoteRepository>(),
-  ]));
+  getIt.registerLazySingleton<CacheManager>(
+    () => CacheManager([
+      getIt<TrustedContactRepository>(),
+      getIt<ChatbotRepository>(),
+      getIt<SafePlaceRepository>(),
+      getIt<MaterialRepository>(),
+      getIt<DeadManRepository>(),
+      getIt<NoteRepository>(),
+    ]),
+  );
 }
 
 void _setupHome() {
-  getIt.registerFactory<HomeViewModel>(() => HomeViewModel(getIt<DeadManRepository>()));
+  getIt.registerFactory<HomeViewModel>(
+    () => HomeViewModel(getIt<DeadManRepository>()),
+  );
 }
 
 /// Registra le dipendenze relative al modulo dell' autenticazione
 void _setupAuth() {
   getIt.registerLazySingleton<AuthService>(() => AuthService());
-  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository(getIt<AuthService>()));
-  getIt.registerFactory<AuthViewModel>(() => AuthViewModel(getIt<AuthRepository>()));
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(getIt<AuthService>()),
+  );
+  getIt.registerFactory<AuthViewModel>(
+    () => AuthViewModel(getIt<AuthRepository>()),
+  );
 }
 
 /// Registra le dipendenze relative al modulo dei Luoghi Sicuri
 void _setupSafePlace() {
-  getIt.registerLazySingleton<SafePlaceService>(() => SafePlaceService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<SafePlaceService>(
+    () => SafePlaceService(apiClient: getIt<ApiClient>()),
+  );
 
-  getIt.registerLazySingleton<SafePlaceRepository>(() => SafePlaceRepository(getIt<SafePlaceService>()));
+  getIt.registerLazySingleton<SafePlaceRepository>(
+    () => SafePlaceRepository(getIt<SafePlaceService>()),
+  );
 
-  getIt.registerFactory<SafePlaceViewModel>(() => SafePlaceViewModel(
-    getIt<SafePlaceRepository>(),
-    locationService: getIt<LocationService>(),
-  ));
+  getIt.registerFactory<SafePlaceViewModel>(
+    () => SafePlaceViewModel(
+      getIt<SafePlaceRepository>(),
+      locationService: getIt<LocationService>(),
+    ),
+  );
 }
 
 /// Registra le dipendenze relative al modulo dei Contatti Fidati
 void _setupTrustedContact() {
   //-----------------MOCKED----------------
-  getIt.registerLazySingleton<TrustedContactService>(() => TrustedContactService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<TrustedContactService>(
+    () => TrustedContactService(apiClient: getIt<ApiClient>()),
+  );
   //getIt.registerLazySingleton<TrustedContactService>(() => MockTrustedContactService());
 
-  getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(getIt<TrustedContactService>()));
+  getIt.registerLazySingleton<TrustedContactRepository>(
+    () => TrustedContactRepository(getIt<TrustedContactService>()),
+  );
 
-  getIt.registerFactory<TrustedContactViewModel>(() => TrustedContactViewModel(
-    getIt<TrustedContactRepository>(),
-    authRepository: getIt<AuthRepository>(),
-  ));
+  getIt.registerFactory<TrustedContactViewModel>(
+    () => TrustedContactViewModel(
+      getIt<TrustedContactRepository>(),
+      authRepository: getIt<AuthRepository>(),
+    ),
+  );
 
-  getIt.registerFactory<SosViewModel>(() => SosViewModel(
-    contactsRepository: getIt<TrustedContactRepository>(),
-    authRepository: getIt<AuthRepository>(),
-  ));
+  getIt.registerFactory<SosViewModel>(
+    () => SosViewModel(
+      contactsRepository: getIt<TrustedContactRepository>(),
+      authRepository: getIt<AuthRepository>(),
+    ),
+  );
 }
 
 /// Registra le dipendenze relative al modulo del Chatbot
 void _setupChatbot() {
-  getIt.registerLazySingleton<ChatbotService>(() => ChatbotService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<ChatbotService>(
+    () => ChatbotService(apiClient: getIt<ApiClient>()),
+  );
 
-  getIt.registerLazySingleton<ChatbotRepository>(() => ChatbotRepository(getIt<ChatbotService>()));
+  getIt.registerLazySingleton<ChatbotRepository>(
+    () => ChatbotRepository(getIt<ChatbotService>()),
+  );
 
-  getIt.registerFactory<ChatbotViewModel>(() => ChatbotViewModel(
-    getIt<ChatbotRepository>(),
-    authRepository: getIt<AuthRepository>(),
-  ));
+  getIt.registerFactory<ChatbotViewModel>(
+    () => ChatbotViewModel(
+      getIt<ChatbotRepository>(),
+      authRepository: getIt<AuthRepository>(),
+    ),
+  );
 }
 
 /// Registra le dipendenze relative al modulo del Materiale Informativo
 void _setupMaterial() {
-  getIt.registerLazySingleton<MaterialService>(() => MaterialService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<MaterialService>(
+    () => MaterialService(apiClient: getIt<ApiClient>()),
+  );
 
-  getIt.registerLazySingleton<MaterialRepository>(() => MaterialRepository(service: getIt<MaterialService>()));
+  getIt.registerLazySingleton<MaterialRepository>(
+    () => MaterialRepository(service: getIt<MaterialService>()),
+  );
 
-  getIt.registerFactory<MaterialViewModel>(() => MaterialViewModel(getIt<MaterialRepository>()));
+  getIt.registerFactory<MaterialViewModel>(
+    () => MaterialViewModel(getIt<MaterialRepository>()),
+  );
 }
 
 /// Registra le dipendenze relative al modulo dell'allarme automatico
 void _setupSettings() {
   //-----------------MOCKED----------------
-  getIt.registerLazySingleton<DeadManService>(() => DeadManService(apiClient: getIt<ApiClient>()));
+  getIt.registerLazySingleton<DeadManService>(
+    () => DeadManService(apiClient: getIt<ApiClient>()),
+  );
   //getIt.registerLazySingleton<DeadManService>(() => MockDeadManService());
 
-  getIt.registerLazySingleton<DeadManRepository>(() => DeadManRepository(getIt<DeadManService>()));
+  getIt.registerLazySingleton<DeadManRepository>(
+    () => DeadManRepository(getIt<DeadManService>()),
+  );
 
-  getIt.registerFactory<DeadManViewModel>(() => DeadManViewModel(getIt<DeadManRepository>(), authRepository: getIt<AuthRepository>()));
+  getIt.registerFactory<DeadManViewModel>(
+    () => DeadManViewModel(
+      getIt<DeadManRepository>(),
+      authRepository: getIt<AuthRepository>(),
+    ),
+  );
 }
 
 /// Registra le dipendenze relative al modulo del Diario (Criptato e Fittizio)
 void _setupDiary() {
-
   // Services
   //-----------------MOCKED----------------
 
-  getIt.registerLazySingleton<DiaryAccountService>(() => DiaryAccountService(apiClient: getIt<ApiClient>()));
-  getIt.registerLazySingleton<NoteService>(() => NoteService(apiClient: getIt<ApiClient>()));
-/*
+  getIt.registerLazySingleton<DiaryAccountService>(
+    () => DiaryAccountService(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NoteService>(
+    () => NoteService(apiClient: getIt<ApiClient>()),
+  );
+  /*
   getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
   getIt.registerLazySingleton<NoteService>(() => MockNoteService());
 */
 
   // Repositories
-  getIt.registerLazySingleton<DiaryAccountRepository>(() => DiaryAccountRepository(getIt<DiaryAccountService>()));
-  getIt.registerLazySingleton<NoteRepository>(() => NoteRepository(getIt<NoteService>()));
+  getIt.registerLazySingleton<DiaryAccountRepository>(
+    () => DiaryAccountRepository(getIt<DiaryAccountService>()),
+  );
+  getIt.registerLazySingleton<NoteRepository>(
+    () => NoteRepository(getIt<NoteService>()),
+  );
 
   // ViewModels (Registrati come Factory per garantire uno stato pulito alla riapertura delle schermate)
-  getIt.registerFactory<DiaryAccessViewModel>(() => DiaryAccessViewModel(getIt<DiaryAccountRepository>()));
-  getIt.registerFactory<DiaryViewModel>(() => DiaryViewModel(getIt<NoteRepository>(), getIt<DiaryAccountRepository>()));
+  getIt.registerFactory<DiaryAccessViewModel>(
+    () => DiaryAccessViewModel(getIt<DiaryAccountRepository>()),
+  );
+  getIt.registerFactory<DiaryViewModel>(
+    () => DiaryViewModel(
+      getIt<NoteRepository>(),
+      getIt<DiaryAccountRepository>(),
+    ),
+  );
 }
