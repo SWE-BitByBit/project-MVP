@@ -68,6 +68,10 @@ class DiaryAccountRepository {
         diaryType,
       );
 
+      if (response == null) {
+        return "";
+      }
+
       // Gestione degli errori unificata dal backend
       if (response['error'] == 'IDENTICAL_TO_REAL') {
         return "La password del diario fittizio non può essere identica alla password del diario reale";

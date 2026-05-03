@@ -27,6 +27,18 @@ class _DiaryFirstSetupWidgetState extends State<DiaryFirstSetupWidget> {
     super.dispose();
   }
 
+  void _submit(DiaryAccessViewModel vm) {
+    if (_pwdController.text != _confirmController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Le password non coincidono")),
+      );
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    vm.createInitialPassword.run(_pwdController.text);
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DiaryAccessViewModel>();
@@ -38,16 +50,20 @@ class _DiaryFirstSetupWidgetState extends State<DiaryFirstSetupWidget> {
         children: [
           const Icon(Icons.shield_outlined, size: 80, color: Colors.teal),
           const SizedBox(height: 24),
+
           const Text(
             "Benvenuto!",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
+
           const SizedBox(height: 8),
+
           const Text(
             "Imposta la tua password per il diario reale. Questa sarà la chiave principale per i tuoi segreti.",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
+
           const SizedBox(height: 32),
 
           TextField(
@@ -58,8 +74,9 @@ class _DiaryFirstSetupWidgetState extends State<DiaryFirstSetupWidget> {
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.lock_open),
             ),
-            onChanged: (val) => vm.validateInput(val),
+            onChanged: vm.validateInput,
           ),
+
           const SizedBox(height: 16),
 
           TextField(
@@ -88,16 +105,7 @@ class _DiaryFirstSetupWidgetState extends State<DiaryFirstSetupWidget> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: () {
-                if (_pwdController.text == _confirmController.text) {
-                  FocusScope.of(context).unfocus();
-                  vm.createInitialPassword.run(_pwdController.text);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Le password non coincidono")),
-                  );
-                }
-              },
+              onPressed: () => _submit(vm),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
               child: const Text(
                 'Attiva Diario',

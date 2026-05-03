@@ -24,22 +24,28 @@ class DiaryAccountService {
   }
 
   /// Imposta o aggiorna la password (Reale o Fittizia).
-  Future<Map<String, dynamic>> setPassword(String? oldPassword, String newPassword, DiaryType diaryType) async {
+  Future<Map<String, dynamic>?> setPassword(
+    String? oldPassword,
+    String newPassword,
+    DiaryType diaryType,
+  ) async {
     final body = <String, dynamic>{
       'new_password': newPassword,
-      'diary_type': diaryType == DiaryType.real_diary ? 'real_diary' : 'fake_diary',
+      'diary_type': diaryType == DiaryType.real_diary
+          ? 'real_diary'
+          : 'fake_diary',
     };
     if (oldPassword != null) {
       body['old_password'] = oldPassword;
     }
 
     final response = await _apiClient.post(
-      '$_basePath/set-password',
+      '$_basePath/set_password',
       body: body,
       requiresAuth: true,
     );
 
-    return response as Map<String, dynamic>;
+    return response as Map<String, dynamic>?;
   }
 
   /// Interroga il backend per sapere se l'utente ha già impostato la password del diario.
@@ -52,11 +58,8 @@ class DiaryAccountService {
       );
 
       return response['has_password'] == true;
-
     } catch (e) {
       return false;
     }
   }
-
-
 }
