@@ -10,7 +10,9 @@ import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_
 import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
 
 // --- MOCKS ---
-class MockTrustedContactViewModel extends Mock implements TrustedContactViewModel {}
+class MockTrustedContactViewModel extends Mock
+    implements TrustedContactViewModel {}
+
 class MockCommandCreate extends Mock implements Command<TrustedContact, void> {}
 
 void main() {
@@ -23,11 +25,16 @@ void main() {
 
     // Configuriamo le dipendenze minime per far sopravvivere il TrustedContactFormWidget
     // che viene renderizzato all'interno del BottomSheet
-    when(() => mockCreateCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
-    when(() => mockCreateCommand.errors).thenReturn(ValueNotifier<CommandError<TrustedContact>?>(null));
+    when(
+      () => mockCreateCommand.isRunning,
+    ).thenReturn(ValueNotifier<bool>(false));
+    when(
+      () => mockCreateCommand.errors,
+    ).thenReturn(ValueNotifier<CommandError<TrustedContact>?>(null));
 
     // Colleghiamo il comando al ViewModel
     when(() => mockVm.createContact).thenReturn(mockCreateCommand);
+    when(() => mockVm.errors).thenReturn(<String, String>{});
   });
 
   Widget createWidgetUnderTest() {
@@ -42,7 +49,9 @@ void main() {
   }
 
   group('TrustedContactActionsWidget - Layout & Interazioni', () {
-    testWidgets('renderizza il FloatingActionButton con l\'icona + (add)', (tester) async {
+    testWidgets('renderizza il FloatingActionButton con l\'icona + (add)', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Verifica la corretta renderizzazione del pulsante
@@ -50,20 +59,23 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('al tocco apre il BottomSheet contenente TrustedContactFormWidget', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    testWidgets(
+      'al tocco apre il BottomSheet contenente TrustedContactFormWidget',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Prima del tap, la modale non deve esserci
-      expect(find.byType(TrustedContactFormWidget), findsNothing);
+        // Prima del tap, la modale non deve esserci
+        expect(find.byType(TrustedContactFormWidget), findsNothing);
 
-      // Eseguiamo il tap sul FAB
-      await tester.tap(find.byType(FloatingActionButton));
+        // Eseguiamo il tap sul FAB
+        await tester.tap(find.byType(FloatingActionButton));
 
-      // Aspettiamo che l'animazione di entrata del BottomSheet sia completata.
-      await tester.pumpAndSettle();
+        // Aspettiamo che l'animazione di entrata del BottomSheet sia completata.
+        await tester.pumpAndSettle();
 
-      // Verifichiamo che la modale si sia aperta mostrando il form
-      expect(find.byType(TrustedContactFormWidget), findsOneWidget);
-    });
+        // Verifichiamo che la modale si sia aperta mostrando il form
+        expect(find.byType(TrustedContactFormWidget), findsOneWidget);
+      },
+    );
   });
 }

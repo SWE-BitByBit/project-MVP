@@ -94,12 +94,16 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'Stato Allarme',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 subtitle: Text(
                   draft.isActive ? 'Attivo e in monitoraggio' : 'Disattivato',
                   style: TextStyle(
-                    color: draft.isActive ? theme.colorScheme.primary : theme.colorScheme.outline,
+                    color: draft.isActive
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline,
                   ),
                 ),
                 value: draft.isActive,
@@ -112,7 +116,9 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
               // --- SLIDER 1 ---
               Text(
                 'Invia avviso di check-in dopo:',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Row(
                 children: [
@@ -123,10 +129,14 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                       max: 10,
                       divisions: 9,
                       label: '${draft.firstInactivityTimer} giorni',
-                      onChanged: (val) => vm.updateTimers(firstTimer: val.toInt()),
+                      onChanged: (val) =>
+                          vm.updateTimers(firstTimer: val.toInt()),
                     ),
                   ),
-                  Text('${draft.firstInactivityTimer} gg', style: theme.textTheme.titleMedium),
+                  Text(
+                    '${draft.firstInactivityTimer} gg',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -134,7 +144,9 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
               // --- SLIDER 2 ---
               Text(
                 'Se non rispondo, lancia l\'allarme dopo:',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Row(
                 children: [
@@ -145,10 +157,14 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                       max: 5,
                       divisions: 4,
                       label: '${draft.secondInactivityTimer} giorni',
-                      onChanged: (val) => vm.updateTimers(secondTimer: val.toInt()),
+                      onChanged: (val) =>
+                          vm.updateTimers(secondTimer: val.toInt()),
                     ),
                   ),
-                  Text('${draft.secondInactivityTimer} gg', style: theme.textTheme.titleMedium),
+                  Text(
+                    '${draft.secondInactivityTimer} gg',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -156,15 +172,20 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
               // --- CAMPI DI TESTO ---
               TextFormField(
                 controller: _subjectController,
-                decoration: const InputDecoration(labelText: 'Oggetto Messaggio'),
+                decoration: const InputDecoration(
+                  labelText: 'Oggetto Messaggio',
+                ),
                 onChanged: (text) => vm.updateMessage(text, draft.messageBody),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _bodyController,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Corpo del Messaggio'),
-                onChanged: (text) => vm.updateMessage(draft.messageSubject, text),
+                decoration: const InputDecoration(
+                  labelText: 'Corpo del Messaggio',
+                ),
+                onChanged: (text) =>
+                    vm.updateMessage(draft.messageSubject, text),
               ),
 
               const SizedBox(height: 24),
@@ -177,22 +198,30 @@ class _DeadManFormWidgetState extends State<DeadManFormWidget> {
                     valueListenable: vm.saveSettings.isRunning,
                     builder: (context, isSaving, _) {
                       return FilledButton.icon(
+                        key: const Key('dms_save_button'),
                         onPressed: (isSaving || !vm.hasUnsavedChanges)
                             ? null
                             : () async {
-                          FocusScope.of(context).unfocus();
-                          await vm.saveSettings.runAsync();
-                          if (vm.saveSettings.errors.value == null && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Impostazioni salvate!'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        },
+                                FocusScope.of(context).unfocus();
+                                await vm.saveSettings.runAsync();
+                                if (vm.saveSettings.errors.value == null &&
+                                    context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Impostazioni salvate!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
                         icon: isSaving
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : const Icon(Icons.save),
                         label: const Text('Salva'),
                       );
