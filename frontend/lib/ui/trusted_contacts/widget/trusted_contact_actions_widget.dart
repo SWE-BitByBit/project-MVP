@@ -4,21 +4,18 @@ import '../view_model/trusted_contact_view_model.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Raggruppa le azioni specifiche per la gestione dei contatti fidati.
-///
-/// Contiene il Floating Action Button per aggiungere un nuovo contatto.
 class TrustedContactActionsWidget extends StatelessWidget {
   const TrustedContactActionsWidget({super.key});
 
   /// Apre il [TrustedContactFormWidget] in un pannello modale.
   void _openAddContactForm(BuildContext context) {
-    // Salviamo viewModel e theme prima di entrare nel builder del BottomSheet
     final viewModel = context.read<TrustedContactViewModel>();
     final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: theme.scaffoldBackgroundColor, // Colore dinamico
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -45,8 +42,8 @@ class TrustedContactActionsWidget extends StatelessWidget {
 
     return FloatingActionButton(
       onPressed: () => _openAddContactForm(context),
-      backgroundColor: theme.colorScheme.primary, // Colore coerente con l'app
-      foregroundColor: theme.colorScheme.onPrimary, // Colore dell'icona (es. bianco)
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: theme.colorScheme.onPrimary,
       tooltip: 'Aggiungi contatto fidato',
       child: const Icon(Icons.add, size: 28),
     );

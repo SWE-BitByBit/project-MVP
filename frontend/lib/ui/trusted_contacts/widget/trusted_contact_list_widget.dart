@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../view_model/trusted_contact_view_model.dart';
 import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Visualizza l'elenco dei contatti fidati salvati.
-///
-/// Implementa il pattern Observer tramite il widget [Consumer], che ascolta
-/// il [TrustedContactViewModel] e ricostruisce la lista ad ogni notifica di cambiamento.
 class TrustedContactListWidget extends StatelessWidget {
   const TrustedContactListWidget({super.key});
 
@@ -108,7 +104,6 @@ class TrustedContactListWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        // Usiamo .value perché il ViewModel esiste già ed è gestito dal Provider padre
         return ChangeNotifierProvider.value(
           value: viewModel,
           child: Padding(
@@ -148,7 +143,6 @@ class TrustedContactListWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-                // Il comando attiva la logica nel ViewModel/Repo
                 viewModel.deleteContact.runAsync(contactId);
               },
               style: ElevatedButton.styleFrom(

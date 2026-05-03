@@ -4,14 +4,10 @@ import '../view_model/trusted_contact_view_model.dart';
 import '../../../domain/models/trusted_contact/trusted_contact.dart';
 
 /// Gestisce i campi di input per l'inserimento o la modifica di un contatto fidato.
-///
-/// Implementa un form validato e reagisce agli stati di caricamento dei comandi
-/// [createContact] o [updateContact] del ViewModel.
 class TrustedContactFormWidget extends StatefulWidget {
   /// Callback invocata quando il form viene salvato con successo o annullato.
   final VoidCallback onDismiss;
 
-  /// Contatto opzionale da modificare. Se null, il form opera in modalità creazione.
   final TrustedContact? initialContact;
 
   const TrustedContactFormWidget({
@@ -125,7 +121,6 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
             ),
             const SizedBox(height: 24),
 
-            // Reattività chirurgica: ascoltiamo solo il comando in uso
             ValueListenableBuilder<bool>(
               valueListenable: isEditing
                   ? viewModel.updateContact.isRunning
@@ -133,20 +128,18 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
               builder: (context, isRunning, child) {
 
                 return ElevatedButton(
-                  // Se sta caricando, disabilitiamo il bottone
+                  // Se sta caricando, disabuilita il bottone
                   onPressed: isRunning ? null : () async {
                     if (_formKey.currentState!.validate()) {
-                      // Chiudiamo la tastiera
                       FocusScope.of(context).unfocus();
 
                       final contact = TrustedContact(
-                        id: widget.initialContact?.id ?? '', // ID pubblico
+                        id: widget.initialContact?.id ?? '',
                         name: _nameController.text.trim(),
                         email: _emailController.text.trim(),
                         phoneNumber: _phoneController.text.trim(),
                       );
 
-                      // Await ci permette di aspettare la risposta del backend
                       if (isEditing) {
                         await viewModel.updateContact.runAsync(contact);
 
@@ -160,9 +153,6 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
                           widget.onDismiss();
                         }
                       }
-
-                      // NOTA: Se c'è un errore (errors.value != null), il form NON si chiude,
-                      // permettendo all'utente di riprovare senza riscrivere tutto!
                     }
                   },
                   style: ElevatedButton.styleFrom(

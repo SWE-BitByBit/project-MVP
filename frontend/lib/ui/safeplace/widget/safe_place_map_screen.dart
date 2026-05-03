@@ -81,34 +81,30 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
         ],
       ),
 
-      // --- APPLICHIAMO LO SCHEMA DEI CONTATTI FIDATI ---
       body: SafeArea(
-        top: false, // La mappa può estendersi sotto la status bar
+        top: false, //La mappa può estendersi sotto la status bar
         child: ValueListenableBuilder<bool>(
           valueListenable: vm.loadPlaces.isRunning,
           builder: (context, isRunning, _) {
-            // 1. STATO DI CARICAMENTO INIZIALE
             if (isRunning && vm.safePlaces.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // 2. CONTROLLO ERRORI BLOCCANTI SUL CARICAMENTO
             return ValueListenableBuilder(
               valueListenable: vm.loadPlaces.errors,
               builder: (context, commandError, _) {
-                // Se c'è un errore e la cache è vuota, blocchiamo la UI e mostriamo l'ErrorIndicator
+                // Se c'è un errore e la cache è vuota, blocca la UI e mostriamo l'ErrorIndicator
                 if (commandError != null && vm.safePlaces.isEmpty) {
                   return Center(
                     child: ErrorIndicator(
                       title: "Errore nel caricamento",
                       label: "Prego riprovare",
                       onPressed: () =>
-                          vm.loadPlaces.run(null), // Lanciamo la retry!
+                          vm.loadPlaces.run(null),
                     ),
                   );
                 }
 
-                // 3. STATO DI SUCCESSO: Mostriamo la Mappa!
                 return SafePlaceMapWidget(mapController: _mapController);
               },
             );
@@ -116,7 +112,6 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
         ),
       ),
 
-      // I Floating Action Button restano invariati rispetto a prima
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,

@@ -40,7 +40,7 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
     } catch (e) {
       if (!mounted) return;
 
-      // 4. ERRORE (Connessione assente, errore server, ecc.)
+      // ERRORE
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -65,7 +65,6 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
     final progress = (_dragOffset / _triggerThreshold).clamp(0.0, 1.0);
     final currentOpacity = 0.4 + (0.6 * progress);
 
-    // Ascoltiamo se il comando è in esecuzione per disabilitare la leva e mostrare il caricamento
     return ValueListenableBuilder<bool>(
       valueListenable: context.read<SosViewModel>().sendAlert.isRunning,
       builder: (context, isRunning, child) {
@@ -107,7 +106,7 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Se sta caricando, mostra lo spinner invece dell'icona!
+                      // Se sta caricando, mostra lo spinner.
                       if (isRunning)
                         const Padding(
                           padding: EdgeInsets.only(bottom: 12.0),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../utils/locator.dart';
 import '../view_model/dead_man_view_model.dart';
-import 'dead_man_form_widget.dart'; // Assicurati che il path sia corretto
+import 'dead_man_form_widget.dart';
 
 /// Schermata principale delle Impostazioni.
 class SettingsScreen extends StatelessWidget {
@@ -31,7 +30,7 @@ class _SettingsScreenBody extends StatelessWidget {
       body: ListView(
         physics: const BouncingScrollPhysics(),
         children: [
-          // --- TAB 1: ALLARME AUTOMATICO ---
+          // --- ALLARME AUTOMATICO ---
           ExpansionTile(
             initiallyExpanded: true,
             leading: Icon(Icons.timer_outlined, color: Theme.of(context).colorScheme.primary),
@@ -45,7 +44,7 @@ class _SettingsScreenBody extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // --- TAB 2: PRIVACY E DATI ---
+          // --- PRIVACY E DATI ---
           ExpansionTile(
             leading: Icon(Icons.privacy_tip_outlined, color: Theme.of(context).colorScheme.outline),
             title: const Text('Privacy e Dati'),
@@ -62,7 +61,7 @@ class _SettingsScreenBody extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // --- TAB 3: INFO APP ---
+          // --- INFO APP ---
           ExpansionTile(
             leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.outline),
             title: const Text('Informazioni App'),
