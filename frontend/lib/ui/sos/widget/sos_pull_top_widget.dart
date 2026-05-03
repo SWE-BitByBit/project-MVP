@@ -23,14 +23,20 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
 
       if (!mounted) return;
 
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 10),
-              Text('🚨 SOS INVIATO!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+
+              Text(
+                '🚨 SOS INVIATO!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
           backgroundColor: Colors.green.shade700,
@@ -48,7 +54,13 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 10),
               Expanded(
-                child: Text(' INVIO FALLITO. Controlla la connessione.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(
+                  ' INVIO FALLITO. Controlla la connessione.',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ],
           ),
@@ -64,26 +76,30 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
     final colorScheme = Theme.of(context).colorScheme;
     final progress = (_dragOffset / _triggerThreshold).clamp(0.0, 1.0);
     final currentOpacity = 0.4 + (0.6 * progress);
-
+    final vm = context.read<SosViewModel>();
     return ValueListenableBuilder<bool>(
-      valueListenable: context.read<SosViewModel>().sendAlert.isRunning,
+      valueListenable: vm.sendAlert.isRunning,
       builder: (context, isRunning, child) {
-
+        vm.checkConnection();
         return GestureDetector(
-          onVerticalDragUpdate: isRunning ? null : (details) {
-            setState(() {
-              _dragOffset += details.primaryDelta!;
-              if (_dragOffset < 0) _dragOffset = 0;
-            });
-          },
-          onVerticalDragEnd: isRunning ? null : (details) {
-            if (_dragOffset > _triggerThreshold) {
-              _triggerSos();
-            }
-            setState(() {
-              _dragOffset = 0;
-            });
-          },
+          onVerticalDragUpdate: isRunning
+              ? null
+              : (details) {
+                  setState(() {
+                    _dragOffset += details.primaryDelta!;
+                    if (_dragOffset < 0) _dragOffset = 0;
+                  });
+                },
+          onVerticalDragEnd: isRunning
+              ? null
+              : (details) {
+                  if (_dragOffset > _triggerThreshold) {
+                    _triggerSos();
+                  }
+                  setState(() {
+                    _dragOffset = 0;
+                  });
+                },
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -94,14 +110,20 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
                   height: 60 + (_dragOffset * 0.3),
                   decoration: BoxDecoration(
                     color: colorScheme.error.withValues(alpha: currentOpacity),
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
-                    boxShadow: progress > 0.1 ? [
-                      BoxShadow(
-                          color: colorScheme.error.withValues(alpha: 0.5 * progress),
-                          blurRadius: 10 * progress,
-                          offset: const Offset(-2, 2)
-                      )
-                    ] : null,
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(20),
+                    ),
+                    boxShadow: progress > 0.1
+                        ? [
+                            BoxShadow(
+                              color: colorScheme.error.withValues(
+                                alpha: 0.5 * progress,
+                              ),
+                              blurRadius: 10 * progress,
+                              offset: const Offset(-2, 2),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -113,27 +135,42 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
                           child: SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           ),
                         )
                       else ...[
                         Icon(
                           Icons.keyboard_double_arrow_down,
-                          color: colorScheme.onError.withValues(alpha: currentOpacity > 0.6 ? 1.0 : 0.6),
+                          color: colorScheme.onError.withValues(
+                            alpha: currentOpacity > 0.6 ? 1.0 : 0.6,
+                          ),
                           size: 20 + (2 * progress),
                         ),
                         const SizedBox(height: 2),
                         if (progress > 0.4)
-                          Text(
-                              'SOS',
-                              style: TextStyle(
+                          Column(
+                            children: [
+                              Text(
+                                'SOS',
+                                style: TextStyle(
                                   color: colorScheme.onError,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 10
-                              )
+                                  fontSize: 10,
+                                ),
+                              ),
+                              if (!vm.isConnected)
+                                Icon(
+                                  Icons.signal_wifi_connected_no_internet_4,
+                                  color: colorScheme.onError,
+                                ),
+                            ],
                           ),
+
                         const SizedBox(height: 8),
-                      ]
+                      ],
                     ],
                   ),
                 ),
