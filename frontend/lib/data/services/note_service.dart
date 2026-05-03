@@ -1,3 +1,8 @@
+import 'dart:io';
+import 'dart:math' as math;
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
 import '../../../domain/models/diary/diary_enums.dart';
 import '../../../domain/models/diary/diary_session.dart';
 import '../network/api_client.dart';
@@ -9,7 +14,7 @@ class NoteService {
   final ApiClient _apiClient;
 
   /// Percorso base per le API del diario.
-  static const String _basePath = '/diary';
+  static const String _basePath = '/notes';
 
   NoteService({required ApiClient apiClient}) : _apiClient = apiClient;
 
@@ -17,11 +22,11 @@ class NoteService {
   Map<String, String> _buildAuthHeaders() {
     final sessionToken = DiarySession.session.token;
     if (sessionToken == null || sessionToken.isEmpty) {
-      throw Exception("Accesso al diario non autorizzato: Session Token mancante.");
+      throw Exception(
+        "Accesso al diario non autorizzato: Session Token mancante.",
+      );
     }
-    return {
-      'X-Diary-Token': sessionToken,
-    };
+    return {'X-Diary-Token': sessionToken};
   }
 
   /// Recupera le preview di tutte le note di un determinato diario.
@@ -42,7 +47,10 @@ class NoteService {
   /// Recupera il contenuto completo di una singola nota.
   ///
   /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}/].
-  Future<Map<String, dynamic>> fetchNoteById(DiaryType targetDiary, String noteId) async {
+  Future<Map<String, dynamic>> fetchNoteById(
+    DiaryType targetDiary,
+    String noteId,
+  ) async {
     final response = await _apiClient.get(
       '$_basePath/${targetDiary.name}/$noteId/',
       headers: _buildAuthHeaders(),
@@ -51,24 +59,16 @@ class NoteService {
   }
 
   /// Crea una nuova nota o aggiorna una esistente nel database.
-  Future<Map<String, dynamic>> saveNote(DiaryType targetDiary, Map<String, dynamic> noteData) async {
-    final String? noteId = noteData['note_id'];
-
-    if (noteId == null) {
-      // POST /diary/{diary_type}/ - Creazione nuova nota
-      return await _apiClient.post(
-        '$_basePath/${targetDiary.name}/',
-        body: noteData,
-        headers: _buildAuthHeaders(),
-      );
-    } else {
-      // PUT /diary/{diary_type}/{note_id}/ - Aggiornamento nota esistente
-      return await _apiClient.put(
-        '$_basePath/${targetDiary.name}/$noteId/',
-        body: noteData,
-        headers: _buildAuthHeaders(),
-      );
-    }
+  Future<Map<String, dynamic>> saveNote(
+    DiaryType targetDiary,
+    Map<String, dynamic> noteData,
+  ) async {
+    final response = await _apiClient.post(
+      _basePath,
+      body: noteData,
+      headers: _buildAuthHeaders(),
+    );
+    return response;
   }
 
   /// Rimuove la nota dal database e i relativi file binari da S3.
@@ -78,6 +78,32 @@ class NoteService {
     await _apiClient.delete(
       '$_basePath/${targetDiary.name}/$noteId/',
       headers: _buildAuthHeaders(),
+    );
+  }
+
+  /// Utilizza il presigned url per fare il download del media dal bucket S3
+  Future<File> _downloadFileFromUrl(String downloadUrl) async {
+    final tempDir = await getTemporaryDirectory();
+    final filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}';
+
+    final response = await http.get(Uri.parse(downloadUrl));
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to download file");
+    }
+
+    final file = File(filePath);
+    await file.writeAsBytes(response.bodyBytes);
+
+    return file;
+  }
+
+  /// Utilizza il presigned url per caricare il media nel bucket S3
+  Future<void> _uploadFileFromUrl(String uploadUrl, File media) async {
+    await http.put(
+      Uri.parse(uploadUrl),
+      headers: {'Content-Type': 'image/jpg'},
+      body: await media.readAsBytes(),
     );
   }
 }

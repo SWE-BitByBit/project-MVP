@@ -53,7 +53,7 @@ abstract class NoteDTO {
       'note_id': note.id,
       'title': note.title,
       'created_at': note.creationDate.toIso8601String(),
-      'updated_at': note.updateDate.toIso8601String(),
+      'last_modified_at': note.updateDate.toIso8601String(),
       'elements': elementsJson,
     };
   }
