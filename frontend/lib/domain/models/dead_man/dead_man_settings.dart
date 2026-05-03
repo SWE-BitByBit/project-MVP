@@ -1,9 +1,8 @@
 /// Modello di dominio che rappresenta la configurazione del Dead Man's Switch.
 ///
-/// Questa classe è rigorosamente IMMUTABILE. Per modificare un valore
-/// (ad esempio durante la compilazione del form), utilizzare il metodo [copyWith].
+/// Questa classe è rigorosamente IMMUTABILE. Per modificare un valore utilizzare il metodo [copyWith].
 class DeadManSettings {
-  /// Indica se il timer è attualmente armato e in esecuzione sul server.
+  /// Indica se il timer è attivo o meno.
   final bool isActive;
 
   /// Minuti di inattività prima che l'app invii la notifica di "Check-in" (Avvertimento).
@@ -12,10 +11,10 @@ class DeadManSettings {
   /// Minuti a disposizione dopo l'avvertimento prima che scatti l'allarme vero e proprio.
   final int secondInactivityTimer;
 
-  /// Oggetto del messaggio inviato ai contatti fidati in caso di mancato check-in.
+  /// Oggetto del messaggio inviato ai contatti fidati
   final String messageSubject;
 
-  /// Corpo del messaggio inviato ai contatti fidati (es. "Aiuto, non rispondo da X ore...").
+  /// Corpo del messaggio inviato ai contatti fidati
   final String messageBody;
 
   const DeadManSettings({
@@ -27,7 +26,6 @@ class DeadManSettings {
   });
 
   /// Crea una copia esatta di questo oggetto, sovrascrivendo solo i campi specificati.
-  /// Fondamentale per gestire lo "Stato Bozza" nel ViewModel prima del salvataggio.
   DeadManSettings copyWith({
     bool? isActive,
     int? firstInactivityTimer,

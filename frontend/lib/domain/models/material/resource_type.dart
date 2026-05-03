@@ -1,13 +1,11 @@
 /// Definisce le tipologie di materiale informativo disponibili nell'applicazione.
 enum ResourceType {
-  /// Rappresenta un collegamento a gruppi o associazioni esterne utili.
+  /// collegamento a gruppi di supporto.
   community,
-  /// Rappresenta testi di legge, normative o decreti.
+  /// collegamento a normative e leggi.
   law,
-  /// Rappresenta mini guide, paragrafi informativi o articoli.
+  /// collegamento ad articoli, guide e risorse informative generiche.
   article;
-
-  // --- GETTER PER LA UI ---
 
   /// Utility per ottenere una stringa leggibile nella lingua dell'utente.
   String get displayName {
@@ -21,10 +19,7 @@ enum ResourceType {
     }
   }
 
-  // --- LOGICA DI SERIALIZZAZIONE (Dal/Per il Backend) ---
-
   /// Converte la stringa [value] proveniente dal DB nell'enumerativo corrispondente.
-  /// Gestisce in modo robusto diverse variazioni di stringhe.
   static ResourceType fromString(String? value) {
     final normalized = value?.toLowerCase().trim();
     switch (normalized) {
