@@ -21,6 +21,7 @@ class TrustedContactRepository implements CacheableRepository {
     if (_cachedContacts.isEmpty || forceRefresh) {
       final List<Map<String, dynamic>> rawData = await _trustedContactService
           .getContacts();
+      print(rawData);
       _cachedContacts = rawData
           .map((json) => TrustedContactDTO.fromJson(json))
           .toList();

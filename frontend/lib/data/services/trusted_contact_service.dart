@@ -16,9 +16,14 @@ class TrustedContactService {
   Future<List<Map<String, dynamic>>> getContacts() async {
     final response = await _apiClient.get(_basePath);
 
-    if (response is List) {
-      return response.cast<Map<String, dynamic>>();
+    if (response is Map<String, dynamic>) {
+      final data = response['trusted_contacts'];
+
+      if (data is List) {
+        return data.cast<Map<String, dynamic>>();
+      }
     }
+
     return [];
   }
 

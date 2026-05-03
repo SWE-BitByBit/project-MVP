@@ -58,33 +58,33 @@ class TrustedContactViewModel extends ChangeNotifier {
   // --- METODI PRIVATI DEI COMANDI ---
 
   /// Carica la lista dei contatti fidati dal repository e notifica la UI.
-  Future<void> _loadContacts() async {
-    _contacts = await _repository.getContacts();
+  Future<void> _loadContacts({bool forceRefresh = true}) async {
+    _contacts = await _repository.getContacts(forceRefresh: forceRefresh);
     notifyListeners();
   }
 
   /// Crea un nuovo contatto e aggiorna la lista.
   Future<void> _createContact(TrustedContact newContact) async {
     await _repository.createContact(newContact);
-    await _loadContacts(); // Risincronizza con la cache del repo
+    await _loadContacts(forceRefresh: false);
   }
 
   /// Aggiorna un contatto esistente.
   Future<void> _updateContact(TrustedContact updatedContact) async {
     await _repository.updateContact(updatedContact);
-    await _loadContacts();
+    await _loadContacts(forceRefresh: false);
   }
 
   /// Elimina un contatto fidato
   Future<void> _deleteContact(String contactId) async {
     final deleteFuture = _repository.deleteContact(contactId);
-    await _loadContacts();
+    await _loadContacts(forceRefresh: false);
 
     try {
       await deleteFuture;
     } catch (e) {
       // Rollback in caso di errore
-      await _loadContacts();
+      await _loadContacts(forceRefresh: true);
       rethrow;
     }
   }
