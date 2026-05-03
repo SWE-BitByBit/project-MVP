@@ -1,3 +1,4 @@
+import json
 import boto3
 import os
 
@@ -22,11 +23,16 @@ def _get_user_id(event):
 def lambda_handler(event, context):
     route = event.get("routeKey", "")
 
+    if " " in route:
+        method, path = route.split(" ", 1)
+    else:
+        return {"statusCode": 400, "body": json.dumps({"error": "Invalid route"})}
+
     auth_adapter = DynamoAuthAdapter()
     auth_service = DiaryAuthService(auth_adapter)
     auth_controller = DiaryAccessController(auth_service)
 
-    if route.startswith("/diary/auth"):
+    if path.startswith("/diary/auth"):
         try:
             return auth_controller.handle_request(event, context)
         except Exception as e:
