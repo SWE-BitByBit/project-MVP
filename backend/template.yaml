@@ -145,10 +145,9 @@ Resources:
             Auth:
               Authorizer: MyJWTAuthorizer
  
-  NoteMediaBucket:
+  NoteMediaBucketV2:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "diary-media-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
