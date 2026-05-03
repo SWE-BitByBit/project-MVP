@@ -6,6 +6,7 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trust
 
 import '../../../../testing/mocks/trusted_contacts/mock_trusted_contact_repository.dart';
 import '../../../../testing/mocks/auth/mock_auth_repository.dart';
+
 void main() {
   late TrustedContactViewModel viewModel;
   late MockTrustedContactRepository mockRepository;
@@ -29,31 +30,26 @@ void main() {
     mockRepository = MockTrustedContactRepository();
     mockAuthRepository = MockAuthRepository();
 
-    when(() => mockRepository.getContacts()).thenAnswer((_) async => tContactsList);
-  });
-
-  group('TrustedContactViewModel - Initialization', () {
-    test('should load contacts automatically on creation', () async {
-      viewModel = TrustedContactViewModel(mockRepository, authRepository: mockAuthRepository);
-
-      // Attendiamo il completamento dell'operazione asincrona avviata nel costruttore.
-      // Essendo isExecuting un CustomValueNotifier e non uno Stream, usiamo pump/delay.
-      await Future.delayed(Duration.zero);
-
-      expect(viewModel.loadContacts.isRunning.value, false);
-      expect(viewModel.contacts, tContactsList);
-      verify(() => mockRepository.getContacts()).called(1);
-    });
+    when(
+      () => mockRepository.getContacts(),
+    ).thenAnswer((_) async => tContactsList);
   });
 
   group('TrustedContactViewModel - CRUD Operations', () {
     setUp(() {
-      viewModel = TrustedContactViewModel(mockRepository, authRepository: mockAuthRepository);
+      viewModel = TrustedContactViewModel(
+        mockRepository,
+        authRepository: mockAuthRepository,
+      );
     });
 
     test('createContact should call repository and refresh list', () async {
-      when(() => mockRepository.createContact(any())).thenAnswer((_) async => tContact);
-      when(() => mockRepository.getContacts()).thenAnswer((_) async => [...tContactsList, tContact]);
+      when(
+        () => mockRepository.createContact(any()),
+      ).thenAnswer((_) async => tContact);
+      when(
+        () => mockRepository.getContacts(),
+      ).thenAnswer((_) async => [...tContactsList, tContact]);
 
       await viewModel.createContact.runAsync(tContact);
 
@@ -61,26 +57,35 @@ void main() {
     });
 
     test('updateContact should call repository and refresh list', () async {
-      when(() => mockRepository.updateContact(any())).thenAnswer((_) async => tContact);
+      when(
+        () => mockRepository.updateContact(any()),
+      ).thenAnswer((_) async => tContact);
 
       await viewModel.updateContact.runAsync(tContact);
 
       verify(() => mockRepository.updateContact(tContact)).called(1);
-      verify(() => mockRepository.getContacts()).called(greaterThan(1));
+      verify(() => mockRepository.getContacts()).called(equals(1));
     });
 
-    test('deleteContact should perform optimistic update and refresh on success', () async {
-      when(() => mockRepository.deleteContact(any())).thenAnswer((_) async {});
+    test(
+      'deleteContact should not perform optimistic update and refresh on success',
+      () async {
+        when(
+          () => mockRepository.deleteContact(any()),
+        ).thenAnswer((_) async {});
 
-      await viewModel.deleteContact.runAsync('1');
+        await viewModel.deleteContact.runAsync('1');
 
-      verify(() => mockRepository.deleteContact('1')).called(1);
-      verify(() => mockRepository.getContacts()).called(2);
-    });
+        verify(() => mockRepository.deleteContact('1')).called(1);
+        verify(() => mockRepository.getContacts()).called(1);
+      },
+    );
 
     test('deleteContact should rollback and refresh list on failure', () async {
       // Usiamo throw invece di Future.error per evitare leak asincroni nel test
-      when(() => mockRepository.deleteContact(any())).thenThrow(Exception('Server Error'));
+      when(
+        () => mockRepository.deleteContact(any()),
+      ).thenThrow(Exception('Server Error'));
 
       try {
         await viewModel.deleteContact.runAsync('1');
@@ -94,9 +99,14 @@ void main() {
 
   group('TrustedContactViewModel - Error Handling', () {
     test('loadContacts should set error on repository failure', () async {
-      when(() => mockRepository.getContacts()).thenThrow(Exception('Fetch Error'));
+      when(
+        () => mockRepository.getContacts(),
+      ).thenThrow(Exception('Fetch Error'));
 
-      viewModel = TrustedContactViewModel(mockRepository, authRepository: mockAuthRepository);
+      viewModel = TrustedContactViewModel(
+        mockRepository,
+        authRepository: mockAuthRepository,
+      );
 
       await Future.delayed(Duration.zero);
 

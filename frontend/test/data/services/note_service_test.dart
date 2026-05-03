@@ -11,25 +11,16 @@ void main() {
   late MockApiClient mockApiClient;
 
   final tNotesList = [
-    {
-      "note_id": "1",
-      "title": "Nota di prova 1"
-    },
-    {
-      "note_id": "2",
-      "title": "Nota di prova 2"
-    }
+    {"note_id": "1", "title": "Nota di prova 1"},
+    {"note_id": "2", "title": "Nota di prova 2"},
   ];
 
   final tNoteDetail = {
     "note_id": "1",
     "title": "Nota di prova 1",
     "elements": [
-      {
-        "type": "text",
-        "content": "Questo è il contenuto della nota."
-      }
-    ]
+      {"type": "text", "content": "Questo è il contenuto della nota."},
+    ],
   };
 
   setUp(() {
@@ -51,134 +42,173 @@ void main() {
       DiarySession.session.token = null;
 
       // act & assert
-      expect(() => noteService.fetchNotes(DiaryType.real_diary), throwsException);
+      expect(
+        () => noteService.fetchNotes(DiaryType.real_diary),
+        throwsException,
+      );
     });
   });
 
   group('fetchNotes', () {
-    test('should perform GET request on /diary/{type}/ and return list when ApiClient returns List', () async {
-      // arrange
-      when(() => mockApiClient.get(
-        any(),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => tNotesList);
+    test(
+      'should perform GET request on /diary/{type}/ and return list when ApiClient returns List',
+      () async {
+        // arrange
+        when(
+          () => mockApiClient.get(any(), headers: any(named: 'headers')),
+        ).thenAnswer((_) async => tNotesList);
 
-      // act
-      final result = await noteService.fetchNotes(DiaryType.real_diary);
+        // act
+        final result = await noteService.fetchNotes(DiaryType.real_diary);
 
-      // assert
-      expect(result, equals(tNotesList));
-      verify(() => mockApiClient.get(
-        '/diary/real_diary/',
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
-    });
+        // assert
+        expect(result, equals(tNotesList));
+        verify(
+          () => mockApiClient.get(
+            '/notes/real_diary/',
+            headers: {'X-Diary-Token': 'mock_valid_token'},
+          ),
+        ).called(1);
+      },
+    );
 
-    test('should perform GET request and return empty list when ApiClient returns a Map', () async {
-      // arrange
-      when(() => mockApiClient.get(
-        any(),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => {"error": "not a list"});
+    test(
+      'should perform GET request and return empty list when ApiClient returns a Map',
+      () async {
+        // arrange
+        when(
+          () => mockApiClient.get(any(), headers: any(named: 'headers')),
+        ).thenAnswer((_) async => {"error": "not a list"});
 
-      // act
-      final result = await noteService.fetchNotes(DiaryType.fake_diary);
+        // act
+        final result = await noteService.fetchNotes(DiaryType.fake_diary);
 
-      // assert
-      expect(result, equals([]));
-      verify(() => mockApiClient.get(
-        '/diary/fake_diary/',
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
-    });
+        // assert
+        expect(result, equals([]));
+        verify(
+          () => mockApiClient.get(
+            '/notes/fake_diary/',
+            headers: {'X-Diary-Token': 'mock_valid_token'},
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('fetchNoteById', () {
-    test('should perform GET request on /diary/{type}/{id}/ and return note detail', () async {
-      // arrange
-      const tNoteId = '1';
-      when(() => mockApiClient.get(
-        any(),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => tNoteDetail);
+    test(
+      'should perform GET request on /diary/{type}/{id}/ and return note detail',
+      () async {
+        // arrange
+        const tNoteId = '1';
+        when(
+          () => mockApiClient.get(any(), headers: any(named: 'headers')),
+        ).thenAnswer((_) async => tNoteDetail);
 
-      // act
-      final result = await noteService.fetchNoteById(DiaryType.real_diary, tNoteId);
+        // act
+        final result = await noteService.fetchNoteById(
+          DiaryType.real_diary,
+          tNoteId,
+        );
 
-      // assert
-      expect(result, equals(tNoteDetail));
-      verify(() => mockApiClient.get(
-        '/diary/real_diary/$tNoteId/',
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
-    });
+        // assert
+        expect(result, equals(tNoteDetail));
+        verify(
+          () => mockApiClient.get(
+            '/notes/real_diary/$tNoteId/',
+            headers: {'X-Diary-Token': 'mock_valid_token'},
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('saveNote', () {
-    test('should perform POST request when noteData does not contain note_id (create)', () async {
-      // arrange
-      final tCreateData = {"title": "Nuova Nota"};
-      final tCreateResponse = {"note_id": "new_id", "title": "Nuova Nota"};
+    test(
+      'should perform POST request when noteData does not contain note_id (create)',
+      () async {
+        // arrange
+        final tCreateData = {"title": "Nuova Nota"};
+        final tCreateResponse = {"note_id": "new_id", "title": "Nuova Nota"};
 
-      when(() => mockApiClient.post(
-        any(),
-        body: any(named: 'body'),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => tCreateResponse);
+        when(
+          () => mockApiClient.post(
+            any(),
+            body: any(named: 'body'),
+            headers: any(named: 'headers'),
+          ),
+        ).thenAnswer((_) async => tCreateResponse);
 
-      // act
-      final result = await noteService.saveNote(DiaryType.fake_diary, tCreateData);
+        // act
+        final result = await noteService.saveNote(
+          DiaryType.fake_diary,
+          tCreateData,
+        );
 
-      // assert
-      expect(result, equals(tCreateResponse));
-      verify(() => mockApiClient.post(
-        '/diary/fake_diary/',
-        body: tCreateData,
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
-    });
+        // assert
+        expect(result, equals(tCreateResponse));
+        verify(
+          () => mockApiClient.post(
+            '/notes',
+            body: tCreateData,
+            headers: {'X-Diary-Token': 'mock_valid_token'},
+          ),
+        ).called(1);
+      },
+    );
 
-    test('should perform PUT request when noteData contains note_id (update)', () async {
-      // arrange
-      final tUpdateData = {"note_id": "1", "title": "Nota Aggiornata"};
-      final tUpdateResponse = {"note_id": "1", "title": "Nota Aggiornata"};
+    test(
+      'should perform PUT request when noteData contains note_id (update)',
+      () async {
+        // arrange
+        final tUpdateData = {"note_id": "1", "title": "Nota Aggiornata"};
+        final tUpdateResponse = {"note_id": "1", "title": "Nota Aggiornata"};
 
-      when(() => mockApiClient.put(
-        any(),
-        body: any(named: 'body'),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => tUpdateResponse);
+        when(
+          () => mockApiClient.put(
+            any(),
+            body: any(named: 'body'),
+            headers: any(named: 'headers'),
+          ),
+        ).thenAnswer((_) async => tUpdateResponse);
 
-      // act
-      final result = await noteService.saveNote(DiaryType.real_diary, tUpdateData);
+        // act
+        final result = await noteService.saveNote(
+          DiaryType.real_diary,
+          tUpdateData,
+        );
 
-      // assert
-      expect(result, equals(tUpdateResponse));
-      verify(() => mockApiClient.put(
-        '/diary/real_diary/1/',
-        body: tUpdateData,
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
-    });
+        // assert
+        expect(result, equals(tUpdateResponse));
+        verify(
+          () => mockApiClient.put(
+            '/note',
+            body: tUpdateData,
+            headers: {'X-Diary-Token': 'mock_valid_token'},
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('deleteNote', () {
-    test('should perform DELETE request on /diary/{type}/{id}/', () async {
+    test('should perform DELETE request on /notes/{type}/{id}/', () async {
       // arrange
       const tNoteId = '1';
-      when(() => mockApiClient.delete(
-        any(),
-        headers: any(named: 'headers'),
-      )).thenAnswer((_) async => {});
+      when(
+        () => mockApiClient.delete(any(), headers: any(named: 'headers')),
+      ).thenAnswer((_) async => {});
 
       // act
       await noteService.deleteNote(DiaryType.real_diary, tNoteId);
 
       // assert
-      verify(() => mockApiClient.delete(
-        '/diary/real_diary/$tNoteId/',
-        headers: {'X-Diary-Token': 'mock_valid_token'},
-      )).called(1);
+      verify(
+        () => mockApiClient.delete(
+          '/notes/real_diary/$tNoteId/',
+          headers: {'X-Diary-Token': 'mock_valid_token'},
+        ),
+      ).called(1);
     });
   });
 }

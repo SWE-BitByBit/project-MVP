@@ -59,7 +59,7 @@ class NoteService {
     DiaryType targetDiary,
     Map<String, dynamic> noteData,
   ) async {
-    return await _apiClient.post(
+    return await _apiClient.put(
       _basePath,
       body: noteData,
       headers: _buildAuthHeaders(),
