@@ -329,7 +329,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
 
         return PopScope(
           onPopInvokedWithResult: (didPop, result) {
-            // Rimuoviamo gli spazi vuoti iniziali e finali
             widget.selectedNote.title = _titleController.text.trim();
 
             // 1. PULIZIA ELEMENTI: Troviamo tutti gli elementi di testo vuoti

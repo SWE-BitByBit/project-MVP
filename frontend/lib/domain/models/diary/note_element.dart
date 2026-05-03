@@ -14,7 +14,4 @@ abstract class NoteElement {
   /// Ogni sottoclasse DEVE implementarlo.
   String get type;
 
-  void setFile(File file);
-
-  File? get file;
 }

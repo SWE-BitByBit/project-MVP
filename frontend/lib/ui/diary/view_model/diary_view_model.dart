@@ -68,10 +68,11 @@ class DiaryViewModel extends ChangeNotifier {
   NoteElement addMediaElement(File file, String type) {
     if (_currentNote == null) throw "Errore nell'aggiunta dell'elemento nota";
 
-    NoteElement elem = (type == "image")
+    if (type == "image")
+    NoteElement elem =
         ? NoteImageElement(file.path, file)
         : NoteAudioElement(file.path, file);
-    elem.setFile(file);
+    elem.file = file;
     _currentNote!.addElement(elem, _currentNote!.getElementCount());
     notifyListeners();
     return elem;
