@@ -39,7 +39,7 @@ import '../ui/home/view_model/home_view_model.dart';
 import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
-
+import '../data/services/mock_diary_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -208,17 +208,18 @@ void _setupDiary() {
 
   // Services
   //-----------------MOCKED----------------
-
+/*
   getIt.registerLazySingleton<DiaryAccountService>(
     () => DiaryAccountService(apiClient: getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<NoteService>(
     () => NoteService(apiClient: getIt<ApiClient>()),
   );
-  /*
+  */
+
   getIt.registerLazySingleton<DiaryAccountService>(() => MockDiaryAccountService());
   getIt.registerLazySingleton<NoteService>(() => MockNoteService());
-*/
+
 
   // Repositories
   getIt.registerLazySingleton<DiaryAccountRepository>(
