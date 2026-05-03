@@ -60,6 +60,7 @@ class DiaryNoteController:
         elements = [
             AddNoteElementCmd(
                 user_id=self._get_user_id(event),
+                note_id="",
                 type=element.get('type'),
                 content=element.get('content')
             )

@@ -1,9 +1,34 @@
+import sys
+import os
+
+src_diary_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src/diary"))
+src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.insert(0, src_diary_path)
+sys.path.insert(1, src_path)
+sys.path.insert(2, backend_path)
+
+modules_to_clean = ["ports", "controller", "repository", "models", "service", "domain", "adapters", "commands", "diary_type", "note_element"]
+for mod in list(sys.modules.keys()):
+    if any(mod == clean_mod or mod.startswith(clean_mod + ".") for clean_mod in modules_to_clean):
+        del sys.modules[mod]
+
 import pytest
 import boto3
-import os
 from moto import mock_aws
 
 from src.diary.adapters.dynamo_auth_adapter import DynamoAuthAdapter
+print("=== DEBUG SYS.PATH ===", sys.path[:5])
+if 'ports' in sys.modules:
+    print("=== DEBUG SYS.MODULES['ports'] ===", sys.modules['ports'])
+else:
+    print("=== DEBUG SYS.MODULES['ports'] NOT FOUND ===")
+
+if 'commands' in sys.modules:
+    print("=== DEBUG SYS.MODULES['commands'] ===", sys.modules['commands'])
+else:
+    print("=== DEBUG SYS.MODULES['commands'] NOT FOUND ===")
+
 from src.diary.services.diary_auth_service import DiaryAuthService
 from src.diary.diary_access_controller import DiaryAccessController
 from src.diary.domain.diary_type import DiaryType
@@ -34,6 +59,7 @@ def setup_auth_stack():
         os.environ["TABLE_AUTH_NAME"] = "test-auth-table"
         os.environ["REGION"] = "us-east-1"
         os.environ["HASH_SECRET"] = "test-secret"
+        os.environ["PASSWORD_HASH_SECRET"] = "test-secret"
 
         adapter = DynamoAuthAdapter()
         service = DiaryAuthService(adapter)
@@ -46,24 +72,37 @@ def setup_auth_stack():
 # HELPERS
 # -------------------------
 def call(controller, route, body):
+    user_id = "user1"
+    try:
+        data = __import__("json").loads(body)
+        if "user_id" in data:
+            user_id = data["user_id"]
+    except:
+        pass
     return controller.handle_request({
         "routekey": route,
+        "routeKey": route,
+        "requestContext": {
+            "authorizer": {
+                "jwt": {
+                    "claims": {
+                        "sub": user_id
+                    }
+                }
+            }
+        },
         "body": body
     }, None)
 
 
-# -------------------------
-# TEST: SET REAL PASSWORD
-# -------------------------
 def test_set_real_password(setup_auth_stack):
     controller = setup_auth_stack
 
     res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "secret123",
+        "password": "Secret123!",
         "diary_type": "REAL_DIARY"
     }))
-
     assert res["statusCode"] == 200
 
 
@@ -75,7 +114,7 @@ def test_set_fake_password(setup_auth_stack):
 
     res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "fake123",
+        "password": "Fake12345!",
         "diary_type": "FAKE_DIARY"
     }))
 
@@ -90,13 +129,13 @@ def test_real_fake_must_be_different(setup_auth_stack):
 
     call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "samepass",
+        "password": "Samepass1!",
         "diary_type": "REAL_DIARY"
     }))
 
     res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "samepass",
+        "password": "Samepass1!",
         "diary_type": "FAKE_DIARY"
     }))
 
@@ -111,17 +150,17 @@ def test_login_real(setup_auth_stack):
 
     call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "realpass",
+        "password": "Realpass1!",
         "diary_type": "REAL_DIARY"
     }))
 
     res = call(controller, "/diary/auth/login", __import__("json").dumps({
         "user_id": "user1",
-        "password": "realpass"
+        "password": "Realpass1!"
     }))
 
     assert res["statusCode"] == 200
-    assert __import__("json").loads(res["body"])["result"] == "real"
+    assert __import__("json").loads(res["body"])["diary_type"] == "REAL_DIARY"
 
 
 # -------------------------
@@ -132,10 +171,10 @@ def test_login_invalid(setup_auth_stack):
 
     res = call(controller, "/diary/auth/login", __import__("json").dumps({
         "user_id": "userX",
-        "password": "wrong"
+        "password": "Wrongpass1!"
     }))
 
-    assert __import__("json").loads(res["body"])["result"] == "invalid"
+    assert res["statusCode"] == 401
 
 
 # -------------------------
@@ -146,7 +185,7 @@ def test_status(setup_auth_stack):
 
     call(controller, "/diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
-        "password": "realpass",
+        "password": "Realpass1!",
         "diary_type": "REAL_DIARY"
     }))
 

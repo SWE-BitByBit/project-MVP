@@ -42,6 +42,7 @@ class DynamoDmsAdapter(DmsRepositoryPort):
                 },
                 ConditionExpression="attribute_not_exists(user_id)"
             )
+            return config
 
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConditionalCheckFailedException':

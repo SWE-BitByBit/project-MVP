@@ -19,8 +19,8 @@ class NoteDTO:
             "note_id": self.note_id,
             "user_id": self.user_id,
             "title": self.title,
-            "created_at": self.created_at.isoformat(),
-            "last_modified_at": self.last_modified_at.isoformat(),
+            "created_at": self.created_at.isoformat() if hasattr(self.created_at, "isoformat") else self.created_at,
+            "last_modified_at": self.last_modified_at.isoformat() if hasattr(self.last_modified_at, "isoformat") else self.last_modified_at,
             "diary_type": self.diary_type,
         }
 

@@ -208,19 +208,19 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
         return note_element_dict
         
     
-def delete_note_element(self, cmd: DeleteNoteElementCmd) -> bool:
+    def delete_note_element(self, cmd: DeleteNoteElementCmd) -> bool:
 
-    try:
-        self._note_repository.delete_note_element(
-            cmd.user_id,
-            cmd.note_id,
-            cmd.note_element_id
-        )
-        if cmd.type in ["image", "audio"]:
-            self._file_repository.delete_object(
-                key=cmd.content
+        try:
+            self._note_repository.delete_note_element(
+                cmd.user_id,
+                cmd.note_id,
+                cmd.note_element_id
             )
-        
-        return True
-    except RuntimeError:
-        return False        
+            if cmd.type in ["image", "audio"]:
+                self._file_repository.delete_object(
+                    key=cmd.content
+                )
+            
+            return True
+        except RuntimeError:
+            return False        

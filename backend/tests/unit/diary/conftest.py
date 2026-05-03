@@ -1,7 +1,34 @@
 # tests/unit/notes/conftest.py
+import sys
+import os
+
+src_diary_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src/diary"))
+src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+import conftest
+sys.modules['conftest'] = conftest
+
+sys.path.insert(1, src_diary_path)
+sys.path.insert(2, src_path)
+sys.path.insert(3, backend_path)
+
+class DiaryImportHook:
+    def find_spec(self, fullname, path, target=None):
+        if fullname == "diary_type":
+            import src.diary.domain.diary_type
+            sys.modules["diary_type"] = sys.modules["src.diary.domain.diary_type"]
+            return sys.modules["diary_type"].__spec__
+        if fullname == "note_element":
+            import src.diary.domain.note_element
+            sys.modules["note_element"] = sys.modules["src.diary.domain.note_element"]
+            return sys.modules["note_element"].__spec__
+        return None
+
+sys.meta_path.insert(0, DiaryImportHook())
+
 import pytest
 import boto3
-import os
 import json
 from moto import mock_aws
 
@@ -17,6 +44,7 @@ def aws_credentials():
     os.environ["NOTES_TABLE"] = "notes_table"
     os.environ["NOTES_ELEMENTS_TABLE"] = "notes_elements_table"
     os.environ["BUCKET_NAME"] = "test-bucket"
+    os.environ["S3_BUCKET_NOTES_NAME"] = "test-bucket"
 
 
 @pytest.fixture(scope="function")
@@ -145,13 +173,13 @@ def aws_s3_client(setup_aws):
 
 @pytest.fixture(scope="function")
 def controller(setup_aws):
-    from src.notes.controller.diary_note_controller import DiaryNoteController
-    from src.notes.service.note_service import NoteService
-    from src.notes.adapters.dynamo_note_adapter import DynamoNoteAdapter
-    from src.notes.adapters.s3_file_repository import S3FileRepository
+    from src.diary.diary_note_controller import DiaryNoteController
+    from src.diary.services.note_service import NoteService
+    from src.diary.adapters.dynamo_note_adapter import DynamoNoteAdapter
+    from src.diary.adapters.s3_note_adapter import S3NoteAdapter
 
     note_repo = DynamoNoteAdapter()
-    file_repo = S3FileRepository()
+    file_repo = S3NoteAdapter()
 
     service = NoteService(note_repo, file_repo)
 
