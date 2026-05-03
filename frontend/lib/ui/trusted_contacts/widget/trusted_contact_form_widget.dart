@@ -4,14 +4,10 @@ import '../view_model/trusted_contact_view_model.dart';
 import '../../../domain/models/trusted_contact/trusted_contact.dart';
 
 /// Gestisce i campi di input per l'inserimento o la modifica di un contatto fidato.
-///
-/// Implementa un form validato e reagisce agli stati di caricamento dei comandi
-/// [createContact] o [updateContact] del ViewModel.
 class TrustedContactFormWidget extends StatefulWidget {
   /// Callback invocata quando il form viene salvato con successo o annullato.
   final VoidCallback onDismiss;
 
-  /// Contatto opzionale da modificare. Se null, il form opera in modalità creazione.
   final TrustedContact? initialContact;
 
   const TrustedContactFormWidget({

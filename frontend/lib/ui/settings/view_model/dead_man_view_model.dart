@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:command_it/command_it.dart';
-
 import '../../../domain/models/dead_man/dead_man_settings.dart';
 import '../../../data/repositories/dead_man_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 
 /// Gestisce lo stato della UI per le impostazioni del Dead Man's Switch.
-///
-/// Interagisce con [DeadManRepository] per i dati e usa [command_it]
-/// per esporre stati reattivi di caricamento ed errore alla UI.
-/// Implementa il pattern "Draft State" per evitare salvataggi accidentali.
 class DeadManViewModel extends ChangeNotifier {
   final DeadManRepository _repository;
 
@@ -22,7 +17,6 @@ class DeadManViewModel extends ChangeNotifier {
   DeadManSettings? get draftSettings => _draftSettings;
 
   /// Controlla se l'utente ha modificato la bozza rispetto ai dati ufficiali.
-  /// Utile per disabilitare il bottone "Salva" se non ci sono state modifiche.
   bool get hasUnsavedChanges {
     final current = _repository.currentSettings;
     if (_draftSettings == null || current == null) return false;
@@ -54,8 +48,6 @@ class DeadManViewModel extends ChangeNotifier {
 
   /// Carica le impostazioni del Dead Man's Switch dal repository e notifica la UI.
   Future<void> _loadSettings() async {
-    // NOTA: Qui in futuro possiamo usare _authRepository per logiche aggiuntive
-    // es. if (_authRepository.getCurrentUser() == null) throw UnauthorizedException();
 
     final settings = await _repository.getSettings(forceRefresh: false);
 

@@ -8,9 +8,6 @@ import '../../../data/repositories/trusted_contact_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 
 /// Gestisce lo stato della UI per i Contatti Fidati.
-///
-/// Interagisce con [TrustedContactRepository] per i dati e usa [command_it]
-/// per esporre stati reattivi di caricamento ed errore alla UI.
 class TrustedContactViewModel extends ChangeNotifier {
   final TrustedContactRepository _repository;
 
@@ -18,7 +15,6 @@ class TrustedContactViewModel extends ChangeNotifier {
   List<TrustedContact> _contacts = [];
   Map<String, String> _errors = {"name": "", "email": "", "phone": ""};
 
-  // Sintassi moderna di command_it
   late final Command<void, void> loadContacts;
   late final Command<TrustedContact, void> createContact;
   late final Command<TrustedContact, void> updateContact;
@@ -28,7 +24,7 @@ class TrustedContactViewModel extends ChangeNotifier {
   List<TrustedContact> get contacts => List.unmodifiable(_contacts);
   Map<String, String> get errors => _errors;
 
-  /// Inizializza il ViewModel e configura i comandi reattivi.
+  /// Inizializza il ViewModel
   TrustedContactViewModel(
     this._repository, {
     required AuthRepository authRepository,
@@ -54,8 +50,6 @@ class TrustedContactViewModel extends ChangeNotifier {
     // Caricamento iniziale al boot del ViewModel
     loadContacts.run();
   }
-
-  // --- METODI PRIVATI DEI COMANDI ---
 
   /// Carica la lista dei contatti fidati dal repository e notifica la UI.
   Future<void> _loadContacts({bool forceRefresh = true}) async {
@@ -126,7 +120,6 @@ class TrustedContactViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    // I comandi di command_it vanno smaltiti per evitare memory leak
     loadContacts.dispose();
     createContact.dispose();
     updateContact.dispose();
