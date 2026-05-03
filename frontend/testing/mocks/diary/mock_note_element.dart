@@ -5,7 +5,7 @@ class MockNoteElement extends Mock implements NoteElement {}
 
 class TestNoteElement extends NoteElement {
   final String _type;
-  TestNoteElement(String content, this._type) : super(content);
+  TestNoteElement(super.content, this._type);
 
   @override
   String get type => _type;
