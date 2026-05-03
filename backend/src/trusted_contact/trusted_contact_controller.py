@@ -176,7 +176,7 @@ class TrustedContactController:
             errors["contact_phone_number"] = "Invalid phone number format"
 
         return errors
-    
+
 
     def _response(self, status_code, body):
         if status_code == 204:
@@ -288,6 +288,7 @@ class TrustedContactController:
                 "message": "Validation error",
                 "errors": errors
             })
+        
     
         new_trusted_contact_cmd = AddTrustedContactCmd(
             user_id=user_id,
@@ -295,7 +296,10 @@ class TrustedContactController:
             contact_email=body.get("contact_email"),
             contact_phone_number=body.get("contact_phone_number")
         )
-        new_trusted_contact = self._get_trusted_contact_crud_service().add_trusted_contact(new_trusted_contact_cmd)
+        try:
+            new_trusted_contact = self._get_trusted_contact_crud_service().add_trusted_contact(new_trusted_contact_cmd)
+        except ValueError as e:
+            return self._response(409, {"message": str(e)})
 
         if not new_trusted_contact:
             return self._response(500, SERVER_ERROR)
@@ -321,13 +325,16 @@ class TrustedContactController:
             contact_phone_number=body.get("contact_phone_number")
         )
 
-        updated_trusted_contact = self._get_trusted_contact_crud_service().update_trusted_contact(to_update_trusted_contact)
+        try:
+            updated_trusted_contact = self._get_trusted_contact_crud_service().update_trusted_contact(to_update_trusted_contact)
+        except ValueError as e:
+            return self._response(409, {"message": str(e)})
 
         if not updated_trusted_contact:
             return self._response(500, SERVER_ERROR)
-        new_trusted_contact_dto = TrustedContactDTO.from_domain(updated_trusted_contact)
+        updated_trusted_contact_dto = TrustedContactDTO.from_domain(updated_trusted_contact)
         
-        return self._response(200, new_trusted_contact_dto.to_dict())
+        return self._response(200, updated_trusted_contact_dto.to_dict())
     
 
     def _handle_trusted_contact_get(self, user_id, contact_id):

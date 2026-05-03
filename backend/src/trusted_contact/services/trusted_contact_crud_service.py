@@ -20,6 +20,11 @@ class TrustedContactCRUDService(
         self._repository = repository
 
     def update_trusted_contact(self, contact: TrustedContact) -> Optional[TrustedContact]:
+        contacts = self._repository.list(contact.user_id)
+
+        if any(c.contact_email == contact.contact_email for c in contacts):
+            raise ValueError("Email already exists")
+        
         return self._repository.update(contact)
     
     def add_trusted_contact(self, cmd: AddTrustedContactCmd) -> Optional[TrustedContact]:
@@ -30,6 +35,12 @@ class TrustedContactCRUDService(
             contact_email=cmd.contact_email,
             contact_phone_number=cmd.contact_phone_number
         )
+
+        contacts = self._repository.list(cmd.user_id)
+
+        if any(c.contact_email == cmd.contact_email for c in contacts):
+            raise ValueError("Email already exists")
+
         return self._repository.add(contact)
 
     def get_trusted_contact(self, cmd: GetTrustedContactCmd) -> Optional[TrustedContact]:
