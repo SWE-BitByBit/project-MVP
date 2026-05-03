@@ -44,6 +44,7 @@ dependencies:
   plugin_platform_interface: ^2.1.8
   file_picker: ^11.0.2
   url_launcher: ^6.3.2
+  url_launcher_platform_interface: ^2.3.2
   flutter_dotenv: ^6.0.0
   flutter_web_auth_2: ^5.0.0
   flutter_map: ^6.1.0

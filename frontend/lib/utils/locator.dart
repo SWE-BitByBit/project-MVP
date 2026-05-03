@@ -40,11 +40,6 @@ import '../ui/diary/view_model/diary_access_view_model.dart';
 import '../ui/diary/view_model/diary_view_model.dart';
 
 
-//-----------------MOCKED----------------
-import '../data/services/mock_diary_services.dart';
-import '../data/services/mock_trusted_contact_service.dart';
-import '../data/services/mock_dead_man_service.dart';
-
 final getIt = GetIt.instance;
 
 void setupLocator() {

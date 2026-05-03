@@ -6,9 +6,6 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_mode
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
 
 import '../../../../testing/mocks/diary/mock_note_repository.dart';
 import '../../../../testing/mocks/diary/mock_diary_account_repository.dart';

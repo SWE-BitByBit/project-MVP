@@ -14,7 +14,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_elem
 
 class DiaryViewModel extends ChangeNotifier {
   final NoteRepository _noteRepo;
-  final DiaryAccountRepository _accRepo;
 
   // --- STATO DELLA UI ---
   List<Note> get notes => _noteRepo.cachedNotes;
@@ -31,7 +30,7 @@ class DiaryViewModel extends ChangeNotifier {
   late final Command<({Note note, DiaryType diary}), void> saveNote;
   late final Command<({String noteId, DiaryType diary}), void> deleteNote;
 
-  DiaryViewModel(this._noteRepo, this._accRepo) {
+  DiaryViewModel(this._noteRepo, DiaryAccountRepository accRepo) {
     loadNotes = Command.createAsync<DiaryType, void>(_loadNotes, initialValue: null);
     openNote = Command.createAsync<String, void>(_openNote, initialValue: null);
     saveNote = Command.createAsync<({Note note, DiaryType diary}), void>(_saveNote, initialValue: null);

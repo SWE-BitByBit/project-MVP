@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/themes/app_theme.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/view_model/auth_view_model.dart';

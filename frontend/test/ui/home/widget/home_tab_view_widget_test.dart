@@ -48,7 +48,7 @@ void main() {
     testWidgets('renderizza correttamente l\'AppBar con titolo e icone', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('Protegge e Trasforma'), findsOneWidget);
+      expect(find.text('Homepage'), findsOneWidget);
       expect(find.byIcon(Icons.account_circle), findsOneWidget);
       expect(find.byIcon(Icons.settings), findsOneWidget);
     });

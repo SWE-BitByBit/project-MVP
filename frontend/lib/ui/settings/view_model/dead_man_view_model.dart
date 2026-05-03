@@ -12,7 +12,6 @@ import '../../../data/repositories/auth_repository.dart';
 /// Implementa il pattern "Draft State" per evitare salvataggi accidentali.
 class DeadManViewModel extends ChangeNotifier {
   final DeadManRepository _repository;
-  final AuthRepository _authRepository;
 
   DeadManSettings? _draftSettings;
 
@@ -39,7 +38,7 @@ class DeadManViewModel extends ChangeNotifier {
   DeadManViewModel(
       this._repository, {
         required AuthRepository authRepository,
-      }) : _authRepository = authRepository {
+      }) {
 
     loadSettings = Command.createAsyncNoParam<void>(
       _loadSettings,

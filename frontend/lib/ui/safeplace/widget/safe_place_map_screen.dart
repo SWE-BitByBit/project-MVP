@@ -154,8 +154,9 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
           const SizedBox(height: 16),
           Consumer<SafePlaceViewModel>(
             builder: (context, viewModel, child) {
-              if (viewModel.selectedPlace == null)
+              if (viewModel.selectedPlace == null) {
                 return const SizedBox.shrink();
+              }
               return FloatingActionButton.extended(
                 heroTag: "btn_details",
                 onPressed: () =>

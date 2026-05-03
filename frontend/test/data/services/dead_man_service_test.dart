@@ -18,17 +18,18 @@ void main() {
     "first_inactivity_timer": 5,
     "second_inactivity_timer": 3,
     "message_subject": "Allarme di sicurezza",
-    "message_body": "Se ricevi questo messaggio, significa che non ho fatto il check-in."
+    "message_body":
+        "Se ricevi questo messaggio, significa che non ho fatto il check-in.",
   };
 
   group('fetchSettings', () {
-    test('should perform GET request on /dms and return data map', () async {
+    test('should perform GET request on /dms_settings and return data map', () async {
       when(() => mockApiClient.get(any())).thenAnswer((_) async => tSettingsResponse);
 
       final result = await deadManService.fetchSettings();
 
       expect(result, equals(tSettingsResponse));
-      verify(() => mockApiClient.get('/dms')).called(1);
+      verify(() => mockApiClient.get('/dms_settings')).called(1);
     });
 
     test('should return empty map if the response is not a Map (e.g. List)', () async {
@@ -37,7 +38,7 @@ void main() {
       final result = await deadManService.fetchSettings();
 
       expect(result, equals({}));
-      verify(() => mockApiClient.get('/dms')).called(1);
+      verify(() => mockApiClient.get('/dms_settings')).called(1);
     });
 
     test('should rethrow exception if ApiClient throws', () async {
@@ -48,17 +49,17 @@ void main() {
   });
 
   group('saveSettings', () {
-    test('should perform POST request on /dms with settings data', () async {
-      when(() => mockApiClient.post(any(), body: any(named: 'body')))
+    test('should perform PUT request on /dms_settings with settings data', () async {
+      when(() => mockApiClient.put(any(), body: any(named: 'body')))
           .thenAnswer((_) async => {});
 
       await deadManService.saveSettings(tSettingsResponse);
 
-      verify(() => mockApiClient.post('/dms', body: tSettingsResponse)).called(1);
+      verify(() => mockApiClient.put('/dms_settings', body: tSettingsResponse)).called(1);
     });
 
-    test('should rethrow exception if ApiClient post throws', () async {
-      when(() => mockApiClient.post(any(), body: any(named: 'body')))
+    test('should rethrow exception if ApiClient put throws', () async {
+      when(() => mockApiClient.put(any(), body: any(named: 'body')))
           .thenThrow(Exception('Server error'));
 
       expect(() => deadManService.saveSettings(tSettingsResponse), throwsException);
@@ -66,13 +67,13 @@ void main() {
   });
 
   group('sendHeartbeat', () {
-    test('should perform POST request on /dms/heartbeat', () async {
+    test('should perform POST request on /dms_settings/heartbeat', () async {
       when(() => mockApiClient.post(any(), body: any(named: 'body')))
           .thenAnswer((_) async => {});
 
       await deadManService.sendHeartbeat();
 
-      verify(() => mockApiClient.post('/dms/heartbeat')).called(1);
+      verify(() => mockApiClient.post('/dms_settings/heartbeat')).called(1);
     });
 
     test('should rethrow exception if heartbeat API call fails', () async {

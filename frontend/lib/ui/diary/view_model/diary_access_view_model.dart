@@ -88,9 +88,8 @@ class DiaryAccessViewModel extends ChangeNotifier {
         asyncError.value = 'Troppi tentativi effettuati. Riprova più tardi.';
         break;
       case DiaryAccessResult.error:
-      default:
-          asyncError.value = 'Password errata o errore di connessione.';
-          break;
+        asyncError.value = 'Password errata o errore di connessione.';
+        break;
     }
 
     notifyListeners();

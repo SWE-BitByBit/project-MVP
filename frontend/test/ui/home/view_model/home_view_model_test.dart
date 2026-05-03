@@ -3,7 +3,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/dead_man/dead_man_settings.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/core/dashboard_item.dart';
 
 import '../../../../testing/mocks/dead_man/mock_dead_man_repository.dart';
 
@@ -27,8 +26,6 @@ void main() {
 
   Future<void> initViewModel() async {
     viewModel = HomeViewModel(mockDeadManRepository);
-    // Attendiamo il completamento del comando automatico nel costruttore
-    await viewModel.loadDashboard.runAsync();
   }
 
   group('HomeViewModel - Dashboard Items', () {
@@ -36,9 +33,9 @@ void main() {
       await initViewModel();
 
       expect(viewModel.loadDashboard.value, isNotNull);
-      expect(viewModel.loadDashboard.value!.length, 3);
+      expect(viewModel.loadDashboard.value.length, 3);
 
-      final titles = viewModel.loadDashboard.value!.map((e) => e.title).toList();
+      final titles = viewModel.loadDashboard.value.map((e) => e.title).toList();
       expect(titles, containsAll([
         'Contatti Fidati',
         'Informazioni',
@@ -46,10 +43,10 @@ void main() {
       ]));
     });
 
-    test('Stato iniziale del comando dovrebbe essere una lista vuota', () {
-      // Inizializziamo senza attendere il runAsync per vedere il valore iniziale
+    test('Stato iniziale del comando dovrebbe essere popolato con gli elementi del dashboard', () {
       viewModel = HomeViewModel(mockDeadManRepository);
-      expect(viewModel.loadDashboard.value, isEmpty);
+      expect(viewModel.loadDashboard.value, isNotEmpty);
+      expect(viewModel.loadDashboard.value.length, 3);
     });
   });
 

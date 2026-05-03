@@ -34,11 +34,13 @@ class DiaryAccountService {
   ///
   /// Se [oldPassword] è nullo, si assume che sia la prima attivazione.
   Future<Map<String, dynamic>> setPassword(String? oldPassword, String newPassword, DiaryType diaryType) async {
-    final body = {
-      if (oldPassword != null) 'old_password': oldPassword,
+    final body = <String, dynamic>{
       'new_password': newPassword,
       'diary_type': diaryType == DiaryType.real_diary ? 'real_diary' : 'fake_diary',
     };
+    if (oldPassword != null) {
+      body['old_password'] = oldPassword;
+    }
 
     final response = await _apiClient.post(
       '$_basePath/set-password',
