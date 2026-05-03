@@ -74,14 +74,22 @@ class NoteService {
     );
   }
 
-  // DA VEDERE SE AGGIUNGERE PER SALVATAGGIO ELEMENTI NOTE
-  /* Future<void> saveNoteElement(Map<String, dynamic> noteElementData) async {
-    return _apiClient.put(
+  Future<Map<String, dynamic>> saveNoteElement(
+    Map<String, dynamic> noteElementData,
+  ) async {
+    return await _apiClient.put(
       '$_basePath/note_element',
       body: noteElementData,
       headers: _buildAuthHeaders(),
     );
-  } */
+  }
+
+  Future<void> deleteNoteElement(String noteElementId) async {
+    await _apiClient.delete(
+      '$_basePath/note_element/$noteElementId/',
+      headers: _buildAuthHeaders(),
+    );
+  }
 
   /// Utilizza il presigned url per fare il download del media dal bucket S3
   Future<File> downloadFileFromUrl(String downloadUrl) async {

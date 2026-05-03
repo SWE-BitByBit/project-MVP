@@ -1,8 +1,10 @@
 import '../../domain/models/diary/diary_enums.dart';
 import '../../domain/models/diary/diary_session.dart';
 import '../../domain/models/diary/note.dart';
+import '../../domain/models/diary/note_element.dart';
 import '../proxies/proxy_note.dart';
 import '../dtos/note_dto.dart';
+import '../dtos/note_element_dto.dart';
 import '../services/note_service.dart';
 import 'cacheable_repository.dart';
 
@@ -111,9 +113,21 @@ class NoteRepository implements CacheableRepository {
     try {
       await _noteService.deleteNote(targetDiary, note.id);
     } catch (e) {
-      // Rollback locale in caso di errore di rete o server
       _cachedNotes.insert(index, noteToDelete);
       rethrow;
+    }
+  }
+
+  /// Aggiunta di un elemento ad una nota già esistente nel backend
+  Future<void> addNoteElement(NoteElement element) async {
+    final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(element);
+    final Map<String, dynamic> response = await _noteService.saveNoteElement(
+      jsonNoteElement,
+    );
+
+    final uploadUrl = response['upload_url']?.toString();
+    if (uploadUrl != null && element.file != null) {
+      await _noteService.uploadFileFromUrl(uploadUrl, element.file!);
     }
   }
 }

@@ -4,7 +4,13 @@ import 'note_element.dart';
 
 /// Classe per gli elementi delle note che contengono tracce audio
 class NoteAudioElement extends NoteElement {
-  NoteAudioElement(super.content, this._audioFile);
+  NoteAudioElement(
+    super.content,
+    this._audioFile, {
+    super.noteParentId,
+    super.noteElementId,
+  });
+
   File _audioFile;
 
   @override

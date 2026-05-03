@@ -5,10 +5,10 @@ abstract class NoteElement {
   /// Contenuto dell'elemento (testo, path dell'immagine o dell'audio).
   /// Essendo pubblica, Dart crea in automatico getter e setter efficienti.
   String content;
-  String? note_parent_id;
-  String? note_element_id;
+  String? noteParentId;
+  String? noteElementId;
 
-  NoteElement(this.content);
+  NoteElement(this.content, {this.noteParentId, this.noteElementId});
 
   /// Getter astratto che definisce il tipo dell'elemento.
   /// Ogni sottoclasse DEVE implementarlo.

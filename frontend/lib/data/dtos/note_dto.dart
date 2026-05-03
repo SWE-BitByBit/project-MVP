@@ -6,6 +6,7 @@ import '../../domain/models/diary/note_element.dart';
 import '../../domain/models/diary/note_text_element.dart';
 import '../../domain/models/diary/note_audio_element.dart';
 import '../../domain/models/diary/note_image_element.dart';
+import '../dtos/note_element_dto.dart';
 
 /// Oggetto di trasferimento dati per la serializzazione delle Note.
 /// Mappa in modo sicuro i dati JSON del backend verso il Dominio e viceversa.
@@ -15,18 +16,7 @@ abstract class NoteDTO {
     final List<dynamic> rawElements = json['elements'] ?? [];
 
     final List<NoteElement> parsedElements = rawElements.map((elemJson) {
-      final type = elemJson['type']?.toString();
-      final content = elemJson['content']?.toString() ?? '';
-
-      switch (type) {
-        case 'image':
-          return NoteImageElement(content, File(content));
-        case 'audio':
-          return NoteAudioElement(content, File(content));
-        case 'text':
-        default:
-          return NoteTextElement(content);
-      }
+      return NoteElementDTO.fromJson(elemJson);
     }).toList();
 
     final creationStr = json['created_at']?.toString();
@@ -48,7 +38,7 @@ abstract class NoteDTO {
     final List<Map<String, dynamic>> elementsJson = note.noteElements.map((
       elem,
     ) {
-      return {'type': elem.type, 'content': elem.content};
+      return NoteElementDTO.toJson(elem);
     }).toList();
 
     return {
