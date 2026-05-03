@@ -29,16 +29,16 @@ class DiaryAccessController:
     def handle_request(self, event, context):
         route = event.get("routeKey")
 
-        if route == "/diary/auth/login":
+        if route == "POST /diary/auth/login":
             return self.login(event)
 
-        elif route == "/diary/auth/logout":
+        elif route == "POST /diary/auth/logout":
             return self.logout(event)
 
-        elif route == "/diary/auth/set_password":
+        elif route == "POST /diary/auth/set_password":
             return self.set_password(event)
 
-        elif route == "/diary/auth/status":
+        elif route == "GET /diary/auth/status":
             return self.status(event)
 
         return self.response(404, {"error": "Route not found"})
