@@ -211,14 +211,20 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
     def delete_note_element(self, cmd: DeleteNoteElementCmd) -> bool:
 
         try:
+            note_element_to_delete = self._note_repository.get_note_element(
+                cmd.user_id,
+                cmd.note_id,
+                cmd.note_element_id
+            )
             self._note_repository.delete_note_element(
                 cmd.user_id,
                 cmd.note_id,
                 cmd.note_element_id
             )
-            if cmd.type in ["image", "audio"]:
+            
+            if note_element_to_delete.type in ["image", "audio"]:
                 self._file_repository.delete_object(
-                    key=cmd.content
+                    key=note_element_to_delete.content
                 )
             
             return True

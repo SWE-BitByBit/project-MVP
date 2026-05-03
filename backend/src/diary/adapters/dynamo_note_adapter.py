@@ -154,7 +154,7 @@ class DynamoNoteAdapter(NoteRepositoryPort):
     def delete_note_element(self, user_id: str, note_id: str, note_element_id: str) -> None:
         
         try:
-            self._get_note_element(user_id, note_id, note_element_id)
+            self.get_note_element(user_id, note_id, note_element_id)
 
             self._note_elements_table.delete_item(
                 Key={"note_id": note_id, "note_element_id": note_element_id}
@@ -166,7 +166,7 @@ class DynamoNoteAdapter(NoteRepositoryPort):
             raise RuntimeError(f"Error deleting note element: {e.response['Error']['Message']}")
     
 
-    def _get_note_element(self, user_id: str, note_id: str, note_element_id: str) -> NoteElement:
+    def get_note_element(self, user_id: str, note_id: str, note_element_id: str) -> NoteElement:
         
         note_response = self._note_table.get_item(
             Key={"user_id": user_id, "note_id": note_id}

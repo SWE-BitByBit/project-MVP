@@ -20,7 +20,7 @@ def _get_user_id(event):
         return claims.get("sub")
 
 def lambda_handler(event, context):
-    route = event.get("routekey", "")
+    route = event.get("routeKey", "")
 
     auth_adapter = DynamoAuthAdapter()
     auth_service = DiaryAuthService(auth_adapter)

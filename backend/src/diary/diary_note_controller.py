@@ -33,7 +33,7 @@ class DiaryNoteController:
         return claims.get("sub")
 
     def handle_request(self, event, context):
-        route = event.get("routekey")
+        route = event.get("routeKey")
 
         if route == "PUT /note":
             return self._note_add(event)
@@ -41,11 +41,11 @@ class DiaryNoteController:
             return self._note_list(event)
         elif route == "GET /notes/{note_id}":
             return self._note_get(event)
-        elif route == "DELETE /notes/{note_id}":
+        elif route == "DELETE /notes/{diary_type}/{note_id}":
             return self._note_delete(event)
-        elif route == "PUT note_element":
+        elif route == "PUT /notes/note_element":
             return self._note_element_add(event)
-        elif route == "DELETE note_element":
+        elif route == "DELETE /notes/note_element/{note_id}/{note_element_id}":
             return self._note_element_delete(event)
 
             
@@ -126,12 +126,10 @@ class DiaryNoteController:
 
 
     def _note_delete(self, event):
-        #TODO
-        #aggiungere 404 Not Found: nota non trovata.
-        body = json.loads(event.get("body"))
+        path_params = event.get("pathParameters") or {}
 
         try:
-            diary_type = DiaryType(body.get("diary_type"))
+            diary_type = DiaryType(path_params.get("diary_type"))
         except ValueError:
             return self.response(400, {"message": "Invalid diary_type"})
 
@@ -139,7 +137,7 @@ class DiaryNoteController:
         result = self._service.delete_note(
             GetNoteCmd(
                 user_id=self._get_user_id(event),
-                note_id=body.get('note_id'),
+                note_id=path_params.get("note_id"),
                 diary_type=diary_type
             )
         )
@@ -175,18 +173,18 @@ class DiaryNoteController:
 
 
     def _note_element_delete(self, event):
-        body = json.loads(event.get("body"))
+        path_params = event.get("pathParameters") or {}
+        note_id = path_params.get("note_id")
+        note_element_id = path_params.get("note_element_id")
 
-        if not body.get("note_id") or not body.get("note_element_id"):
+        if not note_id or not note_element_id:
             return self.response(400, {"message": "Missing required fields"})
 
         result = self._service.delete_note_element(
             DeleteNoteElementCmd(
                 self._get_user_id(event),
-                body.get("note_id"),
-                body.get("note_element_id"),
-                body.get("type"),
-                body.get("content")
+                note_id,
+                note_element_id,
             )
         )
 

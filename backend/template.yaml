@@ -52,7 +52,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/diary/
-      Handler: app.lambda_handler
+      Handler: lambda_handler.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
       Environment:
@@ -99,7 +99,7 @@ Resources:
         PutDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /note
+            Path: /notes
             Method: put
             ApiId: !Ref AppHttpApi
             Auth:
@@ -107,7 +107,7 @@ Resources:
         GetDiaryNotes:
           Type: HttpApi
           Properties:
-            Path: /note
+            Path: /notes
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
@@ -123,7 +123,7 @@ Resources:
         DeleteDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /notes/{note_id}
+            Path: /notes/{diary_type}/{note_id}
             Method: delete
             ApiId: !Ref AppHttpApi
             Auth:
@@ -139,7 +139,7 @@ Resources:
         DeleteDiaryNoteElement:
           Type: HttpApi
           Properties:
-            Path: /notes/note_element/{note_element_id}
+            Path: /notes/note_element/{note_id}/{note_element_id}
             Method: delete
             ApiId: !Ref AppHttpApi
             Auth:
