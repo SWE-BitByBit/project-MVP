@@ -22,7 +22,7 @@ class TrustedContactCRUDService(
     def update_trusted_contact(self, contact: TrustedContact) -> Optional[TrustedContact]:
         contacts = self._repository.list(contact.user_id)
 
-        if any(c.contact_email == contact.contact_email for c in contacts):
+        if any(c.contact_email == contact.contact_email and c.contact_id != contact.contact_id for c in contacts):
             raise ValueError("Email already exists")
         
         return self._repository.update(contact)
