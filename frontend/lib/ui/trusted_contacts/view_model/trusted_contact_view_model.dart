@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:command_it/command_it.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/network/api_exception.dart';
+import 'dart:convert';
 
 import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import '../../../data/repositories/trusted_contact_repository.dart';
@@ -14,6 +16,7 @@ class TrustedContactViewModel extends ChangeNotifier {
 
   // --- STATO DELLA UI ---
   List<TrustedContact> _contacts = [];
+  Map<String, String> _errors = {"name": "", "email": "", "phone": ""};
 
   // Sintassi moderna di command_it
   late final Command<void, void> loadContacts;
@@ -23,6 +26,7 @@ class TrustedContactViewModel extends ChangeNotifier {
 
   /// Restituisce una copia non modificabile della lista dei contatti fidati.
   List<TrustedContact> get contacts => List.unmodifiable(_contacts);
+  Map<String, String> get errors => _errors;
 
   /// Inizializza il ViewModel e configura i comandi reattivi.
   TrustedContactViewModel(
@@ -71,28 +75,46 @@ class TrustedContactViewModel extends ChangeNotifier {
     await _loadContacts();
   }
 
-  /// Elimina un contatto sfruttando l'Optimistic Deletion del Repository.
+  /// Elimina un contatto fidato
   Future<void> _deleteContact(String contactId) async {
-    // 1. Lanciamo il comando sul repo, ma NON mettiamo "await" subito.
-    // In questo modo il repo aggiorna istantaneamente la sua cache ottimistica.
     final deleteFuture = _repository.deleteContact(contactId);
-
-    // 2. Ricarichiamo la lista. Essendo il repo ottimistico, la UI vedrà
-    // il contatto sparire istantaneamente!
     await _loadContacts();
 
     try {
-      // 3. Ora attendiamo davvero la risposta del server in background.
       await deleteFuture;
     } catch (e) {
-      // 4. ROLLBACK! Se il server fallisce, il repo rimette il contatto nella cache.
-      // Noi ricarichiamo di nuovo la lista per far "riapparire" il contatto.
+      // Rollback in caso di errore
       await _loadContacts();
-
-      // Rilanciamo l'eccezione in modo che command_it la catturi
-      // e la metta in deleteContact.errors.value per mostrare uno Snackbar rosso.
       rethrow;
     }
+  }
+
+  /// Resetta gli errori di validazione dei campi del form.
+  void clearInputErrors() {
+    _errors = {"name": "", "email": "", "phone": ""};
+  }
+
+  /// Mappa un errore di validazione in un campo d'errore per l'UI
+  void handleInputError(Object e) {
+    if (e is! ApiException) return;
+
+    final body = jsonDecode(e.message);
+    if (body['message']?.toLowerCase() != 'validation error') return;
+
+    final backendErrors = body['errors'] as Map<String, dynamic>;
+    if (backendErrors.isEmpty) return;
+
+    if (backendErrors.containsKey('contact_name')) {
+      _errors['name'] = "Il nome inserito non è valido";
+    }
+    if (backendErrors.containsKey('contact_email')) {
+      _errors['email'] = "L'email inserita non è valida";
+    }
+    if (backendErrors.containsKey('contact_phone_number')) {
+      _errors['phone'] = "Il numero di telefono inserito non è valido";
+    }
+
+    notifyListeners();
   }
 
   @override

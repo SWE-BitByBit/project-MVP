@@ -19,7 +19,6 @@ class TrustedContactListWidget extends StatelessWidget {
     // Usiamo il Consumer come richiesto dall'UML
     return Consumer<TrustedContactViewModel>(
       builder: (context, viewModel, child) {
-
         // STATO: Lista Vuota
         if (viewModel.contacts.isEmpty) {
           return Center(
@@ -74,12 +73,18 @@ class TrustedContactListWidget extends StatelessWidget {
               ),
               title: Text(
                 contact.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               subtitle: Text('${contact.email}\n${contact.phoneNumber}'),
               isThreeLine: true,
               trailing: IconButton(
-                icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                ),
                 onPressed: () => _showDeleteConfirmation(
                   context,
                   viewModel,
@@ -96,10 +101,10 @@ class TrustedContactListWidget extends StatelessWidget {
 
   /// Apre il modulo di modifica per un contatto esistente.
   void _openEditForm(
-      BuildContext context,
-      TrustedContactViewModel viewModel,
-      TrustedContact contact,
-      ) {
+    BuildContext context,
+    TrustedContactViewModel viewModel,
+    TrustedContact contact,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -109,6 +114,7 @@ class TrustedContactListWidget extends StatelessWidget {
       ),
       builder: (sheetContext) {
         // Usiamo .value perché il ViewModel esiste già ed è gestito dal Provider padre
+        viewModel.clearInputErrors();
         return ChangeNotifierProvider.value(
           value: viewModel,
           child: Padding(
@@ -117,7 +123,9 @@ class TrustedContactListWidget extends StatelessWidget {
             ),
             child: TrustedContactFormWidget(
               initialContact: contact,
-              onDismiss: () => Navigator.pop(sheetContext),
+              onDismiss: () {
+                Navigator.pop(sheetContext);
+              },
             ),
           ),
         );
@@ -127,11 +135,11 @@ class TrustedContactListWidget extends StatelessWidget {
 
   /// Mostra un dialogo di conferma prima dell'eliminazione ottimistica.
   void _showDeleteConfirmation(
-      BuildContext context,
-      TrustedContactViewModel viewModel,
-      String contactId,
-      String contactName,
-      ) {
+    BuildContext context,
+    TrustedContactViewModel viewModel,
+    String contactId,
+    String contactName,
+  ) {
     final theme = Theme.of(context);
 
     showDialog(
