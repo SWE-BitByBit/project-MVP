@@ -3,8 +3,6 @@ import '../../../domain/models/diary/diary_session.dart';
 import '../network/api_client.dart';
 
 /// Servizio responsabile della gestione delle note (CRUD) nel diario.
-///
-/// Interagisce con DynamoDB per i testi e S3 per i contenuti binari.
 class NoteService {
   final ApiClient _apiClient;
 
@@ -25,8 +23,6 @@ class NoteService {
   }
 
   /// Recupera le preview di tutte le note di un determinato diario.
-  ///
-  /// Corrisponde all'endpoint [GET /diary/{diary_type}/].
   Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
     final response = await _apiClient.get(
       '$_basePath/${targetDiary.name}/',
@@ -40,8 +36,6 @@ class NoteService {
   }
 
   /// Recupera il contenuto completo di una singola nota.
-  ///
-  /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}/].
   Future<Map<String, dynamic>> fetchNoteById(DiaryType targetDiary, String noteId) async {
     final response = await _apiClient.get(
       '$_basePath/${targetDiary.name}/$noteId/',
@@ -72,8 +66,6 @@ class NoteService {
   }
 
   /// Rimuove la nota dal database e i relativi file binari da S3.
-  ///
-  /// Corrisponde all'endpoint [DELETE /diary/{diary_type}/{note_id}/].
   Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
     await _apiClient.delete(
       '$_basePath/${targetDiary.name}/$noteId/',
