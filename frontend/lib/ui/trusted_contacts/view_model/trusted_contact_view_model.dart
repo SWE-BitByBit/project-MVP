@@ -99,19 +99,26 @@ class TrustedContactViewModel extends ChangeNotifier {
     if (e is! ApiException) return;
 
     final body = jsonDecode(e.message);
-    if (body['message']?.toLowerCase() != 'validation error') return;
+    final String? message = body['message']?.toString().toLowerCase();
 
-    final backendErrors = body['errors'] as Map<String, dynamic>;
-    if (backendErrors.isEmpty) return;
+    if (body.containsKey('errors')) {
+      final backendErrors = body['errors'] as Map<String, dynamic>;
+      if (backendErrors.isEmpty) return;
 
-    if (backendErrors.containsKey('contact_name')) {
-      _errors['name'] = "Il nome inserito non è valido";
+      if (backendErrors.containsKey('contact_name')) {
+        _errors['name'] = "Il nome inserito non è valido";
+      }
+      if (backendErrors.containsKey('contact_email')) {
+        _errors['email'] = "L'email inserita non è valida";
+      }
+      if (backendErrors.containsKey('contact_phone_number')) {
+        _errors['phone'] = "Il numero di telefono inserito non è valido";
+      }
     }
-    if (backendErrors.containsKey('contact_email')) {
-      _errors['email'] = "L'email inserita non è valida";
-    }
-    if (backendErrors.containsKey('contact_phone_number')) {
-      _errors['phone'] = "Il numero di telefono inserito non è valido";
+
+    if (message == "email already exists") {
+      _errors['email'] =
+          "L'email inserita è già associata a un contatto fidato";
     }
 
     notifyListeners();
