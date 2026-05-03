@@ -52,38 +52,56 @@ void main() {
         expect(elements[3].content, 'Testo di fallback');
       });
 
-      test('dovrebbe gestire campi mancanti con valori di default di sicurezza', () {
-        // Arrange
-        final json = readFixture('note_incomplete.json');
+      test(
+        'dovrebbe gestire campi mancanti con valori di default di sicurezza',
+        () {
+          // Arrange
+          final json = readFixture('note_incomplete.json');
 
-        // Act
-        final result = NoteDTO.fromJson(json);
+          // Act
+          final result = NoteDTO.fromJson(json);
 
-        // Assert
-        expect(result.id, '');
-        expect(result.title, 'Nuova Nota');
-        expect(result.noteElements, isEmpty);
+          // Assert
+          expect(result.id, '');
+          expect(result.title, 'Nuova Nota');
+          expect(result.noteElements, isEmpty);
 
-        final now = DateTime.now();
-        expect(now.difference(result.creationDate).inSeconds.abs(), lessThan(2));
-        expect(now.difference(result.updateDate).inSeconds.abs(), lessThan(2));
-      });
+          final now = DateTime.now();
+          expect(
+            now.difference(result.creationDate).inSeconds.abs(),
+            lessThan(2),
+          );
+          expect(
+            now.difference(result.updateDate).inSeconds.abs(),
+            lessThan(2),
+          );
+        },
+      );
 
-      test('dovrebbe gestire date formattate male facendo fallback a DateTime.now()', () {
-        // Arrange
-        final json = {
-          'created_at': 'data-non-valida',
-          'updated_at': 'data-non-valida',
-        };
+      test(
+        'dovrebbe gestire date formattate male facendo fallback a DateTime.now()',
+        () {
+          // Arrange
+          final json = {
+            'created_at': 'data-non-valida',
+            'updated_at': 'data-non-valida',
+          };
 
-        // Act
-        final result = NoteDTO.fromJson(json);
+          // Act
+          final result = NoteDTO.fromJson(json);
 
-        // Assert
-        final now = DateTime.now();
-        expect(now.difference(result.creationDate).inSeconds.abs(), lessThan(2));
-        expect(now.difference(result.updateDate).inSeconds.abs(), lessThan(2));
-      });
+          // Assert
+          final now = DateTime.now();
+          expect(
+            now.difference(result.creationDate).inSeconds.abs(),
+            lessThan(2),
+          );
+          expect(
+            now.difference(result.updateDate).inSeconds.abs(),
+            lessThan(2),
+          );
+        },
+      );
     });
 
     group('toJson', () {
@@ -96,7 +114,7 @@ void main() {
           lastModified: DateTime.utc(2023, 11, 20, 10, 0, 0),
           initialElements: [
             NoteTextElement('Testo 1'),
-            NoteImageElement('path/to/image.png'),
+            NoteImageElement('path/to/image.png', File('path/to/image.png')),
           ],
         );
 
@@ -107,7 +125,7 @@ void main() {
         expect(result['note_id'], 'note_456');
         expect(result['title'], 'Appunti');
         expect(result['created_at'], '2023-11-20T09:00:00.000Z');
-        expect(result['updated_at'], '2023-11-20T10:00:00.000Z');
+        expect(result['last_modified_at'], '2023-11-20T10:00:00.000Z');
 
         final elementsJson = result['elements'] as List<Map<String, dynamic>>;
         expect(elementsJson.length, 2);

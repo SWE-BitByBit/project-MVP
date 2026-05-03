@@ -59,12 +59,11 @@ class NoteService {
     DiaryType targetDiary,
     Map<String, dynamic> noteData,
   ) async {
-    final response = await _apiClient.post(
+    return await _apiClient.post(
       _basePath,
       body: noteData,
       headers: _buildAuthHeaders(),
     );
-    return response;
   }
 
   /// Rimuove la nota dal database e i relativi file binari da S3.
@@ -75,8 +74,17 @@ class NoteService {
     );
   }
 
+  // DA VEDERE SE AGGIUNGERE PER SALVATAGGIO ELEMENTI NOTE
+  /* Future<void> saveNoteElement(Map<String, dynamic> noteElementData) async {
+    return _apiClient.put(
+      '$_basePath/note_element',
+      body: noteElementData,
+      headers: _buildAuthHeaders(),
+    );
+  } */
+
   /// Utilizza il presigned url per fare il download del media dal bucket S3
-  Future<File> _downloadFileFromUrl(String downloadUrl) async {
+  Future<File> downloadFileFromUrl(String downloadUrl) async {
     final tempDir = await getTemporaryDirectory();
     final filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}';
 
@@ -93,11 +101,21 @@ class NoteService {
   }
 
   /// Utilizza il presigned url per caricare il media nel bucket S3
-  Future<void> _uploadFileFromUrl(String uploadUrl, File media) async {
-    await http.put(
+  Future<void> uploadFileFromUrl(
+    String uploadUrl,
+    File media, {
+    String contentType = 'application/octet-stream',
+  }) async {
+    final bytes = await media.readAsBytes();
+
+    final response = await http.put(
       Uri.parse(uploadUrl),
-      headers: {'Content-Type': 'image/jpg'},
-      body: await media.readAsBytes(),
+      headers: {'Content-Type': contentType},
+      body: bytes,
     );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to upload file (${response.statusCode})');
+    }
   }
 }
