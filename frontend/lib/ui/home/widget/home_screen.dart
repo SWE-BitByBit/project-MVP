@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/core/themes/app_theme.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/view_model/auth_view_model.dart';
@@ -50,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Inietto il ViewModel dell'SOS qui, così è disponibile per tutte le tab
     return Consumer<AuthViewModel>(
       builder: (context, authVm, child) {
         if (authVm.isInitializing) {
@@ -61,19 +59,17 @@ class _HomeScreenState extends State<HomeScreen> {
         final isLoggedIn = authVm.currentUser != null;
 
         return Scaffold(
-          // NESSUNA APP BAR QUI!
           extendBody: true,
 
           body: Stack(
             children: [
-              // 1. IL CORPO (Pagine mantenute in memoria)
               PageView(
                 controller: _pageController,
                 // onPageChanged scatta quando l'utente fa lo SWIPE con il dito
                 onPageChanged: (index) {
                   setState(() {
                     _currentIndex =
-                        index; // Aggiorna l'icona illuminata in basso
+                        index;
                   });
                 },
                 children: [
@@ -98,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   isLoggedIn
                       ? const DiaryScreen()
                       : AuthPlaceholderScreen(
-                          // Usiamo il lucchetto anche qui!
                           appBar: AppBar(
                             title: const Text('Il mio Diario'),
                             centerTitle: true,
@@ -113,7 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
 
-          // 3. BARRA DI NAVIGAZIONE
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) => _onTabTapped(index, isLoggedIn),
@@ -124,14 +118,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: 'Chatbot',
               ),
               NavigationDestination(
-                //icon: SosHomeIconWidget(isSelected: _currentIndex == 1),
                 icon: Icon(Icons.home_outlined),
                 selectedIcon: Icon(Icons.home),
                 label: 'Home',
               ),
 
               NavigationDestination(
-                // Opacità ridotta se non loggato
                 icon: Opacity(
                   opacity: isLoggedIn ? 1.0 : 0.4,
                   child: const Icon(Icons.edit_note_outlined),

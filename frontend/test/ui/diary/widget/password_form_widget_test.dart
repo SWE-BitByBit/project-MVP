@@ -17,7 +17,7 @@ void main() {
 
     // Stubbing dei membri interni del comando
     when(() => mockLoginCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
-    when(() => mockLoginCommand.canExecute).thenReturn(ValueNotifier<bool>(true));
+    when(() => mockLoginCommand.canRun).thenReturn(ValueNotifier<bool>(true));
     when(() => mockLoginCommand.run(any())).thenReturn(null);
 
     // Stubbing del ViewModel

@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [develop]
+    branches: [ develop, main, task/modifica-pipeline-gh-pages ]
   pull_request:
-    branches: [develop]
+    branches: [ develop, main, task/modifica-pipeline-gh-pages ]
 
 jobs:
   # ─────────────────────────────────────────
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # necessario per SonarCloud
+          fetch-depth: 0 # necessario per SonarCloud
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,7 +29,7 @@ jobs:
 
       - name: Run tests and generate coverage
         working-directory: backend
-        run: make coverage   # genera coverage.xml
+        run: make coverage # genera coverage.xml
 
       - name: SonarCloud Scan - Backend
         uses: SonarSource/sonarqube-scan-action@v7
@@ -79,7 +79,7 @@ jobs:
   # ─────────────────────────────────────────
   deploy:
     name: Deploy su AWS
-    needs: [backend-test]  # parte solo se entrambi i job passano
+    needs: [ backend-test ] # parte solo se entrambi i job passano
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -107,3 +107,44 @@ jobs:
       - name: Deploy
         working-directory: backend
         run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+
+  # ─────────────────────────────────────────
+  # JOB 4: Deploy Frontend su GitHub Pages
+  # ─────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend su GH Pages
+    needs: [ frontend-test ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/task/modifica-pipeline-gh-pages')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Create .env from Secrets
+        working-directory: frontend
+        run: |
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          echo "COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}" >> .env
+          echo "COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}" >> .env
+          echo "COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}" >> .env
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build Web
+        working-directory: frontend
+        run: flutter build web --release --base-href /project-MVP/
+
+      - name: Deploy to GH Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/build/web

@@ -1,5 +1,5 @@
-
-
+from trusted_contact_controller import TrustedContactController
 
 def lambda_handler(event, context):
-    print("Hello World")
+    controller = TrustedContactController()
+    return controller.handle_request(context=context, event=event)

@@ -8,7 +8,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.d
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 
 import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
 import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
@@ -37,7 +36,7 @@ void main() {
 
     // Stubbing obbligatorio per i membri interni dei comandi
     when(() => mockSaveNoteCommand.isRunning).thenReturn(ValueNotifier(false));
-    when(() => mockSaveNoteCommand.canExecute).thenReturn(ValueNotifier(true));
+    when(() => mockSaveNoteCommand.canRun).thenReturn(ValueNotifier(true));
 
     // Assicuriamoci che il comando asincrono completi immediatamente
     when(() => mockSaveNoteCommand.runAsync(any())).thenAnswer((_) async => {});

@@ -1,7 +1,6 @@
 import 'chat_message.dart';
 
-/// DTO/Modello di risposta utilizzato dal Service/Repository
-/// quando viene inviato un nuovo messaggio all'AI.
+/// Rappresenta la risposta del server dopo l'invio di un messaggio.
 class MessageResponse {
   /// Il messaggio generato dall'intelligenza artificiale.
   final ChatMessage response;

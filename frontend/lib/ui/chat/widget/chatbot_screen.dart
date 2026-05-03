@@ -10,7 +10,6 @@ import 'chatbot_mode_toggle_widget.dart';
 import 'chatbot_send_message_widget.dart';
 import 'chatbot_mode_info_dialog_widget.dart';
 
-/// IL WRAPPER: Inietta il ViewModel.
 class ChatbotScreen extends StatelessWidget {
   const ChatbotScreen({super.key});
 
@@ -23,7 +22,6 @@ class ChatbotScreen extends StatelessWidget {
   }
 }
 
-/// LA VISTA PURA: Ascolta gli eventi per le SnackBar e disegna l'UI.
 class ChatbotScreenView extends StatefulWidget {
   const ChatbotScreenView({super.key});
 
@@ -104,7 +102,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
           bottom: false,
           child: Column(
             children: [
-              // 2. SOTTO-BARRA: Controlli specifici della Chat
               Builder(
                 builder: (context) {
                   return Container(
@@ -136,8 +133,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
                   );
                 },
               ),
-              // --- INDICATORE DI CARICAMENTO (Transizione Proxy) ---
-              // Usiamo ValueListenableBuilder come in Trusted Contacts!
               Consumer<ChatbotViewModel>(
                 builder: (context, vm, child) {
                   return ValueListenableBuilder<bool>(
@@ -150,7 +145,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
                 },
               ),
 
-              // --- CORPO CENTRALE ---
               Expanded(
                 child: Consumer<ChatbotViewModel>(
                   builder: (context, vm, child) =>
@@ -158,7 +152,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
                 ),
               ),
 
-              // --- BARRA DI INPUT ---
               const ChatbotSendMessageWidget(),
             ],
           ),
@@ -167,18 +160,15 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
     );
   }
 
-  /// Helper che usa i ValueListenableBuilder per intercettare SEMPRE gli errori,
-  /// esattamente come hai fatto in TrustedContactScreen.
+  /// Helper che usa i ValueListenableBuilder per intercettare gli errori.
   Widget _buildMainContent(BuildContext context, ChatbotViewModel vm) {
     return ValueListenableBuilder<bool>(
       valueListenable: vm.loadChatPreviews.isRunning,
       builder: (context, isRunning, _) {
-        // 1. Caso di Caricamento Iniziale
         if (isRunning && vm.chats.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // 2. Controllo degli errori "ascoltando" direttamente command_it
         return ValueListenableBuilder(
           valueListenable: vm.loadChatPreviews.errors,
           builder: (context, commandError, _) {
@@ -193,14 +183,12 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
               );
             }
 
-            // 3. Caso in cui non c'è nessuna chat attiva
             if (vm.currentChat == null) {
               return const Center(
                 child: Text("Seleziona una conversazione dal menu."),
               );
             }
 
-            // 4. Caso di successo: mostra i messaggi
             return const ChatWidget();
           },
         );

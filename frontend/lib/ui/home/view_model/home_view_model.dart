@@ -21,7 +21,6 @@ class HomeViewModel extends ChangeNotifier {
       _deadManRepository.currentSettings?.isActive ?? false;
 
   List<DashboardItem> _loadDashboardItems() {
-    // Solo le 3 card richieste per la Home
     return [
       DashboardItem(
         title: 'Contatti Fidati',

@@ -8,13 +8,13 @@ abstract class DeadManSettingsDTO {
     return DeadManSettings(
       isActive: _parseBool(json['is_active'] ?? json['isActive']),
 
-      firstInactivityTimer: json['first_timer'] as int? ?? 60,
-      secondInactivityTimer: json['second_timer'] as int? ?? 15,
+      firstInactivityTimer: (json['first_inactivity_timer'] ?? json['first_timer']) as int? ?? 60,
+      secondInactivityTimer: (json['second_inactivity_timer'] ?? json['second_timer']) as int? ?? 15,
 
       messageSubject:
-          json['email_subject'] as String? ?? 'Emergenza: Mancato Check-in',
+          (json['message_subject'] ?? json['email_subject']) as String? ?? 'Emergenza: Mancato Check-in',
       messageBody:
-          json['email_body'] as String? ??
+          (json['message_body'] ?? json['email_body']) as String? ??
           'Non ho confermato il mio stato di sicurezza.',
     );
   }
@@ -23,6 +23,10 @@ abstract class DeadManSettingsDTO {
   static Map<String, dynamic> toJson(DeadManSettings settings) {
     return {
       'is_active': settings.isActive,
+      'first_inactivity_timer': settings.firstInactivityTimer,
+      'second_inactivity_timer': settings.secondInactivityTimer,
+      'message_subject': settings.messageSubject,
+      'message_body': settings.messageBody,
       'first_timer': settings.firstInactivityTimer,
       'second_timer': settings.secondInactivityTimer,
       'email_subject': settings.messageSubject,

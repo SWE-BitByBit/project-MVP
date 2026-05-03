@@ -13,7 +13,6 @@ class ChatbotViewModel extends ChangeNotifier {
   final ChatbotRepository _repository;
   final AuthRepository _authRepository;
 
-  // --- STATO DELLA UI ---
   List<Chat> get chats => _repository.cachedChats;
 
   Chat? _currentChat;
@@ -24,7 +23,6 @@ class ChatbotViewModel extends ChangeNotifier {
 
   final ValueNotifier<String?> asyncError = ValueNotifier(null);
 
-  // --- COMANDI REATTIVI ---
   late final Command<void, void> loadChatPreviews;
   late final Command<void, void> createChat;
   late final Command<String, void> openChat;
@@ -45,15 +43,12 @@ class ChatbotViewModel extends ChangeNotifier {
     loadChatPreviews.run();
   }
 
-  // --- LOGICA DI SINCRONIZZAZIONE LOCALE ---
   void setMode(ChatMode newMode) {
     if (_mode != newMode) {
       _mode = newMode;
       notifyListeners();
     }
   }
-
-  // --- IMPLEMENTAZIONE DEI COMANDI ---
 
   Future<void> _loadChatPreviews() async {
     final user = _authRepository.getCurrentUser();
@@ -166,7 +161,7 @@ class ChatbotViewModel extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      // ROLLBACK: Se c'è un errore di rete, togliamo il messaggio finto dalla UI
+      // ROLLBACK: Se c'è un errore di rete, toglie il messaggio finto dalla UI
       activeChat.messages.removeWhere((msg) => msg.id == optimisticMsg.id);
       asyncError.value = "Errore nell'invio del messaggio.";
       notifyListeners();

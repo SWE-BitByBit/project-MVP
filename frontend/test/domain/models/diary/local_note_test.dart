@@ -28,20 +28,23 @@ void main() {
       expect(note.noteElements, isEmpty);
     });
 
-    test('Aggiornamento titolo cambia lastModified solo se il titolo è diverso', () async {
-      final oldUpdateDate = note.updateDate;
+    test(
+      'Aggiornamento titolo cambia lastModified solo se il titolo è diverso',
+      () async {
+        final oldUpdateDate = note.updateDate;
 
-      // Caso: titolo uguale
-      note.title = tTitle;
-      expect(note.updateDate, oldUpdateDate);
+        // Caso: titolo uguale
+        note.title = tTitle;
+        expect(note.updateDate, oldUpdateDate);
 
-      // Caso: titolo diverso
-      await Future.delayed(const Duration(milliseconds: 1));
-      note.title = 'Nuovo Titolo';
+        // Caso: titolo diverso
+        await Future.delayed(const Duration(milliseconds: 1));
+        note.title = 'Nuovo Titolo';
 
-      expect(note.title, 'Nuovo Titolo');
-      expect(note.updateDate.isAfter(oldUpdateDate), isTrue);
-    });
+        expect(note.title, 'Nuovo Titolo');
+        expect(note.updateDate.isAfter(oldUpdateDate), isTrue);
+      },
+    );
 
     test('noteElements deve restituire una lista non modificabile', () {
       final element = TestNoteElement('contenuto', 'text');
@@ -70,16 +73,20 @@ void main() {
       expect(note.getElementCount(), 0);
     });
 
-    test('removeElement rimuove l\'elemento e aggiorna la data di modifica', () {
-      final element = TestNoteElement('test', 'text');
-      note.addElement(element, 0);
-      final dateAfterAdd = note.updateDate;
+    test(
+      'removeElement rimuove l\'elemento e aggiorna la data di modifica',
+      () async {
+        final element = TestNoteElement('test', 'text');
+        note.addElement(element, 0);
+        final dateAfterAdd = note.updateDate;
 
-      note.removeElement(element);
+        await Future.delayed(const Duration(milliseconds: 1));
+        note.removeElement(element);
 
-      expect(note.getElementCount(), 0);
-      expect(note.updateDate.isAfter(dateAfterAdd), isTrue);
-    });
+        expect(note.getElementCount(), 0);
+        expect(note.updateDate.isAfter(dateAfterAdd), isTrue);
+      },
+    );
 
     test('removeElement non aggiorna la data se l\'elemento non esiste', () {
       final element = TestNoteElement('test', 'text');
@@ -93,16 +100,20 @@ void main() {
       expect(note.updateDate, dateAfterAdd);
     });
 
-    test('editNoteElement modifica il contenuto e aggiorna la data di modifica', () {
-      final element = TestNoteElement('vecchio contenuto', 'text');
-      note.addElement(element, 0);
-      final oldDate = note.updateDate;
+    test(
+      'editNoteElement modifica il contenuto e aggiorna la data di modifica',
+      () async {
+        final element = TestNoteElement('vecchio contenuto', 'text');
+        note.addElement(element, 0);
+        final oldDate = note.updateDate;
 
-      note.editNoteElement(element, 'nuovo contenuto');
+        await Future.delayed(const Duration(milliseconds: 1));
+        note.editNoteElement(element, 'nuovo contenuto');
 
-      expect(element.content, 'nuovo contenuto');
-      expect(note.updateDate.isAfter(oldDate), isTrue);
-    });
+        expect(element.content, 'nuovo contenuto');
+        expect(note.updateDate.isAfter(oldDate), isTrue);
+      },
+    );
 
     test('editNoteElement non fa nulla se l\'elemento non è presente', () {
       final element = TestNoteElement('contenuto', 'text');

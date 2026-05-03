@@ -29,8 +29,6 @@ class _DiaryFirstSetupWidgetState extends State<DiaryFirstSetupWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Usiamo context.watch perché vogliamo che il widget si ricostruisca
-    // se viewModel.passwordError cambia
     final vm = context.watch<DiaryAccessViewModel>();
 
     return SingleChildScrollView(

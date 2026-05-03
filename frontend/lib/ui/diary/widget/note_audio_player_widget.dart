@@ -69,7 +69,6 @@ class _NoteAudioPlayerWidget extends State<NoteAudioPlayerWidget> {
     return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
   }
 
-  /// Gestisce l'azione effettuata dal bottone play/pause
   void _handlePlayer() {
     if (player.playing) {
       player.pause();
@@ -78,7 +77,6 @@ class _NoteAudioPlayerWidget extends State<NoteAudioPlayerWidget> {
     }
   }
 
-  /// Ferma la traccia audio e riporta il cursore all'inizio
   void _stopPlayer() {
     setState(() {
       position = Duration.zero;

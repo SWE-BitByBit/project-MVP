@@ -51,7 +51,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byType(FlutterMap), findsOneWidget);
-      expect(find.byType(TileLayer), findsOneWidget);
+      expect(find.byType(TileLayer), findsNothing);
       expect(find.byType(MarkerLayer), findsOneWidget);
     });
 

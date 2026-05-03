@@ -12,7 +12,6 @@ import '../../../data/repositories/auth_repository.dart';
 class TrustedContactViewModel extends ChangeNotifier {
   final TrustedContactRepository _repository;
 
-  final AuthRepository _authRepository;
   // --- STATO DELLA UI ---
   List<TrustedContact> _contacts = [];
 
@@ -29,7 +28,7 @@ class TrustedContactViewModel extends ChangeNotifier {
   TrustedContactViewModel(
     this._repository, {
     required AuthRepository authRepository,
-  }) : _authRepository = authRepository {
+  }) {
     // Inizializzazione comandi
     loadContacts = Command.createAsyncNoParam<void>(
       _loadContacts,

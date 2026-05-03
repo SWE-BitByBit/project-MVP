@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// ATTENZIONE: Importiamo il DiaryAccessViewModel invece del DiaryViewModel
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -14,8 +13,7 @@ class DiaryPasswordSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Non creiamo più un nuovo ViewModel!
-    // Passiamo semplicemente l'istanza globale già esistente al widget figlio.
+    // Passiamo l'istanza globale già esistente al widget figlio.
     return ChangeNotifierProvider.value(
       value: context.read<DiaryAccessViewModel>(),
       child: DiaryPasswordSettingWidget(isModifyingRealPassword: isModifyingRealPassword),
@@ -74,7 +72,7 @@ class _DiaryPasswordSettingWidgetState extends State<DiaryPasswordSettingWidget>
         ? 'Nuova password reale'
         : 'Nuova password fittizia';
 
-    // 1. SOLUZIONE STATUS BAR: Avvolgiamo lo Scaffold in una SafeArea
+    // Avvolge lo Scaffold in una SafeArea
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -107,7 +105,6 @@ class _DiaryPasswordSettingWidgetState extends State<DiaryPasswordSettingWidget>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // NOTA: Abbiamo rimosso il "Banner verde" statico da qui!
 
                     Expanded(
                       child: Column(
@@ -166,12 +163,10 @@ class _DiaryPasswordSettingWidgetState extends State<DiaryPasswordSettingWidget>
                             width: double.infinity,
                             height: 49,
                             child: ElevatedButton(
-                              // 2. SOLUZIONE SNACKBAR E CHIUSURA: Funzione async
                               onPressed: () async {
                                 viewModel.validateInput(_newPassword1.text);
 
                                 if (_passwordsMatch && viewModel.passwordError.isEmpty) {
-                                  // Chiudiamo la tastiera per un effetto più pulito
                                   FocusScope.of(context).unfocus();
 
                                   if (widget.isModifyingRealPassword) {
@@ -187,7 +182,6 @@ class _DiaryPasswordSettingWidgetState extends State<DiaryPasswordSettingWidget>
                                   }
 
                                   if (viewModel.setupSuccess && context.mounted) {
-                                    // A) Chiudiamo il popup
                                     Navigator.of(context).pop();
 
                                     ScaffoldMessenger.of(context).showSnackBar(

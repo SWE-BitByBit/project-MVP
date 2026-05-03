@@ -21,7 +21,7 @@ class AuthPlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Restituiamo un intero Scaffold, così gestisce la sua AppBar!
+    // Restituisce un intero Scaffold.
     return Scaffold(
       appBar: appBar,
       body: SafeArea(

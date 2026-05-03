@@ -65,11 +65,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // 2. Verifica che le opzioni del menu siano visibili
-      expect(find.text('Modalità Mirror'), findsOneWidget);
-      expect(find.text('Modalità Detective'), findsOneWidget);
+      expect(find.text('Specchio intelligente'), findsOneWidget);
+      expect(find.text('Detective delle relazioni'), findsOneWidget);
 
       // 3. Seleziona la modalità Detective dal menu
-      await tester.tap(find.text('Modalità Detective'));
+      await tester.tap(find.text('Detective delle relazioni'));
       await tester.pumpAndSettle();
 
       // 4. Verifica che il ViewModel sia stato aggiornato con la nuova modalità

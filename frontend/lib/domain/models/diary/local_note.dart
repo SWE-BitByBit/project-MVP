@@ -2,14 +2,13 @@ import 'note.dart';
 import 'note_element.dart';
 
 /// Implementazione concreta dell'interfaccia [Note].
-/// Rappresenta una nota completamente caricata in memoria [cite: 74-79].
 class LocalNote implements Note {
 
-  /// Identificativo univoco della nota. `final` garantisce che non sia modificabile.
+  /// Identificativo univoco della nota. 
   @override
   final String id;
 
-  /// Data di creazione. `final` garantisce che non sia modificabile.
+  /// Data di creazione.
   @override
   final DateTime creationDate;
 
@@ -18,7 +17,6 @@ class LocalNote implements Note {
 
   final List<NoteElement> _noteContents;
 
-  /// Costruttore
   LocalNote({
     required this.id,
     required String title,
@@ -48,8 +46,6 @@ class LocalNote implements Note {
     }
   }
 
-  // --- METODI ---
-
   /// Aggiorna la data di ultima modifica al momento attuale.
   @override
   void updateLastModified() {
@@ -65,11 +61,11 @@ class LocalNote implements Note {
   void addElement(NoteElement element, int pos) {
     if (pos >= 0 && pos <= _noteContents.length) {
       _noteContents.insert(pos, element);
-      updateLastModified(); // Aggiunto per coerenza: modificare il contenuto modifica la nota
+      updateLastModified();
     }
   }
 
-  /// Rimuove il [NoteElement] dalla lista degli elementi.
+  /// Rimuove il [NoteElement] specificato dalla nota.
   @override
   void removeElement(NoteElement element) {
     if (_noteContents.remove(element)) {
@@ -77,7 +73,6 @@ class LocalNote implements Note {
     }
   }
 
-  /// Modifica il testo di un elemento specifico.
   @override
   void editNoteElement(NoteElement element, String newText) {
     final index = _noteContents.indexOf(element);
@@ -86,5 +81,4 @@ class LocalNote implements Note {
       updateLastModified();
     }
   }
-
 }

@@ -1,5 +1,4 @@
 /// Rappresenta l'entità utente all'interno del livello di dominio dell'applicazione.
-/// Questa classe è pura e non contiene logica di conversione dati.
 class User {
   final String sub;
   final String email;

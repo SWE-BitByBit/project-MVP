@@ -15,7 +15,7 @@ class ErrorBannerWidget extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      color: colorScheme.errorContainer, // Colore di sfondo tenue per gli errori
+      color: colorScheme.errorContainer,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
