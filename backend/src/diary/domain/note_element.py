@@ -1,4 +1,4 @@
-from .diary_type import DiaryType
+from domain.diary_type import DiaryType
 
 class NoteElement:
     def __init__(

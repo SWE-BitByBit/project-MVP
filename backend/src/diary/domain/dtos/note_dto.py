@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from diary_type import DiaryType
-from note_element import NoteElement
+from domain.diary_type import DiaryType
+from domain.note_element import NoteElement
 
 @dataclass
 class NoteDTO:

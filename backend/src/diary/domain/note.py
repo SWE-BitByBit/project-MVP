@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
-from .note_element import NoteElement
-from .diary_type import DiaryType
+from domain.note_element import NoteElement
+from domain.diary_type import DiaryType
 
 class Note:
     def __init__(
