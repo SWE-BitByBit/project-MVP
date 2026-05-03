@@ -34,6 +34,6 @@ class DeadManService {
   }
 
   Future<void> sendHeartbeat() async {
-    await _apiClient.post('$_basePath/heartbeat');
+    await _apiClient.put('$_basePath/heartbeat');
   }
 }
