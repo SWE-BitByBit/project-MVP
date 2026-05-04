@@ -29,6 +29,11 @@ class FakeMutableChat extends Fake implements Chat {
   void addMessage(ChatMessage message) {
     messages.add(message);
   }
+
+  @override
+  void removeMessage(String id) {
+    messages.removeWhere((m) => m.id == id);
+  }
 }
 
 void main() {
@@ -261,13 +266,10 @@ void main() {
       'sendMessage fallback: imposta asyncError se API fallisce e rimuove messaggio finto',
       () async {
         await initViewModel();
-
         final fakeChat = FakeMutableChat();
-
         when(
           () => mockChatbotRepository.sendMessage(any(), any(), any()),
         ).thenAnswer((_) async => throw Exception('Errore di rete'));
-
         try {
           await viewModel.sendMessage.runAsync((
             chat: fakeChat,
@@ -275,9 +277,7 @@ void main() {
             mode: ChatMode.mirror,
           ));
         } catch (_) {}
-
         await Future.delayed(Duration.zero);
-
         expect(viewModel.asyncError.value, 'Errore nell\'invio del messaggio.');
         expect(fakeChat.messages, isEmpty);
       },
