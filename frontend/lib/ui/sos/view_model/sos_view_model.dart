@@ -1,3 +1,4 @@
+import 'package:audio_session/audio_session.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:command_it/command_it.dart';
@@ -43,8 +44,23 @@ class SosViewModel extends ChangeNotifier {
   }
 
   Future<void> _sendOfflineSosAlert() async {
-    _alertPlayer.setVolume(1.0);
-    _alertPlayer.play();
+    final audioSession = await AudioSession.instance;
+    await audioSession.configure(
+      AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
+        androidAudioAttributes: const AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.unknown,
+          flags: AndroidAudioFlags.audibilityEnforced,
+          usage: AndroidAudioUsage.alarm,
+        ),
+      ),
+    );
+    await audioSession.setActive(true);
+    await _alertPlayer.play();
+    _alertPlayer.stop();
+    await _alertPlayer.seek(Duration.zero);
+    await audioSession.setActive(false);
   }
 
   Future<void> checkConnection() async {
