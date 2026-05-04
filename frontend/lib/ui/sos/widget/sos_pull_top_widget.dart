@@ -25,27 +25,41 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
+          content: vm.isConnected
+              ? const Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 10),
 
-              Text(
-                '🚨 SOS INVIATO!',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                    Text(
+                      '🚨 SOS INVIATO!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                )
+              : const Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 10),
+
+                    Text(
+                      '🚨 ALLARME ATTIVATO!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
           backgroundColor: Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      print(e);
       // ERRORE
       ScaffoldMessenger.of(context).showSnackBar(
         vm.isConnected
