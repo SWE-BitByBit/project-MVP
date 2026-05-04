@@ -61,7 +61,7 @@ class HttpApiClient implements ApiClient {
     bool requiresAuth = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
-    debugPrint('richiesta POST a $uri');
+    debugPrint('richiesta GET a $uri');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.get(uri, headers: mergedHeaders);
     return _handleResponse(response);
@@ -96,6 +96,7 @@ class HttpApiClient implements ApiClient {
     bool requiresAuth = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
+    debugPrint('richiesta PUT a $uri');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.put(
       uri,
@@ -112,6 +113,7 @@ class HttpApiClient implements ApiClient {
     bool requiresAuth = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
+    debugPrint('richiesta DELETE a $uri');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.delete(uri, headers: mergedHeaders);
     return _handleResponse(response);
