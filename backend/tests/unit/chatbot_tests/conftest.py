@@ -2,9 +2,16 @@ import sys
 from pathlib import Path
 
 # Aggiunge src/chatbot al path per gli import interni (es. 'from ports.xxx')
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src" / "chatbot"))
-# Aggiunge src/ al path per gli import con prefisso 'src.chatbot.xxx'
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent))
+import conftest
+sys.modules['conftest'] = conftest
+sys.path.insert(1, str(Path(__file__).parent.parent.parent.parent / "src" / "chatbot"))
+sys.path.insert(2, str(Path(__file__).parent.parent.parent.parent / "src"))
+
+modules_to_clean = ["ports", "controller", "repository", "models", "service", "services", "domain", "adapters", "commands"]
+for mod in list(sys.modules.keys()):
+    if any(mod == clean_mod or mod.startswith(clean_mod + ".") for clean_mod in modules_to_clean):
+        del sys.modules[mod]
 
 import pytest
 import boto3
