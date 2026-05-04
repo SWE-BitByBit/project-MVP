@@ -7,6 +7,46 @@ import '../view_model/chatbot_view_model.dart';
 class ChatHistoryWidget extends StatelessWidget {
   const ChatHistoryWidget({super.key});
 
+  void _showDeleteConfirmation(
+    BuildContext context,
+    ChatbotViewModel viewModel,
+    String chatId,
+    String chatTitle,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Elimina chat"),
+          content: Text(
+            "Eliminare definitivamente la conversazione '$chatTitle'?\n"
+            "Una volta confermata l'eliminazione, la chat non potrà più essere recuperata.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Annulla",
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                viewModel.deleteChat(chatId);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text(
+                'Elimina',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch permette al drawer di aggiornarsi se la lista dei preview cambia
@@ -40,7 +80,12 @@ class ChatHistoryWidget extends StatelessWidget {
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => viewModel.deleteChat(preview.getId()),
+                    onPressed: () => _showDeleteConfirmation(
+                      context,
+                      viewModel,
+                      preview.getId(),
+                      preview.getTitle(),
+                    ),
                   ),
                 );
               },
