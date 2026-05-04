@@ -10,6 +10,7 @@ from domain.diary_type import DiaryType
 from domain.dtos.note_dto import NoteDTO
 
 SERVER_ERROR = {"message": "Internal server error"}
+INVALID_DIARY_TYPE = {"message": "Invalid diary_type"}
 
 class DiaryNoteController:
 
@@ -55,7 +56,7 @@ class DiaryNoteController:
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"message": "Invalid diary_type"})
+            return self.response(400, INVALID_DIARY_TYPE)
 
         elements = [
             AddNoteElementCmd(
@@ -101,7 +102,7 @@ class DiaryNoteController:
             return self.response(200, note)
 
         except ValueError:
-            return self.response(400, {"message": "Invalid diary_type"})
+            return self.response(400, INVALID_DIARY_TYPE)
         
         except Exception:
             return self.response(500, SERVER_ERROR)
@@ -113,7 +114,7 @@ class DiaryNoteController:
         try:
             diary_type = DiaryType(body.get("diary_type"))
         except ValueError:
-            return self.response(400, {"message": "Invalid diary_type"})
+            return self.response(400, INVALID_DIARY_TYPE)
 
         notes = self._service.list_notes(
             GetNotesCmd(

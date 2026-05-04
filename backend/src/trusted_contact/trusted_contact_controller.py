@@ -147,9 +147,16 @@ class TrustedContactController:
             .get("jwt", {})
             .get("claims", {})
         )
+        given_name = claims.get("given_name")
+        name = claims.get("name")
 
-        return claims.get("given_name", "")
-    
+        if given_name:
+            return given_name
+
+        if name:
+            return name
+
+        return ''
 
     def _get_user_email(self, event):
         claims = (
@@ -158,6 +165,7 @@ class TrustedContactController:
             .get("jwt", {})
             .get("claims", {})
         )
+
 
         return claims.get("email", "")
     

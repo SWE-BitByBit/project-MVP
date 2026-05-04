@@ -7,7 +7,7 @@ from domain.note import Note
 
 class GetNotePort(ABC):
     @abstractmethod
-    def get_note(self, cmd: GetNoteCmd) -> dict:
+    def get_note(self, cmd: GetNoteCmd) -> Optional[dict]:
         pass
 
     @abstractmethod

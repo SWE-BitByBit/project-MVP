@@ -2,6 +2,7 @@ from ulid import ULID
 import os
 from typing import List
 from botocore.exceptions import ClientError
+from typing import Optional
 
 from domain.note import Note
 from domain.note import NoteElement
@@ -89,7 +90,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
 
         return note_dict
 
-    def get_note(self, cmd: GetNoteCmd) -> dict:
+    def get_note(self, cmd: GetNoteCmd) -> Optional[dict]:
         note = self._note_repository.get(
             cmd.user_id,
             cmd.note_id,
@@ -184,7 +185,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
                 )
                 note_element_dict["upload_url"] = upload_url
 
-            except ClientError as e:
+            except ClientError:
                 raise RuntimeError("Error generating presigned URL")
 
         else:
