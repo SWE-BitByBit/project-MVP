@@ -27,9 +27,10 @@ class NoteService {
   }
 
   /// Recupera le preview di tutte le note di un determinato diario.
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}].
   Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
     final response = await _apiClient.get(
-      '$_basePath/${targetDiary.name}/',
+      '$_basePath/${targetDiary.name}',
       headers: _buildAuthHeaders(),
     );
 
@@ -41,13 +42,13 @@ class NoteService {
 
   /// Recupera il contenuto completo di una singola nota.
   ///
-  /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}/].
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}].
   Future<Map<String, dynamic>> fetchNoteById(
     DiaryType targetDiary,
     String noteId,
   ) async {
     final response = await _apiClient.get(
-      '$_basePath/${targetDiary.name}/$noteId/',
+      '$_basePath/${targetDiary.name}/$noteId',
       headers: _buildAuthHeaders(),
     );
     return response as Map<String, dynamic>;
@@ -69,7 +70,7 @@ class NoteService {
   /// Rimuove la nota dal database e i relativi file binari da S3.
   Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
     await _apiClient.delete(
-      '$_basePath/${targetDiary.name}/$noteId/',
+      '$_basePath/${targetDiary.name}/$noteId',
       headers: _buildAuthHeaders(),
     );
   }
@@ -86,7 +87,7 @@ class NoteService {
 
   Future<void> deleteNoteElement(String noteId, String noteElementId) async {
     await _apiClient.delete(
-      '$_basePath/note_element/$noteId/$noteElementId/',
+      '$_basePath/note_element/$noteId/$noteElementId',
       headers: _buildAuthHeaders(),
     );
   }

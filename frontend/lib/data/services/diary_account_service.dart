@@ -32,8 +32,8 @@ class DiaryAccountService {
     final body = <String, dynamic>{
       'password': newPassword,
       'diary_type': diaryType == DiaryType.real_diary
-          ? 'REAL_DIARY'
-          : 'FAKE_DIARY',
+          ? 'real_diary'
+          : 'fake_diary',
     };
     if (oldPassword != null) {
       body['previous_password'] = oldPassword;
