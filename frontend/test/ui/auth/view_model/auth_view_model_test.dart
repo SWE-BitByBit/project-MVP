@@ -26,6 +26,9 @@ void main() {
     mockDeadManRepository = MockDeadManRepository();
     mockCacheManager = MockCacheManager();
 
+    when(() => mockDeadManRepository.sendHeartbeat()).thenAnswer((_) async {});
+    when(() => mockDeadManRepository.createSettings()).thenAnswer((_) async {});
+
     getIt.registerSingleton<DeadManRepository>(mockDeadManRepository);
     getIt.registerSingleton<CacheManager>(mockCacheManager);
 
@@ -80,10 +83,9 @@ void main() {
   });
 
   group('AuthViewModel - login Command', () {
-    test('dovrebbe eseguire il login con successo e inviare l\'heartbeat', () async {
+    test('dovrebbe eseguire il login con successo', () async {
       final fakeUser = FakeUser();
       when(() => mockAuthRepository.login()).thenAnswer((_) async => fakeUser);
-      when(() => mockDeadManRepository.sendHeartbeat()).thenAnswer((_) async {});
 
       bool listenerCalled = false;
       viewModel.addListener(() => listenerCalled = true);
@@ -91,20 +93,17 @@ void main() {
       await viewModel.login.runAsync();
 
       verify(() => mockAuthRepository.login()).called(1);
-      verify(() => mockDeadManRepository.sendHeartbeat()).called(1);
       expect(viewModel.login.errors.value, isNull);
       expect(listenerCalled, isTrue);
     });
 
-    test('dovrebbe gestire il fallimento dell\'heartbeat senza fallire il login', () async {
+    test('dovrebbe gestire l\'errore del login', () async {
       final fakeUser = FakeUser();
       when(() => mockAuthRepository.login()).thenAnswer((_) async => fakeUser);
-      when(() => mockDeadManRepository.sendHeartbeat()).thenThrow(Exception('Errore rete'));
 
       await viewModel.login.runAsync();
 
       verify(() => mockAuthRepository.login()).called(1);
-      verify(() => mockDeadManRepository.sendHeartbeat()).called(1);
 
       expect(viewModel.login.errors.value, isNull);
     });

@@ -49,6 +49,17 @@ void main() {
     when(() => mockViewModel.saveNote).thenReturn(mockSaveCommand);
     when(() => mockViewModel.deleteNote).thenReturn(mockDeleteCommand);
 
+    when(() => mockViewModel.addElement(
+      type: any(named: 'type'),
+      text: any(named: 'text'),
+      file: any(named: 'file'),
+    )).thenAnswer((invocation) {
+      final text = invocation.namedArguments[#text] as String?;
+      final elem = NoteTextElement(text ?? '');
+      testNote.addElement(elem, testNote.getElementCount());
+      return elem;
+    });
+
     // Ora initSession non fallirà più grazie al mock del canale
     await DiarySession.session.initSession(DiaryType.real_diary, "test_token");
 

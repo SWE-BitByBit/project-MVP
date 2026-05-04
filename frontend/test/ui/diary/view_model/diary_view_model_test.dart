@@ -6,6 +6,8 @@ import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_mode
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 
 import '../../../../testing/mocks/diary/mock_note_repository.dart';
 import '../../../../testing/mocks/diary/mock_diary_account_repository.dart';
@@ -17,6 +19,8 @@ class FakeNote extends Fake implements Note {
   FakeNote({required this.id});
 }
 
+class FakeNoteElement extends Fake implements NoteElement {}
+
 void main() {
   late DiaryViewModel viewModel;
   late MockNoteRepository mockNoteRepo;
@@ -25,6 +29,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(DiaryType.real_diary);
     registerFallbackValue(FakeNote(id: 'any'));
+    registerFallbackValue(FakeNoteElement());
   });
 
   setUp(() {
@@ -33,6 +38,11 @@ void main() {
     mockAccRepo = MockDiaryAccountRepository();
 
     when(() => mockNoteRepo.cachedNotes).thenReturn([]);
+    when(() => mockNoteRepo.addNoteElement(any(), any())).thenAnswer((invocation) async {
+      final Note note = invocation.positionalArguments[0] as Note;
+      final NoteElement element = invocation.positionalArguments[1] as NoteElement;
+      note.addElement(element, note.getElementCount());
+    });
 
     viewModel = DiaryViewModel(mockNoteRepo, mockAccRepo);
   });
@@ -51,7 +61,7 @@ void main() {
       viewModel.createNewNote(DiaryType.real_diary);
       final initialCount = viewModel.currentNote!.getElementCount();
 
-      viewModel.addTextElement("Testo di prova");
+      viewModel.addElement(type: 'text', text: "Testo di prova");
 
       expect(viewModel.currentNote!.getElementCount(), initialCount + 1);
     });
@@ -61,10 +71,9 @@ void main() {
       viewModel.createNewNote(DiaryType.real_diary);
       final file = File('path/to/image.png');
 
-      viewModel.addMediaElement(file, "image");
+      viewModel.addElement(type: 'image', file: file);
 
-      // Accediamo all'ultimo elemento aggiunto (necessita casting o check del tipo)
-      // Nota: assumendo che addElement funzioni come da implementazione LocalNote
+      expect(viewModel.currentNote!.getElementCount(), 1);
     });
     group('DiaryViewModel - Comandi', () {
       test('loadNotes dovrebbe chiamare getNotes sul repository', () async {

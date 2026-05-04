@@ -65,7 +65,7 @@ void main() {
         expect(result, equals(tNotesList));
         verify(
           () => mockApiClient.get(
-            '/notes/real_diary/',
+            '/notes/real_diary',
             headers: {'X-Diary-Token': 'mock_valid_token'},
           ),
         ).called(1);
@@ -87,7 +87,7 @@ void main() {
         expect(result, equals([]));
         verify(
           () => mockApiClient.get(
-            '/notes/fake_diary/',
+            '/notes/fake_diary',
             headers: {'X-Diary-Token': 'mock_valid_token'},
           ),
         ).called(1);
@@ -115,7 +115,7 @@ void main() {
         expect(result, equals(tNoteDetail));
         verify(
           () => mockApiClient.get(
-            '/notes/real_diary/$tNoteId/',
+            '/notes/real_diary/$tNoteId',
             headers: {'X-Diary-Token': 'mock_valid_token'},
           ),
         ).called(1);
@@ -125,14 +125,14 @@ void main() {
 
   group('saveNote', () {
     test(
-      'should perform POST request when noteData does not contain note_id (create)',
+      'should perform PUT request when noteData does not contain note_id (create)',
       () async {
         // arrange
         final tCreateData = {"title": "Nuova Nota"};
         final tCreateResponse = {"note_id": "new_id", "title": "Nuova Nota"};
 
         when(
-          () => mockApiClient.post(
+          () => mockApiClient.put(
             any(),
             body: any(named: 'body'),
             headers: any(named: 'headers'),
@@ -148,7 +148,7 @@ void main() {
         // assert
         expect(result, equals(tCreateResponse));
         verify(
-          () => mockApiClient.post(
+          () => mockApiClient.put(
             '/notes',
             body: tCreateData,
             headers: {'X-Diary-Token': 'mock_valid_token'},
@@ -185,7 +185,6 @@ void main() {
             '/notes',
             body: tUpdateData,
             headers: {'X-Diary-Token': 'mock_valid_token'},
-            requiresAuth: true,
           ),
         ).called(1);
       },
@@ -206,7 +205,7 @@ void main() {
       // assert
       verify(
         () => mockApiClient.delete(
-          '/notes/real_diary/$tNoteId/',
+          '/notes/real_diary/$tNoteId',
           headers: {'X-Diary-Token': 'mock_valid_token'},
         ),
       ).called(1);

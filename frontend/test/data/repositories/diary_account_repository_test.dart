@@ -31,7 +31,7 @@ void main() {
       test('dovrebbe restituire real_diary in caso di successo', () async {
         // Arrange
         when(() => mockService.validateDiaryPassword(any()))
-          .thenAnswer((_) async => {'diary_type': 'REAL_DIARY'});
+          .thenAnswer((_) async => {'diary_type': 'real_diary', 'access_token': 'test_token'});
 
         // Act
         final result = await repository.clarifyAccessResult('Password123!');
@@ -44,7 +44,7 @@ void main() {
       test('dovrebbe restituire fake_diary in caso di successo con password esca', () async {
         // Arrange
         when(() => mockService.validateDiaryPassword(any()))
-          .thenAnswer((_) async => {'diary_type': 'FAKE_DIARY'});
+          .thenAnswer((_) async => {'diary_type': 'fake_diary', 'access_token': 'test_token'});
 
         // Act
         final result = await repository.clarifyAccessResult('FakePassword123!');

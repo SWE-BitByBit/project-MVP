@@ -130,21 +130,14 @@ void main() {
       when(() => mockViewModel.chats).thenReturn([chat1]);
       when(() => mockViewModel.currentChat).thenReturn(null);
 
-      // Troviamo tutti i bottoni "cestino" (ce ne sono 2). Clicchiamo il secondo (indice 1)
+      await tester.pumpWidget(createWidgetUnderTest());
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pumpAndSettle();
+
+      // Troviamo tutti i bottoni "cestino"
       final cestini = find.byIcon(Icons.delete_outline);
-      await tester.tap(cestini.at(1));
+      await tester.tap(cestini.first);
 
-      // Aspettiamo che il dialogo si apra
-      await tester.pumpAndSettle();
-
-      // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
-
-      // Aspettiamo che il ViewModel faccia la chiamata di rete finta e che Flutter ridisegni lo schermo
-      await tester.pumpAndSettle();
-
-      // Trova l'icona del cestino ed esegui il tap
-      await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
 
       verify(() => mockDeleteChat.run('1')).called(1);
