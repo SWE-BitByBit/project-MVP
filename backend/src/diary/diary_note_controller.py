@@ -38,9 +38,9 @@ class DiaryNoteController:
 
         if route == "PUT /notes":
             return self._note_add(event)
-        elif route == "GET /notes":
+        elif route == "GET /notes/{diary_type}":
             return self._note_list(event)
-        elif route == "GET /notes/{note_id}":
+        elif route == "GET /notes/{diary_type}/{note_id}":
             return self._note_get(event)
         elif route == "DELETE /notes/{diary_type}/{note_id}":
             return self._note_delete(event)
@@ -83,15 +83,15 @@ class DiaryNoteController:
     
 
     def _note_get(self, event):
-        body = json.loads(event.get("body") or "{}")
+        path_params = event.get("pathParameters") or {}
 
         try:
-            diary_type = DiaryType(body.get("diary_type"))
+            diary_type = DiaryType(path_params.get("diary_type"))
             
             note = self._service.get_note(
                 GetNoteCmd(
                     user_id=self._get_user_id(event),
-                    note_id=body.get('note_id'),
+                    note_id=path_params.get('note_id'),
                     diary_type=diary_type
                 )
             )
@@ -109,10 +109,10 @@ class DiaryNoteController:
 
 
     def _note_list(self, event):
-        body = json.loads(event.get("body") or "{}")
-
+        path_params = event.get("pathParameters") or {}
+        
         try:
-            diary_type = DiaryType(body.get("diary_type"))
+            diary_type = DiaryType(path_params.get("diary_type"))
         except ValueError:
             return self.response(400, INVALID_DIARY_TYPE)
 

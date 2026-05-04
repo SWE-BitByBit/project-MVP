@@ -107,7 +107,7 @@ Resources:
         GetDiaryNotes:
           Type: HttpApi
           Properties:
-            Path: /notes
+            Path: /notes/{diary_type}
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
@@ -115,7 +115,7 @@ Resources:
         GetDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /notes/{note_id}
+            Path: /notes/{diary_type}/{note_id}
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
