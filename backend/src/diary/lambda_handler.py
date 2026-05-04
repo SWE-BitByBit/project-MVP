@@ -64,4 +64,4 @@ def lambda_handler(event, context):
     service = NoteService(repo, storage)
     controller = DiaryNoteController(service)
 
-    return controller.handle_response(event, context)
+    return controller.handle_request(event, context)
