@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../domain/models/diary/diary_enums.dart';
 import '../../domain/models/diary/diary_session.dart';
 import '../../domain/models/diary/note.dart';
@@ -65,16 +66,29 @@ class NoteRepository implements CacheableRepository {
     return cachedNotes;
   }
 
-  /// Recupera il contenuto completo di una nota.
+  /// Recupera il contenuto completo di una nota scaricando prima i file.
   Future<Note> getNoteById(String noteId) async {
     final targetDiary = DiarySession.session.loggedDiary;
     if (targetDiary == null) {
       throw Exception("Nessun diario attivo nella sessione.");
     }
+
     final Map<String, dynamic> rawNote = await _noteService.fetchNoteById(
       targetDiary,
       noteId,
     );
+
+    final List<dynamic> rawElements = rawNote['elements'] ?? [];
+    for (var elemJson in rawElements) {
+      final type = elemJson['type']?.toString();
+      final downloadUrl = elemJson['download_url']?.toString();
+
+      if ((type == 'image' || type == 'audio') && downloadUrl != null && downloadUrl.isNotEmpty) {
+          final File downloadedFile = await _noteService.downloadFileFromUrl(downloadUrl);
+          elemJson['content'] = downloadedFile.path;
+
+      }
+    }
     return NoteDTO.fromJson(rawNote);
   }
 
