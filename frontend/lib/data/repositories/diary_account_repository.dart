@@ -20,12 +20,12 @@ class DiaryAccountRepository {
       final String? token = response['access_token'];
 
       if (token != null && typeStr != null) {
-        final diaryType = typeStr == 'REAL_DIARY'
+        final diaryType = typeStr == 'real_diary'
             ? DiaryType.real_diary
             : DiaryType.fake_diary;
         await DiarySession.session.initSession(diaryType, token);
 
-        return typeStr == 'REAL_DIARY'
+        return typeStr == 'real_diary'
             ? DiaryAccessResult.real_diary
             : DiaryAccessResult.fake_diary;
       }
