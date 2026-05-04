@@ -17,7 +17,7 @@ abstract class NoteElementDTO {
       case 'image':
         return NoteImageElement(
           content,
-          File(content),
+          file: File(content),
           noteParentId: noteId,
           noteElementId: elementId,
         );
@@ -25,7 +25,7 @@ abstract class NoteElementDTO {
       case 'audio':
         return NoteAudioElement(
           content,
-          File(content),
+          file: File(content),
           noteParentId: noteId,
           noteElementId: elementId,
         );

@@ -5,9 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_image_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_audio_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_audio_player_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
@@ -46,8 +43,9 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
 
   /// Rimuove l'elemento [noteElement] dalla nota
   void _removeNoteElement(NoteElement element, Card card) {
+    context.read<DiaryViewModel>().deleteElement(element);
+
     setState(() {
-      widget.selectedNote.removeElement(element);
       _elements.remove(card);
       _lastUpdated = widget.selectedNote.updateDate;
     });
@@ -219,38 +217,43 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     super.dispose();
   }
 
-  /// Apre il selettore di immagini e aggiunge l'immagine scelta alla nota
-  Future _addImageElement(Note note) async {
-    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      File pickedImage = File(image.path);
+  /// Gestisce l'acquisizione dell'input (se necessario), la chiamata al ViewModel
+  /// e l'aggiornamento della UI per qualsiasi tipo di elemento.
+  Future<void> _addNewElement(String type) async {
+    File? pickedFile;
+    bool requestFocus = false;
 
-      final newElement = NoteImageElement(
-        pickedImage.path,
-        File(pickedImage.path),
-      );
-      note.addElement(newElement, note.getElementCount());
-
-      setState(() {
-        _elements.add(_createCard(newElement));
-        _lastUpdated = widget.selectedNote.updateDate;
-      });
+    // 1. Acquisizione del file (solo per i media)
+    if (type == 'image') {
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null) return; // L'utente ha chiuso il picker senza scegliere
+      pickedFile = File(image.path);
     }
-  }
-
-  Future _addAudioElement(Note note) async {
-    final pickResult = await FilePicker.pickFiles(type: FileType.audio);
-    if (pickResult != null) {
-      final File audioFile = File(pickResult.files.single.path!);
-
-      final newElement = NoteAudioElement(audioFile.path, File(audioFile.path));
-      note.addElement(newElement, note.getElementCount());
-
-      setState(() {
-        _elements.add(_createCard(newElement));
-        _lastUpdated = widget.selectedNote.updateDate;
-      });
+    else if (type == 'audio') {
+      final pickResult = await FilePicker.pickFiles(type: FileType.audio);
+      if (pickResult == null) return; // L'utente ha chiuso il picker senza scegliere
+      pickedFile = File(pickResult.files.single.path!);
     }
+    else if (type == 'text') {
+      // Per il testo non serve un file, ma vogliamo che la tastiera si apra subito
+      requestFocus = true;
+    }
+
+    // Se il widget è stato smontato mentre l'utente sceglieva il file, interrompiamo
+    if (!mounted) return;
+
+    // 2. Chiamata al ViewModel (ora identica per tutti!)
+    final newElement = context.read<DiaryViewModel>().addElement(
+      type: type,
+      text: type == 'text' ? "" : null,
+      file: pickedFile,
+    );
+
+    // 3. Aggiornamento visivo della UI
+    setState(() {
+      _elements.add(_createCard(newElement, requestFocus: requestFocus));
+      _lastUpdated = widget.selectedNote.updateDate;
+    });
   }
 
   /// Aggiorna il titolo della nota
@@ -262,21 +265,13 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
   }
 
   /// Mostra menu popup contentente tre bottoni per l'aggiunta di elementi nota
-  void _showOptions(BuildContext context, Note note) async {
+  void _showOptions(BuildContext context) async {
     showMenu(
       position: const RelativeRect.fromLTRB(100, 1000, 0, 0),
       context: context,
       items: [
         PopupMenuItem(
-          onTap: () {
-            final newElement = NoteTextElement("");
-            note.addElement(newElement, note.getElementCount());
-
-            setState(() {
-              _elements.add(_createCard(newElement, requestFocus: true));
-              _lastUpdated = widget.selectedNote.updateDate;
-            });
-          },
+          onTap: () => _addNewElement('text'), // <-- Guarda che pulizia!
           child: const Row(
             children: [
               Icon(Icons.textsms),
@@ -286,9 +281,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           ),
         ),
         PopupMenuItem(
-          onTap: () {
-            _addImageElement(note);
-          },
+          onTap: () => _addNewElement('image'), // <-- Guarda che pulizia!
           child: const Row(
             children: [
               Icon(Icons.photo),
@@ -298,9 +291,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           ),
         ),
         PopupMenuItem(
-          onTap: () {
-            _addAudioElement(note);
-          },
+          onTap: () => _addNewElement('audio'), // <-- Guarda che pulizia!
           child: const Row(
             children: [
               Icon(Icons.multitrack_audio),
@@ -472,7 +463,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               ),
               floatingActionButton: FloatingActionButton(
                 elevation: 10,
-                onPressed: () => _showOptions(context, widget.selectedNote),
+                onPressed: () => _showOptions(context),
                 backgroundColor: Colors.teal,
                 tooltip: 'Scegli un elemento da aggiungere alla nota',
                 child: const Icon(

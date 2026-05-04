@@ -79,10 +79,23 @@ class DiaryViewModel extends ChangeNotifier {
         throw "Tipo di elemento non supportato: $type";
     }
 
-    _currentNote!.addElement(elem, _currentNote!.getElementCount());
     _noteRepo.addNoteElement(_currentNote!, elem);
     notifyListeners();
     return elem;
+  }
+
+  void deleteElement(NoteElement element) {
+    if (_currentNote == null) return;
+
+    final deleteFuture = _noteRepo.deleteNoteElement(_currentNote!, element);
+
+    notifyListeners();
+
+    deleteFuture.catchError((e) {
+      asyncError.value = "Impossibile eliminare l'elemento. Controlla la connessione.";
+      // Il repo lo ha già reinserito, quindi ridisegniamo la UI
+      notifyListeners();
+    });
   }
 
   Future<void> _loadNotes(DiaryType diary) async {
