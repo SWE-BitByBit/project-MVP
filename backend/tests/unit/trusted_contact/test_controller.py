@@ -205,7 +205,7 @@ def test_send_alert_no_contacts(controller, aws_ses_client):
     event = build_event("PUT", "/alert", {}, user_id="user_no_contacts",
                         user_email="noone@gmail.com")
     response = controller.handle_request(event, {})
-    assert response["statusCode"] == 500
+    assert response["statusCode"] == 400
     assert get_sent_email_count(aws_ses_client) == 0
 
 # --------- Scheduler -------------

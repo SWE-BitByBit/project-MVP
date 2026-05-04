@@ -11,7 +11,7 @@ Parameters:
   CognitoAudience:
     Type: String
     Default: "5dlcoa478c3uve9bctpopae4kl"
-  
+
 Globals:
   Function:
     Timeout: 10
@@ -52,7 +52,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/diary/
-      Handler: app.lambda_handler
+      Handler: lambda_handler.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
       Environment:
@@ -88,18 +88,18 @@ Resources:
             ApiId: !Ref AppHttpApi
             Auth:
               Authorizer: MyJWTAuthorizer
-        PostDiaryStatus:
+        GetDiaryStatus:
           Type: HttpApi
           Properties:
             Path: /diary/auth/status
-            Method: post
+            Method: get
             ApiId: !Ref AppHttpApi
             Auth:
               Authorizer: MyJWTAuthorizer
         PutDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /note
+            Path: /notes
             Method: put
             ApiId: !Ref AppHttpApi
             Auth:
@@ -107,7 +107,7 @@ Resources:
         GetDiaryNotes:
           Type: HttpApi
           Properties:
-            Path: /note
+            Path: /notes
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
@@ -123,7 +123,7 @@ Resources:
         DeleteDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /notes/{note_id}
+            Path: /notes/{diary_type}/{note_id}
             Method: delete
             ApiId: !Ref AppHttpApi
             Auth:
@@ -139,16 +139,15 @@ Resources:
         DeleteDiaryNoteElement:
           Type: HttpApi
           Properties:
-            Path: /notes/note_element/{note_element_id}
+            Path: /notes/note_element/{note_id}/{note_element_id}
             Method: delete
             ApiId: !Ref AppHttpApi
             Auth:
               Authorizer: MyJWTAuthorizer
- 
+
   NoteMediaBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "diary-media-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
@@ -166,7 +165,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: note_table
+      TableName: note_table_mvp
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -180,13 +179,13 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
-  
+
   DiaryNoteElementTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: note_elements_table
+      TableName: note_elements_table_mvp
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: note_id
@@ -206,7 +205,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: diary_auth_table
+      TableName: diary_auth_table_mvp
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -224,12 +223,13 @@ Resources:
       CodeUri: src/trusted_contact/
       Handler: app.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-contact-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
+        tact-mvp"
       Environment:
         Variables:
           REGION: eu-south-1
-          DMS_TABLE: dead_man_switch_settings_mvp
-          TRUSTED_CONTACT_TABLE: trusted_contacts_mvp
+          DMS_TABLE: !Ref DeadManSwitchSettingsTable
+          TRUSTED_CONTACT_TABLE: !Ref TrustedContactsTable
           SOURCE_EMAIL: swe.bitbybit@gmail.com
       Events:
         PostDmsSettings:
@@ -312,13 +312,13 @@ Resources:
             ApiId: !Ref AppHttpApi
             Auth:
               Authorizer: MyJWTAuthorizer
-      
+
   TrustedContactsTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: trusted_contacts_mvp
+      TableName: trusted_contacts_mvp_v2
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -332,13 +332,13 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
-  
+
   DeadManSwitchSettingsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: dead_man_switch_settings_mvp
+      TableName: dead_man_switch_settings_mvp_v2
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: user_id
@@ -539,6 +539,22 @@ Outputs:
     Description: Diary notes lambda function ARN
     Value: !GetAtt DiaryFunction.Arn
 
+  NoteMediaBucket:
+    Description: Bucket for storing note's images and audios
+    Value: !Ref NoteMediaBucket
+
+  DiaryNoteTable:
+    Description: Diary note DynamoDB Table ARN
+    Value: !Ref DiaryNoteTable
+
+  DiaryNoteElementTable:
+    Description: Diary note elements DynamoDB Table ARN
+    Value: !Ref DiaryNoteElementTable
+
+  DiaryAuthTable:
+    Description: Diary password DynamoDB Table ARN
+    Value: !Ref DiaryAuthTable
+
   TrustedContactFunction:
     Description: Trusted contacts lambda function ARN
     Value: !GetAtt TrustedContactFunction.Arn
@@ -574,7 +590,7 @@ Outputs:
   DiaryAuthTableName:
     Description: Diary Auth table name
     Value: !Ref DiaryAuthTable
-  
+
   NoteMediaBucketName:
     Description: Diary media bucket name
     Value: !Ref NoteMediaBucket
