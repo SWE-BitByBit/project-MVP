@@ -414,7 +414,16 @@ def test_lambda_put_chat_not_found(crud_service, tables):
     assert result["statusCode"] == 404
 
 
-def test_lambda_post_message(crud_service, sample_chat, tables):
+def test_lambda_post_message(crud_service, sample_chat, tables, monkeypatch):
+    from src.chatbot import lambda_function
+
+    class MockLLMSuccess:
+        def get_message_response(self, *args, **kwargs):
+            return "Mock response"
+
+    controller = lambda_function.get_controller()
+    monkeypatch.setattr(controller, "_llm_service", MockLLMSuccess())
+
     user_id = sample_chat["user_id"]
     chat_id = sample_chat["chat_id"]
 

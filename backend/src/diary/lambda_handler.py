@@ -1,3 +1,4 @@
+import json
 import boto3
 import os
 
@@ -9,17 +10,31 @@ from services.diary_auth_service import DiaryAuthService
 from diary_access_controller import DiaryAccessController
 from diary_note_controller import DiaryNoteController
 
+def _get_user_id(event):
+        claims = (
+            event.get("requestContext", {})
+            .get("authorizer", {})
+            .get("jwt", {})
+            .get("claims", {})
+        )
+
+        return claims.get("sub")
+
 def lambda_handler(event, context):
-    route = event.get("routekey", "")
+    route = event.get("routeKey", "")
 
-    if route.startswith("/diary/auth"):
-        auth_adapter = DynamoAuthAdapter()
-        auth_service = DiaryAuthService(auth_adapter)
-        auth_controller = DiaryAccessController(auth_service)
+    if " " in route:
+        method, path = route.split(" ", 1)
+    else:
+        return {"statusCode": 400, "body": json.dumps({"error": "Invalid route"})}
 
+    auth_adapter = DynamoAuthAdapter()
+    auth_service = DiaryAuthService(auth_adapter)
+    auth_controller = DiaryAccessController(auth_service)
+
+    if path.startswith("/diary/auth"):
         try:
             return auth_controller.handle_request(event, context)
-
         except Exception as e:
             return {
                 "statusCode": 500,
@@ -27,6 +42,18 @@ def lambda_handler(event, context):
                     "error": str(e)
                 }
             }
+
+    headers = event.get("headers", {})
+    token = headers.get("X-Diary-Token") or headers.get("x-diary-token")
+    user_id = _get_user_id(event)
+
+    if not token or not user_id or not auth_controller.validate_token(user_id, token):
+        return {
+            "statusCode": 401,
+            "body": {
+                "error": "Unauthorized"
+            }
+        }
 
     repo = DynamoNoteAdapter()
     storage = S3NoteAdapter(

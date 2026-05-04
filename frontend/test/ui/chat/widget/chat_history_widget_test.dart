@@ -35,7 +35,9 @@ void main() {
     when(() => mockViewModel.createChat).thenReturn(mockCreateChat);
 
     // Setup essenziale per il widget figlio ChatbotCreateChatWidget che ascolta isRunning
-    when(() => mockCreateChat.isRunning).thenReturn(createChatIsRunningNotifier);
+    when(
+      () => mockCreateChat.isRunning,
+    ).thenReturn(createChatIsRunningNotifier);
 
     when(() => mockOpenChat.run(any())).thenAnswer((_) async {});
     when(() => mockDeleteChat.run(any())).thenAnswer((_) async {});
@@ -56,7 +58,9 @@ void main() {
   }
 
   group('ChatHistoryWidget', () {
-    testWidgets('Mostra messaggio di stato vuoto se non ci sono chat', (tester) async {
+    testWidgets('Mostra messaggio di stato vuoto se non ci sono chat', (
+      tester,
+    ) async {
       when(() => mockViewModel.chats).thenReturn([]);
       when(() => mockViewModel.currentChat).thenReturn(null);
 
@@ -89,30 +93,36 @@ void main() {
       expect(find.byType(ListTile), findsNWidgets(2));
     });
 
-    testWidgets('Il tap su una chat invia il comando openChat e chiude il drawer', (tester) async {
-      final chat1 = MockChat();
-      when(() => chat1.id).thenReturn('1');
-      when(() => chat1.title).thenReturn('Chat di test');
+    testWidgets(
+      'Il tap su una chat invia il comando openChat e chiude il drawer',
+      (tester) async {
+        final chat1 = MockChat();
+        when(() => chat1.id).thenReturn('1');
+        when(() => chat1.title).thenReturn('Chat di test');
 
-      when(() => mockViewModel.chats).thenReturn([chat1]);
-      when(() => mockViewModel.currentChat).thenReturn(null);
+        when(() => mockViewModel.chats).thenReturn([chat1]);
+        when(() => mockViewModel.currentChat).thenReturn(null);
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      scaffoldKey.currentState?.openDrawer();
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest());
+        scaffoldKey.currentState?.openDrawer();
+        await tester.pumpAndSettle();
 
-      // Tappiamo sulla riga della chat
-      await tester.tap(find.text('Chat di test'));
-      await tester.pumpAndSettle(); // Aspettiamo l'animazione di chiusura del drawer
+        // Tappiamo sulla riga della chat
+        await tester.tap(find.text('Chat di test'));
+        await tester
+            .pumpAndSettle(); // Aspettiamo l'animazione di chiusura del drawer
 
-      // Verifica comando
-      verify(() => mockOpenChat.run('1')).called(1);
+        // Verifica comando
+        verify(() => mockOpenChat.run('1')).called(1);
 
-      // Verifica che il drawer sia stato chiuso (il testo non è più visibile/attivo nello scaffold)
-      expect(find.text('Cronologia Chat'), findsNothing);
-    });
+        // Verifica che il drawer sia stato chiuso (il testo non è più visibile/attivo nello scaffold)
+        expect(find.text('Cronologia Chat'), findsNothing);
+      },
+    );
 
-    testWidgets('Il tap sull\'icona cestino invia il comando deleteChat', (tester) async {
+    testWidgets('Il tap sull\'icona cestino invia il comando deleteChat', (
+      tester,
+    ) async {
       final chat1 = MockChat();
       when(() => chat1.id).thenReturn('1');
       when(() => chat1.title).thenReturn('Chat da eliminare');
@@ -120,8 +130,17 @@ void main() {
       when(() => mockViewModel.chats).thenReturn([chat1]);
       when(() => mockViewModel.currentChat).thenReturn(null);
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      scaffoldKey.currentState?.openDrawer();
+      // Troviamo tutti i bottoni "cestino" (ce ne sono 2). Clicchiamo il secondo (indice 1)
+      final cestini = find.byIcon(Icons.delete_outline);
+      await tester.tap(cestini.at(1));
+
+      // Aspettiamo che il dialogo si apra
+      await tester.pumpAndSettle();
+
+      // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
+
+      // Aspettiamo che il ViewModel faccia la chiamata di rete finta e che Flutter ridisegni lo schermo
       await tester.pumpAndSettle();
 
       // Trova l'icona del cestino ed esegui il tap

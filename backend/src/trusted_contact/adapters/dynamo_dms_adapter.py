@@ -42,6 +42,7 @@ class DynamoDmsAdapter(DmsRepositoryPort):
                 },
                 ConditionExpression="attribute_not_exists(user_id)"
             )
+            return config
 
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
@@ -53,7 +54,8 @@ class DynamoDmsAdapter(DmsRepositoryPort):
 
         try:
             response = self._table.get_item(
-                Key={"user_id": user_id}
+                Key={"user_id": user_id},
+                ConsistentRead=True
             )
             item = response.get("Item")
             if not item:

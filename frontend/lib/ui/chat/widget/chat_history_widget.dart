@@ -9,13 +9,51 @@ import 'chatbot_create_chat_widget.dart';
 class ChatHistoryWidget extends StatelessWidget {
   const ChatHistoryWidget({super.key});
 
+  void _showDeleteConfirmation(
+    BuildContext context,
+    ChatbotViewModel viewModel,
+    String chatId,
+    String chatTitle,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Elimina chat"),
+          content: Text(
+            "Eliminare definitivamente la conversazione '$chatTitle'?\n"
+            "Una volta confermata l'eliminazione, la chat non potrà più essere recuperata.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Annulla",
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                viewModel.deleteChat(chatId);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text(
+                'Elimina',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Drawer(
-      child: SafeArea(
-        child:Column(
+    return Column(
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: colorScheme.primaryContainer),
