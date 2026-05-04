@@ -216,13 +216,16 @@ void _setupSettings() {
 
 /// Registra le dipendenze relative al modulo del Diario (Criptato e Fittizio)
 void _setupDiary() {
+  getIt.registerLazySingleton<NoteService>(
+        () => NoteService(apiClient: getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton<DiaryAccountService>(
     () => DiaryAccountService(apiClient: getIt<ApiClient>()),
   );
-  /*
+
   getIt.registerLazySingleton<NoteService>(
     () => NoteService(apiClient: getIt<ApiClient>()),
-  );*/
+  );
 
   //getIt.registerLazySingleton<NoteService>(() => MockNoteService());
 

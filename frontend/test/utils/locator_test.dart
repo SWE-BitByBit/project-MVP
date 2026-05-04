@@ -25,6 +25,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
+    
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('com.ryanheise.just_audio.methods'),
+      (MethodCall methodCall) async => null,
+    );
+
     // 1. Inizializza le variabili d'ambiente fittizie
     dotenv.loadFromString(envString: '''
       API_BASE_URL=http://test.com
