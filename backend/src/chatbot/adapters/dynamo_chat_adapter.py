@@ -1,5 +1,6 @@
 from typing import List, Optional
 from datetime import datetime, timezone
+import os
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -13,8 +14,8 @@ from domain.chat_message import Message
 class DynamoChatAdapter(ChatsRepositoryPort):
     def __init__(self, dynamodb=None):
         self._dynamodb = dynamodb or boto3.resource("dynamodb")
-        self._chats_table = self._dynamodb.Table("chats_mvp")
-        self._messages_table = self._dynamodb.Table("chats_messages_mvp")
+        self._chats_table = self._dynamodb.Table(os.envrion["TABLE_CHATS"])
+        self._messages_table = self._dynamodb.Table(os.envrion["TABLE_MESSAGES"])
 
     @staticmethod
     def _now_iso() -> str:

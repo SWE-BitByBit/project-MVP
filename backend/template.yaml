@@ -357,12 +357,14 @@ Resources:
       Handler: lambda_function.lambda_handler
       FunctionName: lambda-chatbot-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Environment:
+        Variables:
+          TABLE_CHATS: !Ref ChatsTable
+          TABLE_MESSAGES: !Ref ChatsMessagesTable
+          PYTHONPATH: "/var/task"
       Layers:
         - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
       Runtime: python3.12
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
       Events:
         GetChats:
           Type: HttpApi
