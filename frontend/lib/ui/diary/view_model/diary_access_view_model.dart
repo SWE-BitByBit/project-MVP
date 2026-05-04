@@ -68,6 +68,7 @@ class DiaryAccessViewModel extends ChangeNotifier {
 
     switch (res) {
       case DiaryAccessResult.real_diary:
+        _isAuthenticated = true;
       case DiaryAccessResult.fake_diary:
         _isAuthenticated = true;
         break;

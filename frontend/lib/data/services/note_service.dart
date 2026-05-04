@@ -59,6 +59,7 @@ class NoteService {
     DiaryType targetDiary,
     Map<String, dynamic> noteData,
   ) async {
+    noteData['diary_type'] = targetDiary.name;
     return await _apiClient.put(
       _basePath,
       body: noteData,

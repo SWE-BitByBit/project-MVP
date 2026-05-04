@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
 import 'api_exception.dart';
@@ -60,6 +61,7 @@ class HttpApiClient implements ApiClient {
     bool requiresAuth = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
+    debugPrint('richiesta POST a $uri');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.get(uri, headers: mergedHeaders);
     return _handleResponse(response);
@@ -73,12 +75,16 @@ class HttpApiClient implements ApiClient {
     bool requiresAuth = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
+    debugPrint('richiesta POST a $uri');
+    debugPrint('body POST a $body');
+
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.post(
       uri,
       headers: mergedHeaders,
       body: body != null ? jsonEncode(body) : null,
     );
+    debugPrint('riposta: $response');
     return _handleResponse(response);
   }
 
