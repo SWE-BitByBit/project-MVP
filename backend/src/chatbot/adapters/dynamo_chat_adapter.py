@@ -14,8 +14,8 @@ from domain.chat_message import Message
 class DynamoChatAdapter(ChatsRepositoryPort):
     def __init__(self, dynamodb=None):
         self._dynamodb = dynamodb or boto3.resource("dynamodb")
-        self._chats_table = self._dynamodb.Table(os.envrion["TABLE_CHATS"])
-        self._messages_table = self._dynamodb.Table(os.envrion["TABLE_MESSAGES"])
+        self._chats_table = self._dynamodb.Table(os.environ["TABLE_CHATS"])
+        self._messages_table = self._dynamodb.Table(os.environ["TABLE_MESSAGES"])
 
     @staticmethod
     def _now_iso() -> str:

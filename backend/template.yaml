@@ -420,7 +420,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: chats_mvp
+      TableName: chats_mvp_v2
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: chat_id
@@ -449,7 +449,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: chats_messages_mvp
+      TableName: chats_messages_mvp_v2
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: chat_id
