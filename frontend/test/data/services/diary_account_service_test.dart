@@ -70,11 +70,12 @@ void main() {
       // assert
       expect(result, equals(tSetPasswordResponse));
       verify(() => mockApiClient.post(
-        '/diary/auth/set-password',
+        '/diary/auth/set_password',
+        headers: any(named: 'headers'),
         body: {
-          'old_password': 'old_pass',
-          'new_password': 'new_pass',
-          'diary_type': 'real_diary',
+          'previous_password': 'old_pass',
+          'password': 'new_pass',
+          'diary_type': 'REAL_DIARY',
         },
         requiresAuth: true,
       )).called(1);
@@ -94,10 +95,11 @@ void main() {
       // assert
       expect(result, equals(tSetPasswordResponse));
       verify(() => mockApiClient.post(
-        '/diary/auth/set-password',
+        '/diary/auth/set_password',
+        headers: any(named: 'headers'),
         body: {
-          'new_password': 'new_pass',
-          'diary_type': 'fake_diary',
+          'password': 'new_pass',
+          'diary_type': 'FAKE_DIARY',
         },
         requiresAuth: true,
       )).called(1);
@@ -109,6 +111,7 @@ void main() {
       // arrange
       when(() => mockApiClient.get(
         any(),
+        headers: any(named: 'headers'),
         requiresAuth: any(named: 'requiresAuth'),
       )).thenAnswer((_) async => {"has_password": true});
 
@@ -124,6 +127,7 @@ void main() {
       // arrange
       when(() => mockApiClient.get(
         any(),
+        headers: any(named: 'headers'),
         requiresAuth: any(named: 'requiresAuth'),
       )).thenAnswer((_) async => {"has_password": false});
 
@@ -138,6 +142,7 @@ void main() {
       // arrange
       when(() => mockApiClient.get(
         any(),
+        headers: any(named: 'headers'),
         requiresAuth: any(named: 'requiresAuth'),
       )).thenThrow(Exception('404 Not Found'));
 

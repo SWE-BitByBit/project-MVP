@@ -27,6 +27,8 @@ void main() {
 
     // Associa il command al VM
     when(() => mockVm.sendAlert).thenReturn(mockSendAlertCommand);
+
+    when(() => mockVm.checkConnection()).thenAnswer((_) async {});
   });
 
   Widget createWidgetUnderTest() {

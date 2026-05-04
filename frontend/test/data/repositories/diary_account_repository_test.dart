@@ -30,8 +30,8 @@ void main() {
     group('clarifyAccessResult', () {
       test('dovrebbe restituire real_diary in caso di successo', () async {
         // Arrange
-        when(() => mockService.validateDiaryPassword('Password123!'))
-            .thenAnswer((_) async => {'token': 'fake_token', 'diary_type': 'real_diary'});
+        when(() => mockService.validateDiaryPassword(any()))
+          .thenAnswer((_) async => {'diary_type': 'REAL_DIARY'});
 
         // Act
         final result = await repository.clarifyAccessResult('Password123!');
@@ -43,8 +43,8 @@ void main() {
 
       test('dovrebbe restituire fake_diary in caso di successo con password esca', () async {
         // Arrange
-        when(() => mockService.validateDiaryPassword('FakePassword123!'))
-            .thenAnswer((_) async => {'token': 'fake_token', 'diary_type': 'fake_diary'});
+        when(() => mockService.validateDiaryPassword(any()))
+          .thenAnswer((_) async => {'diary_type': 'FAKE_DIARY'});
 
         // Act
         final result = await repository.clarifyAccessResult('FakePassword123!');

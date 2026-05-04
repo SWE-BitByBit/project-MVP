@@ -114,7 +114,7 @@ void main() {
           lastModified: DateTime.utc(2023, 11, 20, 10, 0, 0),
           initialElements: [
             NoteTextElement('Testo 1'),
-            NoteImageElement('path/to/image.png', File('path/to/image.png')),
+            NoteImageElement('path/to/image.png', file: File('path/to/image.png')),
           ],
         );
 

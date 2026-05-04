@@ -219,10 +219,10 @@ void _setupDiary() {
   getIt.registerLazySingleton<DiaryAccountService>(
     () => DiaryAccountService(apiClient: getIt<ApiClient>()),
   );
-  /*
+
   getIt.registerLazySingleton<NoteService>(
     () => NoteService(apiClient: getIt<ApiClient>()),
-  );*/
+  );
 
   //getIt.registerLazySingleton<NoteService>(() => MockNoteService());
 

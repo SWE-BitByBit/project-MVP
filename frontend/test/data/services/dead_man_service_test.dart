@@ -67,18 +67,31 @@ void main() {
   });
 
   group('sendHeartbeat', () {
-    test('should perform POST request on /dms_settings/heartbeat', () async {
-      when(() => mockApiClient.post(any(), body: any(named: 'body')))
-          .thenAnswer((_) async => {});
+    test('sendHeartbeat should perform PUT request on /dms_settings/heartbeat', () async {
+      // arrange
+      when(() => mockApiClient.put(
+        any(),
+        body: any(named: 'body'),
+        headers: any(named: 'headers'),
+        requiresAuth: any(named: 'requiresAuth'),
+      )).thenAnswer((_) async => {});
 
       await deadManService.sendHeartbeat();
 
-      verify(() => mockApiClient.post('/dms_settings/heartbeat')).called(1);
+      verify(() => mockApiClient.put(
+        '/dms_settings/heartbeat',
+        requiresAuth: true,
+      )).called(1);
     });
 
     test('should rethrow exception if heartbeat API call fails', () async {
-      when(() => mockApiClient.post(any(), body: any(named: 'body')))
-          .thenThrow(Exception('Timeout'));
+      // arrange
+      when(() => mockApiClient.put(
+        any(),
+        body: any(named: 'body'),
+        headers: any(named: 'headers'),
+        requiresAuth: any(named: 'requiresAuth'),
+      )).thenThrow(Exception('Errore di rete'));
 
       expect(() => deadManService.sendHeartbeat(), throwsException);
     });
