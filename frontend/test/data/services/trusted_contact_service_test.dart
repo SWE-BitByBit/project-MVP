@@ -47,7 +47,7 @@ void main() {
         // arrange
         when(
           () => mockApiClient.get(any()),
-        ).thenAnswer((_) async => tContactsJsonList);
+        ).thenAnswer((_) async => {'trusted_contacts': tContactsJsonList});
 
         // act
         final result = await service.getContacts();

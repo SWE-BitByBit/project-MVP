@@ -75,7 +75,7 @@ void main() {
         body: {
           'previous_password': 'old_pass',
           'password': 'new_pass',
-          'diary_type': 'REAL_DIARY',
+          'diary_type': 'real_diary',
         },
         requiresAuth: true,
       )).called(1);
@@ -99,7 +99,7 @@ void main() {
         headers: any(named: 'headers'),
         body: {
           'password': 'new_pass',
-          'diary_type': 'FAKE_DIARY',
+          'diary_type': 'fake_diary',
         },
         requiresAuth: true,
       )).called(1);
@@ -113,7 +113,7 @@ void main() {
         any(),
         headers: any(named: 'headers'),
         requiresAuth: any(named: 'requiresAuth'),
-      )).thenAnswer((_) async => {"has_password": true});
+      )).thenAnswer((_) async => {"has_real_password": true});
 
       // act
       final result = await service.checkHasRealPassword();
@@ -129,7 +129,7 @@ void main() {
         any(),
         headers: any(named: 'headers'),
         requiresAuth: any(named: 'requiresAuth'),
-      )).thenAnswer((_) async => {"has_password": false});
+      )).thenAnswer((_) async => {"has_real_password": false});
 
       // act
       final result = await service.checkHasRealPassword();

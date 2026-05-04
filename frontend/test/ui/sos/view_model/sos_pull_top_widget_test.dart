@@ -29,6 +29,7 @@ void main() {
     when(() => mockVm.sendAlert).thenReturn(mockSendAlertCommand);
 
     when(() => mockVm.checkConnection()).thenAnswer((_) async {});
+    when(() => mockVm.isConnected).thenReturn(true);
   });
 
   Widget createWidgetUnderTest() {

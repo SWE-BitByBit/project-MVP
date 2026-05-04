@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:command_it/command_it.dart';
+import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/utils/locator.dart';
 import 'package:mvp_app_protegge_e_trasforma/utils/cache_manager.dart';
@@ -21,16 +22,56 @@ import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_access_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 
+class MockJustAudioPlatform extends JustAudioPlatform {
+  @override
+  Future<AudioPlayerPlatform> init(InitRequest request) async {
+    return MockAudioPlayerPlatform(request.id);
+  }
+  @override
+  Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) async {
+    return DisposePlayerResponse();
+  }
+  @override
+  Future<DisposeAllPlayersResponse> disposeAllPlayers(DisposeAllPlayersRequest request) async {
+    return DisposeAllPlayersResponse();
+  }
+}
+
+class MockAudioPlayerPlatform extends AudioPlayerPlatform {
+  MockAudioPlayerPlatform(super.id);
+  @override
+  Stream<PlaybackEventMessage> get playbackEventMessageStream => const Stream.empty();
+  @override
+  Future<LoadResponse> load(LoadRequest request) async => LoadResponse(duration: const Duration(seconds: 1));
+  @override
+  Future<PlayResponse> play(PlayRequest request) async => PlayResponse();
+  @override
+  Future<PauseResponse> pause(PauseRequest request) async => PauseResponse();
+  @override
+  Future<SeekResponse> seek(SeekRequest request) async => SeekResponse();
+  @override
+  Future<SetVolumeResponse> setVolume(SetVolumeRequest request) async => SetVolumeResponse();
+  @override
+  Future<SetSpeedResponse> setSpeed(SetSpeedRequest request) async => SetSpeedResponse();
+  @override
+  Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async => SetLoopModeResponse();
+  @override
+  Future<SetShuffleModeResponse> setShuffleMode(SetShuffleModeRequest request) async => SetShuffleModeResponse();
+  @override
+  Future<SetAndroidAudioAttributesResponse> setAndroidAudioAttributes(SetAndroidAudioAttributesRequest request) async => SetAndroidAudioAttributesResponse();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    
+    JustAudioPlatform.instance = MockJustAudioPlatform();
+
+    const channelPathProvider = MethodChannel('plugins.flutter.io/path_provider');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('com.ryanheise.just_audio.methods'),
-      (MethodCall methodCall) async => null,
-    );
+        .setMockMethodCallHandler(channelPathProvider, (MethodCall methodCall) async {
+      return '.';
+    });
 
     // 1. Inizializza le variabili d'ambiente fittizie
     dotenv.loadFromString(envString: '''
