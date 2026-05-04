@@ -14,6 +14,7 @@ import '../../../../testing/mocks/chatbot/mock_proxy_chat.dart';
 import '../../../../testing/mocks/chatbot/mock_message_response.dart';
 
 class FakeUser extends Fake implements User {}
+
 class FakeChat extends Fake implements Chat {}
 
 class FakeMutableChat extends Fake implements Chat {
@@ -38,6 +39,14 @@ void main() {
   setUpAll(() {
     registerFallbackValue(FakeChat());
     registerFallbackValue(ChatMode.mirror);
+    registerFallbackValue(
+      ChatMessage(
+        id: 'send_1',
+        content: 'Domanda',
+        type: MessageType.user,
+        timestamp: DateTime.now(),
+      ),
+    );
   });
 
   setUp(() {
@@ -48,7 +57,9 @@ void main() {
 
     when(() => mockAuthRepository.getCurrentUser()).thenReturn(FakeUser());
     when(() => mockChatbotRepository.cachedChats).thenReturn([]);
-    when(() => mockChatbotRepository.getChatPreviews()).thenAnswer((_) async {return [];});
+    when(() => mockChatbotRepository.getChatPreviews()).thenAnswer((_) async {
+      return [];
+    });
     when(() => mockChatbotRepository.lastViewedChatId).thenReturn(null);
   });
 
@@ -61,17 +72,20 @@ void main() {
   }
 
   group('ChatbotViewModel - Inizializzazione e Stato', () {
-    test('Costruttore dovrebbe caricare le preview e creare chat virtuale se lista vuota', () async {
-      await initViewModel();
+    test(
+      'Costruttore dovrebbe caricare le preview e creare chat virtuale se lista vuota',
+      () async {
+        await initViewModel();
 
-      verify(() => mockAuthRepository.getCurrentUser()).called(1);
-      verify(() => mockChatbotRepository.getChatPreviews()).called(1);
-      expect(viewModel.chats, isEmpty);
-      expect(viewModel.currentChat, isNotNull);
-      expect(viewModel.currentChat, isA<LocalChat>());
-      expect(viewModel.currentChat!.id, startsWith('virtual_'));
-      expect(viewModel.mode, ChatMode.mirror);
-    });
+        verify(() => mockAuthRepository.getCurrentUser()).called(1);
+        verify(() => mockChatbotRepository.getChatPreviews()).called(1);
+        expect(viewModel.chats, isEmpty);
+        expect(viewModel.currentChat, isNotNull);
+        expect(viewModel.currentChat, isA<LocalChat>());
+        expect(viewModel.currentChat!.id, startsWith('virtual_'));
+        expect(viewModel.mode, ChatMode.mirror);
+      },
+    );
 
     test('Non deve caricare preview se utente non è loggato', () async {
       when(() => mockAuthRepository.getCurrentUser()).thenReturn(null);
@@ -92,24 +106,29 @@ void main() {
       );
       when(() => mockChatbotRepository.cachedChats).thenReturn([mockChat]);
       when(() => mockChatbotRepository.lastViewedChatId).thenReturn('chat_1');
-      when(() => mockChatbotRepository.lastViewedChatId = any()).thenReturn(null);
+      when(
+        () => mockChatbotRepository.lastViewedChatId = any(),
+      ).thenReturn(null);
 
       await initViewModel();
 
       expect(viewModel.currentChat?.id, 'chat_1');
     });
 
-    test('setMode non dovrebbe notificare se la modalità è identica a quella di default (mirror)', () async {
-      await initViewModel();
+    test(
+      'setMode non dovrebbe notificare se la modalità è identica a quella di default (mirror)',
+      () async {
+        await initViewModel();
 
-      int notifyCount = 0;
-      viewModel.addListener(() => notifyCount++);
+        int notifyCount = 0;
+        viewModel.addListener(() => notifyCount++);
 
-      viewModel.setMode(ChatMode.mirror);
+        viewModel.setMode(ChatMode.mirror);
 
-      expect(viewModel.mode, ChatMode.mirror);
-      expect(notifyCount, 0);
-    });
+        expect(viewModel.mode, ChatMode.mirror);
+        expect(notifyCount, 0);
+      },
+    );
   });
 
   group('ChatbotViewModel - Azioni Chat', () {
@@ -131,37 +150,49 @@ void main() {
       when(() => proxyChat.id).thenReturn('proxy_1');
       when(() => proxyChat.load()).thenAnswer((_) async {});
       when(() => mockChatbotRepository.cachedChats).thenReturn([proxyChat]);
-      when(() => mockChatbotRepository.lastViewedChatId = any()).thenReturn(null);
+      when(
+        () => mockChatbotRepository.lastViewedChatId = any(),
+      ).thenReturn(null);
 
       await initViewModel();
       await viewModel.openChat.runAsync('proxy_1');
 
       verify(() => proxyChat.load()).called(1);
-      verify(() => mockChatbotRepository.lastViewedChatId = 'proxy_1').called(1);
+      verify(
+        () => mockChatbotRepository.lastViewedChatId = 'proxy_1',
+      ).called(1);
       expect(viewModel.currentChat, proxyChat);
     });
 
-    test('deleteChat dovrebbe eliminare la chat e resettare se era quella corrente', () async {
-      await initViewModel();
-      final currentVirtualId = viewModel.currentChat!.id;
+    test(
+      'deleteChat dovrebbe eliminare la chat e resettare se era quella corrente',
+      () async {
+        await initViewModel();
+        final currentVirtualId = viewModel.currentChat!.id;
 
-      when(() => mockChatbotRepository.deleteChat(currentVirtualId)).thenAnswer((_) async {});
+        when(
+          () => mockChatbotRepository.deleteChat(currentVirtualId),
+        ).thenAnswer((_) async {});
 
-      // Un piccolo delay per garantire che la nuova chat virtuale creata nel fallback abbia un ID diverso
-      await Future.delayed(const Duration(milliseconds: 2));
+        // Un piccolo delay per garantire che la nuova chat virtuale creata nel fallback abbia un ID diverso
+        await Future.delayed(const Duration(milliseconds: 2));
 
-      await viewModel.deleteChat.runAsync(currentVirtualId);
+        await viewModel.deleteChat.runAsync(currentVirtualId);
 
-      verify(() => mockChatbotRepository.deleteChat(currentVirtualId)).called(1);
-      expect(viewModel.currentChat!.id, isNot(currentVirtualId));
-      expect(viewModel.currentChat!.id, startsWith('virtual_'));
-    });
+        verify(
+          () => mockChatbotRepository.deleteChat(currentVirtualId),
+        ).called(1);
+        expect(viewModel.currentChat!.id, isNot(currentVirtualId));
+        expect(viewModel.currentChat!.id, startsWith('virtual_'));
+      },
+    );
 
     test('deleteChat in errore imposta asyncError', () async {
       await initViewModel();
 
-      when(() => mockChatbotRepository.deleteChat('error_id'))
-          .thenAnswer((_) async => throw Exception('Delete fallita'));
+      when(
+        () => mockChatbotRepository.deleteChat('error_id'),
+      ).thenAnswer((_) async => throw Exception('Delete fallita'));
 
       try {
         await viewModel.deleteChat.runAsync('error_id');
@@ -174,58 +205,82 @@ void main() {
   });
 
   group('ChatbotViewModel - Invio Messaggi', () {
-    test('sendMessage su chat virtuale crea chat reale prima di inviare', () async {
-      await initViewModel();
-      final virtualChat = viewModel.currentChat as LocalChat;
+    test(
+      'sendMessage su chat virtuale crea chat reale prima di inviare',
+      () async {
+        await initViewModel();
+        final virtualChat = viewModel.currentChat as LocalChat;
 
-      final realChat = LocalChat(
-        id: 'real_1',
-        title: 'Nuova',
-        creationDate: DateTime.now(),
-        updateDate: DateTime.now(),
-        messages: <ChatMessage>[],
-      );
-      final mockResponse = MockMessageResponse();
-      final replyMsg = ChatMessage(
-        id: 'reply_1',
-        content: 'Risposta',
-        type: MessageType.ai,
-        timestamp: DateTime.now(),
-      );
+        final realChat = LocalChat(
+          id: 'real_1',
+          title: 'Nuova',
+          creationDate: DateTime.now(),
+          updateDate: DateTime.now(),
+          messages: <ChatMessage>[],
+        );
+        final mockResponse = MockMessageResponse();
 
-      when(() => mockResponse.response).thenReturn(replyMsg);
-      when(() => mockResponse.updatedTitle).thenReturn('Titolo Aggiornato');
+        final replyMsg = ChatMessage(
+          id: 'reply_1',
+          content: 'Risposta',
+          type: MessageType.ai,
+          timestamp: DateTime.now(),
+        );
 
-      when(() => mockChatbotRepository.createChat()).thenAnswer((_) async => realChat);
-      when(() => mockChatbotRepository.lastViewedChatId = any()).thenReturn(null);
-      when(() => mockChatbotRepository.sendMessage(any(), any(), any()))
-          .thenAnswer((_) async => mockResponse);
+        when(() => mockResponse.response).thenReturn(replyMsg);
+        when(() => mockResponse.updatedTitle).thenReturn('Titolo Aggiornato');
 
-      await viewModel.sendMessage.runAsync((chat: virtualChat, content: 'Ciao', mode: ChatMode.mirror));
+        when(
+          () => mockChatbotRepository.createChat(any()),
+        ).thenAnswer((_) async => realChat);
+        when(
+          () => mockChatbotRepository.lastViewedChatId = any(),
+        ).thenReturn(null);
+        when(
+          () => mockChatbotRepository.sendMessage(any(), any(), any()),
+        ).thenAnswer((_) async => mockResponse);
 
-      verify(() => mockChatbotRepository.createChat()).called(1);
-      verify(() => mockChatbotRepository.sendMessage(any(), 'Ciao', ChatMode.mirror)).called(1);
+        await viewModel.sendMessage.runAsync((
+          chat: virtualChat,
+          content: 'Ciao',
+          mode: ChatMode.mirror,
+        ));
 
-      expect(viewModel.currentChat, realChat);
-      expect(realChat.title, 'Titolo Aggiornato');
-    });
+        verify(() => mockChatbotRepository.createChat(any())).called(1);
+        verify(
+          () =>
+              mockChatbotRepository.sendMessage(any(), 'Ciao', ChatMode.mirror),
+        ).called(1);
 
-    test('sendMessage fallback: imposta asyncError se API fallisce e rimuove messaggio finto', () async {
-      await initViewModel();
+        expect(viewModel.currentChat, realChat);
+        expect(realChat.title, 'Titolo Aggiornato');
+      },
+    );
 
-      final fakeChat = FakeMutableChat();
+    test(
+      'sendMessage fallback: imposta asyncError se API fallisce e rimuove messaggio finto',
+      () async {
+        await initViewModel();
 
-      when(() => mockChatbotRepository.sendMessage(any(), any(), any()))
-          .thenAnswer((_) async => throw Exception('Errore di rete'));
+        final fakeChat = FakeMutableChat();
 
-      try {
-        await viewModel.sendMessage.runAsync((chat: fakeChat, content: 'Fail', mode: ChatMode.mirror));
-      } catch (_) {}
+        when(
+          () => mockChatbotRepository.sendMessage(any(), any(), any()),
+        ).thenAnswer((_) async => throw Exception('Errore di rete'));
 
-      await Future.delayed(Duration.zero);
+        try {
+          await viewModel.sendMessage.runAsync((
+            chat: fakeChat,
+            content: 'Fail',
+            mode: ChatMode.mirror,
+          ));
+        } catch (_) {}
 
-      expect(viewModel.asyncError.value, 'Errore nell\'invio del messaggio.');
-      expect(fakeChat.messages, isEmpty);
-    });
+        await Future.delayed(Duration.zero);
+
+        expect(viewModel.asyncError.value, 'Errore nell\'invio del messaggio.');
+        expect(fakeChat.messages, isEmpty);
+      },
+    );
   });
 }

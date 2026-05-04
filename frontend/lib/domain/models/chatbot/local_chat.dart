@@ -15,11 +15,11 @@ class LocalChat implements Chat {
     required DateTime creationDate,
     required DateTime updateDate,
     required List<ChatMessage> messages,
-  })  : _id = id,
-        _title = title,
-        _creationDate = creationDate,
-        _updateDate = updateDate,
-        _messages = messages;
+  }) : _id = id,
+       _title = title,
+       _creationDate = creationDate,
+       _updateDate = updateDate,
+       _messages = messages;
 
   @override
   String get id => _id;
@@ -45,6 +45,12 @@ class LocalChat implements Chat {
   @override
   void addMessage(ChatMessage message) {
     _messages.add(message);
+    _updateDate = DateTime.now();
+  }
+
+  @override
+  void removeMessage(String messageId) {
+    _messages.removeWhere((m) => m.id == messageId);
     _updateDate = DateTime.now();
   }
 }

@@ -59,6 +59,11 @@ class ProxyChat implements Chat {
     _localChat?.addMessage(message);
   }
 
+  @override
+  void removeMessage(String messageId) {
+    _localChat?.removeMessage(messageId);
+  }
+
   /// Recupera i dati dal backend solo se non sono già caricati.
   Future<void> load() async {
     if (_localChat == null) {

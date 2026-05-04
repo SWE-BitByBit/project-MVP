@@ -117,17 +117,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
                           onPressed: () => Scaffold.of(context).openDrawer(),
                           tooltip: 'Cronologia chat',
                         ),
-                        Expanded(
-                          child: Consumer<ChatbotViewModel>(
-                            builder: (context, vm, child) => Text(
-                              vm.currentChat?.title ?? 'Nuova Conversazione',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   );

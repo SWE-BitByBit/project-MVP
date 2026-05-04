@@ -64,6 +64,19 @@ class ChatbotRepository implements CacheableRepository {
     return cachedChats;
   }
 
+  String _generateChatTitle(ChatMessage initialMessage) {
+    const int maxLength = 20;
+    final content = initialMessage.content.trim();
+
+    if (content.isEmpty) return 'Nuova chat';
+
+    final title = content.length <= maxLength
+        ? content
+        : '${content.substring(0, maxLength)}...';
+
+    return title[0].toUpperCase() + title.substring(1);
+  }
+
   /// Usato dalla [ProxyChat] per scaricare effettivamente i messaggi
   Future<Chat> getChatById(String chatId) async {
     final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(
@@ -73,8 +86,11 @@ class ChatbotRepository implements CacheableRepository {
   }
 
   /// Crea una nuova conversazione e la aggiunge alla cache
-  Future<Chat> createChat() async {
-    final Map<String, dynamic> rawChat = await _chatbotService.createChat();
+  Future<Chat> createChat(ChatMessage initialMessage) async {
+    final String title = _generateChatTitle(initialMessage);
+    final Map<String, dynamic> rawChat = await _chatbotService.createChat(
+      title,
+    );
     final newChat = ChatDTO.fromJson(rawChat);
 
     _cachedChats.insert(0, newChat);
@@ -133,5 +149,18 @@ class ChatbotRepository implements CacheableRepository {
       response: responseMessage,
       updatedTitle: updatedTitle,
     );
+  }
+
+  Future<void> updateChatTitle(String chatId, String newTitle) async {
+    final Map<String, dynamic> updatedChatJson = await _chatbotService
+        .updateChat(chatId, {'title': newTitle});
+
+    final updatedChat = ChatDTO.fromJson(updatedChatJson);
+    final index = _cachedChats.indexWhere((c) => c.id == chatId);
+
+    if (index != -1) {
+      _cachedChats[index] = updatedChat;
+      _sortCache();
+    }
   }
 }

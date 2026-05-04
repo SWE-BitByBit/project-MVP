@@ -23,12 +23,15 @@ class ChatbotService {
   }
 
   /// Crea una nuova istanza di chat nel database.
-  Future<Map<String, dynamic>> createChat() async {
-    return await _apiClient.post(_basePath, body: {});
+  Future<Map<String, dynamic>> createChat(String title) async {
+    return await _apiClient.post(_basePath, body: {'title': title});
   }
 
   /// Aggiorna i metadati di una chat esistente (es. il titolo).
-  Future<Map<String, dynamic>> updateChat(String chatId, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> updateChat(
+    String chatId,
+    Map<String, dynamic> data,
+  ) async {
     return await _apiClient.put('$_basePath/$chatId', body: data);
   }
 
@@ -39,16 +42,23 @@ class ChatbotService {
 
   /// Invia un messaggio al modello linguistico tramite il sistema RAG.
   Future<Map<String, dynamic>> sendMessage(
-      String chatId,
-      String content,
-      String mode,
-      ) async {
-    final body = {
-      'message': content,
-      'response_mode': mode,
-    };
+    String chatId,
+    String content,
+    String mode,
+  ) async {
+    final body = {'message': content, 'response_mode': mode};
 
     // La specifica indica che questo metodo ritorna risposta + titolo aggiornato.
     return await _apiClient.post('$_basePath/$chatId/messages', body: body);
+  }
+
+  Future<Map<String, dynamic>> updateChatTitle(
+    String chatId,
+    String newTitle,
+  ) async {
+    return await _apiClient.put(
+      '$_basePath/$chatId',
+      body: {'title': newTitle},
+    );
   }
 }
