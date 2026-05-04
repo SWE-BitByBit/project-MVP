@@ -15,14 +15,22 @@ class ChatbotCreateChatWidget extends StatelessWidget {
         return SizedBox(
           width: double.infinity, // Prende tutta la larghezza del Drawer
           child: FilledButton.icon(
+            key: const Key('create_chat_button'),
             onPressed: isRunning
                 ? null
                 : () {
-              Navigator.pop(context); // Chiude il drawer
-              vm.createChat.run(null);
-            },
+                    Navigator.pop(context); // Chiude il drawer
+                    vm.createChat.run(null);
+                  },
             icon: isRunning
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : const Icon(Icons.add),
             label: const Text('Nuova conversazione'),
           ),

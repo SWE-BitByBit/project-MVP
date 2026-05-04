@@ -270,7 +270,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
       context: context,
       items: [
         PopupMenuItem(
-          onTap: () => _addNewElement('text'), // <-- Guarda che pulizia!
+          onTap: () => _addNewElement('text'),
           child: const Row(
             children: [
               Icon(Icons.textsms),
@@ -280,7 +280,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           ),
         ),
         PopupMenuItem(
-          onTap: () => _addNewElement('image'), // <-- Guarda che pulizia!
+          onTap: () => _addNewElement('image'),
           child: const Row(
             children: [
               Icon(Icons.photo),
@@ -290,7 +290,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
           ),
         ),
         PopupMenuItem(
-          onTap: () => _addNewElement('audio'), // <-- Guarda che pulizia!
+          onTap: () => _addNewElement('audio'),
           child: const Row(
             children: [
               Icon(Icons.multitrack_audio),

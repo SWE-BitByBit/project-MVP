@@ -32,52 +32,62 @@ void main() {
         body: const Center(child: Text('Home')),
         drawer: ChangeNotifierProvider<ChatbotViewModel>.value(
           value: mockViewModel,
-          child: const Drawer(
-            child: ChatbotCreateChatWidget(),
-          ),
+          child: const Drawer(child: ChatbotCreateChatWidget()),
         ),
       ),
     );
   }
 
   group('ChatbotCreateChatWidget', () {
-    testWidgets('Mostra il bottone con icona "add" e testo quando NON è in esecuzione', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-      scaffoldKey.currentState?.openDrawer();
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Mostra il bottone con icona "add" e testo quando NON è in esecuzione',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+        scaffoldKey.currentState?.openDrawer();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Nuova conversazione'), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.text('Nuova conversazione'), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
 
-      // Verifica che il bottone sia abilitato
-      final button = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(button.enabled, isTrue);
-    });
+        // Verifica che il bottone sia abilitato
+        final button = tester.widget<FilledButton>(
+          find.byKey(const Key('create_chat_button')),
+        );
+        expect(button.enabled, isTrue);
+      },
+    );
 
-    testWidgets('Mostra il CircularProgressIndicator e disabilita il bottone quando è in esecuzione', (tester) async {
-      // Iniziamo con il notifier a false per permettere al drawer di aprirsi completamente senza timeout
-      isRunningNotifier.value = false;
+    testWidgets(
+      'Mostra il CircularProgressIndicator e disabilita il bottone quando è in esecuzione',
+      (tester) async {
+        // Iniziamo con il notifier a false per permettere al drawer di aprirsi completamente senza timeout
+        isRunningNotifier.value = false;
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      scaffoldKey.currentState?.openDrawer();
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(createWidgetUnderTest());
+        scaffoldKey.currentState?.openDrawer();
+        await tester.pumpAndSettle();
 
-      // Attiviamo il caricamento e usiamo pump() al posto di pumpAndSettle()
-      // perché il CircularProgressIndicator ha un'animazione infinita che causa il timeout
-      isRunningNotifier.value = true;
-      await tester.pump();
+        // Attiviamo il caricamento e usiamo pump() al posto di pumpAndSettle()
+        // perché il CircularProgressIndicator ha un'animazione infinita che causa il timeout
+        isRunningNotifier.value = true;
+        await tester.pump();
 
-      expect(find.text('Nuova conversazione'), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.text('Nuova conversazione'), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      // Verifica che il bottone sia disabilitato
-      final button = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(button.enabled, isFalse);
-    });
+        // Verifica che il bottone sia disabilitato
+        final button = tester.widget<FilledButton>(
+          find.byKey(const Key('create_chat_button')),
+        );
+        expect(button.enabled, isFalse);
+      },
+    );
 
-    testWidgets('Il tap chiude il drawer ed esegue il comando createChat', (tester) async {
+    testWidgets('Il tap chiude il drawer ed esegue il comando createChat', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       scaffoldKey.currentState?.openDrawer();
       await tester.pumpAndSettle();

@@ -35,7 +35,7 @@ class ChatHistoryWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                viewModel.deleteChat(chatId);
+                viewModel.deleteChat.run(chatId);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text(
@@ -135,9 +135,12 @@ class ChatHistoryWidget extends StatelessWidget {
                         Icons.delete_outline,
                         color: colorScheme.error,
                       ),
-                      onPressed: () {
-                        vm.deleteChat.run(chat.id);
-                      },
+                      onPressed: () => _showDeleteConfirmation(
+                        context,
+                        vm,
+                        chat.id,
+                        chat.title,
+                      ),
                     ),
                   );
                 },

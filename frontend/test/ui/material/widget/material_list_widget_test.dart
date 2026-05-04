@@ -32,14 +32,14 @@ void main() {
     // Configura il mock di url_launcher per autorizzare l'apertura dei link.
     // Ora any() per LaunchOptions funzionerà grazie al Fake!
     when(() => mockUrlLauncher.canLaunch(any())).thenAnswer((_) async => true);
-    when(() => mockUrlLauncher.launchUrl(any(), any())).thenAnswer((_) async => true);
+    when(
+      () => mockUrlLauncher.launchUrl(any(), any()),
+    ).thenAnswer((_) async => true);
   });
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: Scaffold(
-        body: MaterialListWidget(viewModel: mockVm),
-      ),
+      home: Scaffold(body: MaterialListWidget(viewModel: mockVm)),
     );
   }
 
@@ -54,18 +54,16 @@ void main() {
       expect(find.byType(ExpansionTile), findsNothing);
     });
 
-    testWidgets('renderizza correttamente le card delle risorse fornite', (tester) async {
+    testWidgets('renderizza correttamente le card delle risorse fornite', (
+      tester,
+    ) async {
       when(() => mockVm.materials).thenReturn([
         const Resource(
           id: '1',
           title: 'Titolo Articolo',
           type: ResourceType.article,
         ),
-        const Resource(
-          id: '2',
-          title: 'Legge Test',
-          type: ResourceType.law,
-        ),
+        const Resource(id: '2', title: 'Legge Test', type: ResourceType.law),
       ]);
 
       await tester.pumpWidget(createWidgetUnderTest());
@@ -77,7 +75,9 @@ void main() {
   });
 
   group('MaterialListWidget - Expansion & Interactions', () {
-    testWidgets('espande la card e mostra il contenuto testuale', (tester) async {
+    testWidgets('espande la card e mostra il contenuto testuale', (
+      tester,
+    ) async {
       when(() => mockVm.materials).thenReturn([
         const Resource(
           id: 'test_exp',
@@ -105,37 +105,42 @@ void main() {
       expect(find.text('Visita il Link'), findsNothing);
     });
 
-    testWidgets('mostra il bottone URL se presente e interagisce con url_launcher', (tester) async {
-      const testUrl = 'https://example.com';
-      when(() => mockVm.materials).thenReturn([
-        const Resource(
-          id: 'test_url',
-          title: 'Risorsa con Link',
-          url: testUrl,
-          type: ResourceType.article,
-        ),
-      ]);
+    testWidgets(
+      'mostra il bottone URL se presente e interagisce con url_launcher',
+      (tester) async {
+        const testUrl = 'https://example.com';
+        when(() => mockVm.materials).thenReturn([
+          const Resource(
+            id: 'test_url',
+            title: 'Risorsa con Link',
+            url: testUrl,
+            type: ResourceType.article,
+          ),
+        ]);
 
-      await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // Espande la card
-      await tester.tap(find.text('Risorsa con Link'));
-      await tester.pumpAndSettle();
+        // Espande la card
+        await tester.tap(find.text('Risorsa con Link'));
+        await tester.pumpAndSettle();
 
-      // Verifica la presenza del bottone
-      final buttonFinder = find.widgetWithText(FilledButton, 'Visita il Link');
-      expect(buttonFinder, findsOneWidget);
+        // Verifica la presenza del bottone
+        final buttonFinder = find.byKey(const Key('open_link_button_test_url'));
+        expect(buttonFinder, findsOneWidget);
 
-      // Clicca il bottone
-      await tester.tap(buttonFinder);
-      await tester.pumpAndSettle();
+        // Clicca il bottone
+        await tester.tap(buttonFinder);
+        await tester.pumpAndSettle();
 
-      // Verifica che UrlLauncher sia stato invocato con l'URL corretto
-      verify(() => mockUrlLauncher.canLaunch(testUrl)).called(1);
-      verify(() => mockUrlLauncher.launchUrl(testUrl, any())).called(1);
-    });
+        // Verifica che UrlLauncher sia stato invocato con l'URL corretto
+        verify(() => mockUrlLauncher.canLaunch(testUrl)).called(1);
+        verify(() => mockUrlLauncher.launchUrl(testUrl, any())).called(1);
+      },
+    );
 
-    testWidgets('mostra uno SnackBar di errore se url_launcher fallisce', (tester) async {
+    testWidgets('mostra uno SnackBar di errore se url_launcher fallisce', (
+      tester,
+    ) async {
       const badUrl = 'https://badurl.com';
       when(() => mockVm.materials).thenReturn([
         const Resource(
@@ -147,7 +152,9 @@ void main() {
       ]);
 
       // Simuliamo il fallimento del check di canLaunch
-      when(() => mockUrlLauncher.canLaunch(badUrl)).thenAnswer((_) async => false);
+      when(
+        () => mockUrlLauncher.canLaunch(badUrl),
+      ).thenAnswer((_) async => false);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -155,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Clicca il bottone che ora dovrebbe fallire e sollevare l'eccezione
-      await tester.tap(find.widgetWithText(FilledButton, 'Visita il Link'));
+      await tester.tap(find.byKey(const Key('open_link_button_bad_url')));
       await tester.pump(); // Esegui microtask (showSnackBar)
       await tester.pumpAndSettle(); // Finisci animazione SnackBar
 

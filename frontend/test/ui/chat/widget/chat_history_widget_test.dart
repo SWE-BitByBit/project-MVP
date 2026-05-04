@@ -138,6 +138,12 @@ void main() {
       final cestini = find.byIcon(Icons.delete_outline);
       await tester.tap(cestini.first);
 
+      // Aspettiamo che il dialog si apra
+      await tester.pumpAndSettle();
+
+      // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
+
       await tester.pumpAndSettle();
 
       verify(() => mockDeleteChat.run('1')).called(1);

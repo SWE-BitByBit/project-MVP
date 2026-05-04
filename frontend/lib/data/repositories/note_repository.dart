@@ -83,10 +83,13 @@ class NoteRepository implements CacheableRepository {
       final type = elemJson['type']?.toString();
       final downloadUrl = elemJson['download_url']?.toString();
 
-      if ((type == 'image' || type == 'audio') && downloadUrl != null && downloadUrl.isNotEmpty) {
-          final File downloadedFile = await _noteService.downloadFileFromUrl(downloadUrl);
-          elemJson['content'] = downloadedFile.path;
-
+      if ((type == 'image' || type == 'audio') &&
+          downloadUrl != null &&
+          downloadUrl.isNotEmpty) {
+        final File downloadedFile = await _noteService.downloadFileFromUrl(
+          downloadUrl,
+        );
+        elemJson['content'] = downloadedFile.path;
       }
     }
     return NoteDTO.fromJson(rawNote);
@@ -134,7 +137,6 @@ class NoteRepository implements CacheableRepository {
 
   /// Aggiunta di un elemento alla nota nel backend
   Future<void> addNoteElement(Note note, NoteElement element) async {
-
     note.addElement(element, note.getElementCount());
 
     try {
