@@ -37,7 +37,7 @@ class AuthViewModel extends ChangeNotifier {
       await _authRepository.restoreSession();
     }
 
-    if (!_authRepository.isLoggedIn()) {
+    if (_authRepository.isLoggedIn()) {
       final deadManRepo = getIt<DeadManRepository>();
 
       try {
