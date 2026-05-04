@@ -36,7 +36,7 @@ class DiaryNoteController:
     def handle_request(self, event, context):
         route = event.get("routeKey")
 
-        if route == "PUT /note":
+        if route == "PUT /notes":
             return self._note_add(event)
         elif route == "GET /notes":
             return self._note_list(event)
