@@ -55,26 +55,47 @@ class DiaryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addTextElement(String text) {
-    if (_currentNote != null) {
-      _currentNote!.addElement(
-        NoteTextElement(text),
-        _currentNote!.getElementCount(),
-      );
-      notifyListeners();
+  /// Aggiunge un nuovo elemento (testo, immagine o audio) alla nota corrente.
+  NoteElement addElement({required String type, String? text, File? file}) {
+    if (_currentNote == null) {
+      throw "Errore nell'aggiunta dell'elemento: nessuna nota corrente.";
     }
-  }
 
-  NoteElement addMediaElement(File file, String type) {
-    if (_currentNote == null) throw "Errore nell'aggiunta dell'elemento nota";
+    NoteElement elem;
 
-    NoteElement elem = (type == "image")
-        ? NoteImageElement(file.path, file)
-        : NoteAudioElement(file.path, file);
-    elem.setFile(file);
-    _currentNote!.addElement(elem, _currentNote!.getElementCount());
+    switch (type) {
+      case 'text':
+        elem = NoteTextElement(text ?? '');
+        break;
+      case 'image':
+        if (file == null) throw "Errore: file mancante per l'immagine.";
+        elem = NoteImageElement(file.path, file: file);
+        break;
+      case 'audio':
+        if (file == null) throw "Errore: file mancante per l'audio.";
+        elem = NoteAudioElement(file.path, file: file);
+        break;
+      default:
+        throw "Tipo di elemento non supportato: $type";
+    }
+
+    _noteRepo.addNoteElement(_currentNote!, elem);
     notifyListeners();
     return elem;
+  }
+
+  void deleteElement(NoteElement element) {
+    if (_currentNote == null) return;
+
+    final deleteFuture = _noteRepo.deleteNoteElement(_currentNote!, element);
+
+    notifyListeners();
+
+    deleteFuture.catchError((e) {
+      asyncError.value = "Impossibile eliminare l'elemento. Controlla la connessione.";
+      // Il repo lo ha già reinserito, quindi ridisegniamo la UI
+      notifyListeners();
+    });
   }
 
   Future<void> _loadNotes(DiaryType diary) async {

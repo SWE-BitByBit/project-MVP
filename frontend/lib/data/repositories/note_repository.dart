@@ -120,6 +120,7 @@ class NoteRepository implements CacheableRepository {
 
   /// Aggiunta di un elemento alla nota nel backend
   Future<void> addNoteElement(Note note, NoteElement element) async {
+
     note.addElement(element, note.getElementCount());
 
     try {
