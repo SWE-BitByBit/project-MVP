@@ -97,7 +97,7 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
             ),
           ],
         ),
-        drawer: const ChatHistoryWidget(),
+        drawer: Drawer(child: const ChatHistoryWidget()),
         body: SafeArea(
           bottom: false,
           child: Column(
