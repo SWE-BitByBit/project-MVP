@@ -101,6 +101,12 @@ void main() {
       final cestini = find.byIcon(Icons.delete_outline);
       await tester.tap(cestini.at(1));
 
+      // Aspettiamo che il dialogo si apra
+      await tester.pumpAndSettle();
+
+      // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
+
       // Aspettiamo che il ViewModel faccia la chiamata di rete finta e che Flutter ridisegni lo schermo
       await tester.pumpAndSettle();
 
