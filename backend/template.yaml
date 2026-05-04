@@ -221,7 +221,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/trusted_contact/
-      Handler: app.lambda_handler
+      Handler: lambda_handler.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
         tact-mvp"
