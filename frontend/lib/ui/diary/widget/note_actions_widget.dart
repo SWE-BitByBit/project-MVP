@@ -34,17 +34,18 @@ class NoteActionsWidget extends StatelessWidget {
       builder: (context, vm, child) {
         final diarySession = DiarySession.session;
 
-        if (diarySession.isDiaryAuth == true && diarySession.loggedDiary != null) {
+        if (diarySession.isDiaryAuth == true &&
+            diarySession.loggedDiary != null) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 130.0),
             child: FloatingActionButton(
               onPressed: () async {
                 vm.createNewNote(diarySession.loggedDiary!);
 
-                await vm.saveNote.runAsync((
-                note: vm.currentNote!,
-                diary: diarySession.loggedDiary!
-                ));
+                // await vm.saveNote.runAsync((
+                // note: vm.currentNote!,
+                // diary: diarySession.loggedDiary!
+                // ));
 
                 if (context.mounted && vm.currentNote != null) {
                   _openEditor(context, vm);
