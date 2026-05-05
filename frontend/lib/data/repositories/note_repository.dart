@@ -47,7 +47,7 @@ class NoteRepository implements CacheableRepository {
     _cachedNotes.clear();
     for (var json in rawNotes) {
       final creationStr = json['created_at']?.toString();
-      final updateStr = json['updated_at']?.toString();
+      final updateStr = json['last_modified_at']?.toString();
       final creationDate =
           DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
 

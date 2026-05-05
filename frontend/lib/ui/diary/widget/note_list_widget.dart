@@ -13,7 +13,11 @@ class NoteListWidget extends StatelessWidget {
   final String timeFormat = "H:mm";
 
   /// Apre la schermata [NoteEditorWidget] per la nota cliccata nella ListView
-  Future<void> _openNoteEditor(BuildContext context, DiaryViewModel vm, String noteId) async {
+  Future<void> _openNoteEditor(
+    BuildContext context,
+    DiaryViewModel vm,
+    String noteId,
+  ) async {
     await vm.openNote.runAsync(noteId);
 
     if (!context.mounted) return;
@@ -43,12 +47,12 @@ class NoteListWidget extends StatelessWidget {
 
   /// Apre un [AlertDialog] per confermare l'eliminazione della nota
   void _showDeleteConfirmation(
-      BuildContext context,
-      DiaryViewModel viewModel,
-      String noteTitle,
-      DateTime noteDate,
-      String noteId,
-      ) {
+    BuildContext context,
+    DiaryViewModel viewModel,
+    String noteTitle,
+    DateTime noteDate,
+    String noteId,
+  ) {
     final diarySession = DiarySession.session;
     if (diarySession.isDiaryAuth != null && diarySession.loggedDiary != null) {
       showDialog(
@@ -58,7 +62,7 @@ class NoteListWidget extends StatelessWidget {
             title: const Text("Elimina nota"),
             content: Text(
               "Eliminare definitivamente la nota $noteTitle creata il ${DateFormat(dayFormat).format(noteDate)} alle ${DateFormat(timeFormat).format(noteDate)}?\n"
-                  "Una volta confermata l'eliminazione la nota non potrà più essere recuperata.",
+              "Una volta confermata l'eliminazione la nota non potrà più essere recuperata.",
             ),
             actions: [
               TextButton(
@@ -71,7 +75,10 @@ class NoteListWidget extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  viewModel.deleteNote.run((noteId: noteId, diary: diarySession.loggedDiary!));
+                  viewModel.deleteNote.run((
+                    noteId: noteId,
+                    diary: diarySession.loggedDiary!,
+                  ));
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text(
@@ -89,80 +96,74 @@ class NoteListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DiaryViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.loadNotes.isRunning.value) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            if (viewModel.notes.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Nessuna nota presente nel diario',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: viewModel.notes.length,
-              separatorBuilder: (context, index) => const Divider(),
-              itemBuilder: (context, index) {
-                final note = viewModel.notes[index];
-                return ListTile(
-
-                  onTap: () => _openNoteEditor(context, viewModel, note.id),
-                  title: (note.title.isEmpty)
-                      ? const Text(
-                    "Nota senza titolo",
+      builder: (context, viewModel, child) {
+        if (viewModel.loadNotes.isRunning.value) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          if (viewModel.notes.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nessuna nota presente nel diario',
                     style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black54,
-                      fontSize: 16,
-                    ),
-                  )
-                      : Text(
-                    note.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 18,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  subtitle: Text(
-                    "Ultima modifica: ${DateFormat(dayFormat).format(
-                        note.updateDate)} alle ${DateFormat(timeFormat).format(
-                        note.updateDate)}\nData di creazione: ${DateFormat(
-                        dayFormat).format(note.creationDate)} alle ${DateFormat(
-                        timeFormat).format(note.creationDate)}",
-                  ),
-                  isThreeLine: true,
-                  trailing: IconButton(
-                    padding: const EdgeInsets.only(top: 24),
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () =>
-                        _showDeleteConfirmation(
-                          context,
-                          viewModel,
-                          note.title.isEmpty ? "senza titolo" : note.title,
-                          note.creationDate,
-                          note.id,
-                        ),
-                  ),
-                );
-              },
+                ],
+              ),
             );
           }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: viewModel.notes.length,
+            separatorBuilder: (context, index) => const Divider(),
+            itemBuilder: (context, index) {
+              final note = viewModel.notes[index];
+              return ListTile(
+                onTap: () => _openNoteEditor(context, viewModel, note.id),
+                title: (note.title.isEmpty)
+                    ? const Text(
+                        "Nota senza titolo",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
+                          fontSize: 16,
+                        ),
+                      )
+                    : Text(
+                        note.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                subtitle: Text(
+                  "Ultima modifica: ${DateFormat(dayFormat).format(note.updateDate)} alle ${DateFormat(timeFormat).format(note.updateDate)}\nData di creazione: ${DateFormat(dayFormat).format(note.creationDate)} alle ${DateFormat(timeFormat).format(note.creationDate)}",
+                ),
+                isThreeLine: true,
+                trailing: IconButton(
+                  padding: const EdgeInsets.only(top: 24),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _showDeleteConfirmation(
+                    context,
+                    viewModel,
+                    note.title.isEmpty ? "senza titolo" : note.title,
+                    note.creationDate,
+                    note.id,
+                  ),
+                ),
+              );
+            },
+          );
         }
-        );
+      },
+    );
   }
 }

@@ -92,7 +92,8 @@ class DiaryViewModel extends ChangeNotifier {
     notifyListeners();
 
     deleteFuture.catchError((e) {
-      asyncError.value = "Impossibile eliminare l'elemento. Controlla la connessione.";
+      asyncError.value =
+          "Impossibile eliminare l'elemento. Controlla la connessione.";
       // Il repo lo ha già reinserito, quindi ridisegniamo la UI
       notifyListeners();
     });
