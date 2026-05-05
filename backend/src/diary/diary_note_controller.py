@@ -68,7 +68,7 @@ class DiaryNoteController:
             for element in body.get('elements', [])
         ]
         try: 
-            response, created = self._service.add_note(
+            response = self._service.add_note(
                 AddNoteCmd(
                     user_id=self._get_user_id(event),
                     title=body.get('title'),
@@ -80,7 +80,7 @@ class DiaryNoteController:
                 body.get("note_id")
             )
     
-            return self.response(201 if created else 200, response)
+            return self.response(200, response)
     
         except Exception:
             return self.response(500, SERVER_ERROR)

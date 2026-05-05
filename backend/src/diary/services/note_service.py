@@ -29,7 +29,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
         self._note_repository = note_repository
         self._file_repository = file_repository
 
-    def add_note(self, cmd: AddNoteCmd, note_id: str) -> tuple[dict, bool]:
+    def add_note(self, cmd: AddNoteCmd, note_id: str) -> dict:
         if note_id:
             existing_note =  self._note_repository.get(
                 cmd.user_id,
@@ -38,7 +38,13 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             )
 
             if existing_note:
-                return {"message": "Note already present"}, False
+                return self.get_note(
+                    GetNoteCmd(
+                        cmd.user_id,
+                        note_id,
+                        cmd.diary_type
+                    )
+                )
 
         note = Note(
             note_id=str(ULID()),
@@ -97,7 +103,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
 
         self._note_repository.add(note)
 
-        return note_dict, True
+        return note_dict
 
     def get_note(self, cmd: GetNoteCmd) -> Optional[dict]:
         note = self._note_repository.get(

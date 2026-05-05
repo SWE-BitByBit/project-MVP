@@ -6,5 +6,5 @@ from domain.note import Note
 class SetNotePort(ABC):
 
     @abstractmethod
-    def add_note(self, cmd: AddNoteCmd, note_id: str) -> tuple[dict, bool]: 
+    def add_note(self, cmd: AddNoteCmd, note_id: str) -> bool: 
         pass
