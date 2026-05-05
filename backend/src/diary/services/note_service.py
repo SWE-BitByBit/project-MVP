@@ -244,5 +244,12 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
                 )
             
             return True
+        
+        except KeyError:
+            return True
+        
+        except ValueError:
+            return False
+        
         except RuntimeError:
-            return False        
+            return False       

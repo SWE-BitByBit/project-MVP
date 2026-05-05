@@ -192,11 +192,11 @@ class DiaryNoteController:
                 note_element_id,
             )
         )
-
-        if not result:
-            return self.response(500, SERVER_ERROR)
-
-        return self.response(200, {"message": "Note element deleted successfully"})
+        
+        if result:
+            return self.response(204, {"message": "Note element deleted successfully"})
+        else:
+            return self.response(404, {"message": "Note or element not found"})
 
 
 
