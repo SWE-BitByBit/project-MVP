@@ -14,7 +14,7 @@ def pytest_cmdline_main(config):
     if not is_all_tests:
         return None
         
-    subfolders = ["chatbot_tests", "diary", "materials", "safe_places", "trusted_contact"]
+    subfolders = ["chatbot", "diary", "materials", "safe_places", "trusted_contact"]
     
     # Recupera gli argomenti originali passati a pytest
     original_args = sys.argv[1:]
