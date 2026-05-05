@@ -51,7 +51,7 @@ def setup_mock_dynamo():
             "title": "Prima nota",
             "created_at": "2024-01-01T00:00:00+00:00",
             "last_modified_at": "2024-01-01T00:00:00+00:00",
-            "diary_type": "REAL_DIARY",
+            "diary_type": "real_diary",
         })
         note_table.put_item(Item={
             "user_id": "user1",
@@ -59,7 +59,7 @@ def setup_mock_dynamo():
             "title": "Seconda nota",
             "created_at": "2024-01-02T00:00:00+00:00",
             "last_modified_at": "2024-01-02T00:00:00+00:00",
-            "diary_type": "FAKE_DIARY",
+            "diary_type": "fake_diary",
         })
         
         note_elements_table.put_item(Item={
@@ -159,7 +159,7 @@ def test_add_note(setup_mock_dynamo, sample_note, note_table):
     ).get("Item")
     assert item is not None
     assert item["title"] == "Nota di test"
-    assert item["diary_type"] == "REAL_DIARY"
+    assert item["diary_type"] == "real_diary"
 
 
 def test_add_note_with_note_element(setup_mock_dynamo, sample_note_with_elements, note_elements_table):

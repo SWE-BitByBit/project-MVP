@@ -186,7 +186,7 @@ def test_lambda_get_single_chat(crud_service, sample_chat, tables):
                 }
             }
         },
-        "rawPath": "/mvp/chats"
+        "rawPath": "/chats"
     }
 
     result = lambda_handler(event, None)
@@ -209,7 +209,7 @@ def test_lambda_get_chats(crud_service, sample_chat, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": "/mvp/chats"
+        "rawPath": "/chats"
     }
 
     result = lambda_handler(event, None)
@@ -229,7 +229,7 @@ def test_lambda_create_chat(crud_service, tables):
             "http": {"method": "POST"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": "/mvp/chats",
+        "rawPath": "/chats",
         "body": json.dumps({"title": "Lambda Chat"})
     }
 
@@ -253,7 +253,7 @@ def test_lambda_get_chat_by_id(crud_service, sample_chat, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
     }
 
     result = lambda_handler(event, None)
@@ -275,7 +275,7 @@ def test_lambda_get_chat_not_found(crud_service, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
     }
 
     result = lambda_handler(event, None)
@@ -293,7 +293,7 @@ def test_lambda_delete_chat(crud_service, sample_chat, tables):
             "http": {"method": "DELETE"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
     }
 
     result = lambda_handler(event, None)
@@ -306,7 +306,7 @@ def test_lambda_delete_chat(crud_service, sample_chat, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
     }
 
     result2 = lambda_handler(get_event, None)
@@ -355,14 +355,18 @@ def test_tokenize(llm_service):
 
 def test_build_corpus(llm_service, sample_chat_llm):
     corpus, messages = llm_service._build_corpus(sample_chat_llm)
+    userMessagesLen = len([
+        m for m in sample_chat_llm.messages
+        if m.sender != "ai"
+    ])
 
-    assert len(corpus) == len(sample_chat_llm.messages)
-    assert len(messages) == len(sample_chat_llm.messages)
+    assert len(corpus) == userMessagesLen
+    assert len(messages) == userMessagesLen
 
     assert isinstance(corpus[0], list)
     assert "machine" in corpus[0]
-    assert "learning" in corpus[1]
-    assert "pizza" in corpus[2]
+    assert "learning" not in corpus[1]
+    assert "pizza" in corpus[1]
 
 
 def test_retrieve_relevant_messages(llm_service, sample_chat_llm):
@@ -386,7 +390,7 @@ def test_lambda_put_chat(crud_service, sample_chat, tables):
             "http": {"method": "PUT"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}",
+        "rawPath": f"/chats/{chat_id}",
         "body": json.dumps({"title": "Updated Lambda Chat"})
     }
 
@@ -406,7 +410,7 @@ def test_lambda_put_chat_not_found(crud_service, tables):
             "http": {"method": "PUT"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}",
+        "rawPath": f"/chats/{chat_id}",
         "body": json.dumps({"title": "Doesn't matter"})
     }
 
@@ -432,7 +436,7 @@ def test_lambda_post_message(crud_service, sample_chat, tables, monkeypatch):
             "http": {"method": "POST"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "rawPath": f"/chats/{chat_id}/messages",
         "body": json.dumps({"message": "Hello from Lambda Integration Test"})
     }
 
@@ -454,7 +458,7 @@ def test_lambda_post_message_not_found(crud_service, tables):
             "http": {"method": "POST"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "rawPath": f"/chats/{chat_id}/messages",
         "body": json.dumps({"message": "Hello"})
     }
 
@@ -468,7 +472,7 @@ def test_lambda_unauthorized(tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {}}} # No 'sub'
         },
-        "rawPath": "/mvp/chats"
+        "rawPath": "/chats"
     }
 
     result = lambda_handler(event, None)
@@ -484,13 +488,13 @@ def test_lambda_invalid_json_body(sample_chat, tables):
             "http": {"method": "PUT"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}",
+        "rawPath": f"/chats/{chat_id}",
         "body": "{ invalid json"
     }
 
     # parse_body returns {} on error, handle_chat_put uses defaults
     result = lambda_handler(event, None)
-    assert result["statusCode"] == 200
+    assert result["statusCode"] == 400
 
 
 def test_lambda_no_body(sample_chat, tables):
@@ -502,12 +506,12 @@ def test_lambda_no_body(sample_chat, tables):
             "http": {"method": "PUT"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
         # No body key
     }
 
     result = lambda_handler(event, None)
-    assert result["statusCode"] == 200
+    assert result["statusCode"] == 400
 
 
 def test_lambda_invalid_route(sample_chat, tables):
@@ -518,7 +522,7 @@ def test_lambda_invalid_route(sample_chat, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": "/mvp/not-chats"
+        "rawPath": "/not-chats"
     }
 
     result = lambda_handler(event, None)
@@ -533,7 +537,7 @@ def test_lambda_unknown_method_chats(sample_chat, tables):
             "http": {"method": "PATCH"}, # Unsupported method for /chats
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": "/mvp/chats"
+        "rawPath": "/chats"
     }
 
     result = lambda_handler(event, None)
@@ -549,7 +553,7 @@ def test_lambda_unknown_method_chat_id(sample_chat, tables):
             "http": {"method": "PATCH"}, # Unsupported method for /chats/{id}
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}"
+        "rawPath": f"/chats/{chat_id}"
     }
 
     result = lambda_handler(event, None)
@@ -565,7 +569,7 @@ def test_lambda_unknown_method_messages(sample_chat, tables):
             "http": {"method": "GET"}, # Unsupported method for /chats/{id}/messages (only POST)
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}/messages"
+        "rawPath": f"/chats/{chat_id}/messages"
     }
 
     result = lambda_handler(event, None)
@@ -580,27 +584,12 @@ def test_lambda_no_title_post(sample_chat, tables):
             "http": {"method": "POST"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": "/mvp/chats",
+        "rawPath": "/chats",
         "body": json.dumps({}) # No title
     }
 
     result = lambda_handler(event, None)
     assert result["statusCode"] == 201
-
-
-def test_lambda_no_stage_path(sample_chat, tables):
-    user_id = sample_chat["user_id"]
-
-    event = {
-        "requestContext": {
-            "http": {"method": "GET"},
-            "authorizer": {"jwt": {"claims": {"sub": user_id}}}
-        },
-        "rawPath": "/chats" # No /mvp
-    }
-
-    result = lambda_handler(event, None)
-    assert result["statusCode"] == 200
 
 
 def test_lambda_too_many_parts(sample_chat, tables):
@@ -612,7 +601,7 @@ def test_lambda_too_many_parts(sample_chat, tables):
             "http": {"method": "GET"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}/messages/something"
+        "rawPath": f"/chats/{chat_id}/messages/something"
     }
 
     result = lambda_handler(event, None)
@@ -639,7 +628,7 @@ def test_lambda_llm_failure(sample_chat, tables, monkeypatch):
             "http": {"method": "POST"},
             "authorizer": {"jwt": {"claims": {"sub": user_id}}}
         },
-        "rawPath": f"/mvp/chats/{chat_id}/messages",
+        "rawPath": f"/chats/{chat_id}/messages",
         "body": json.dumps({"message": "Hello"})
     }
 

@@ -172,14 +172,14 @@ def aws_s3_client(setup_aws):
 
 
 @pytest.fixture(scope="function")
-def controller(setup_aws):
+def controller(setup_aws, aws_notes_table, aws_s3_client):
     from src.diary.diary_note_controller import DiaryNoteController
     from src.diary.services.note_service import NoteService
     from src.diary.adapters.dynamo_note_adapter import DynamoNoteAdapter
     from src.diary.adapters.s3_note_adapter import S3NoteAdapter
 
-    note_repo = DynamoNoteAdapter()
-    file_repo = S3NoteAdapter()
+    note_repo = DynamoNoteAdapter(setup_aws["dynamodb"])
+    file_repo = S3NoteAdapter(setup_aws["s3_client"])
 
     service = NoteService(note_repo, file_repo)
 
@@ -188,7 +188,7 @@ def controller(setup_aws):
 
 def build_event(route, body=None, user_id="user1"):
     return {
-        "routekey": route,
+        "routeKey": route,
         "requestContext": {
             "authorizer": {
                 "jwt": {
