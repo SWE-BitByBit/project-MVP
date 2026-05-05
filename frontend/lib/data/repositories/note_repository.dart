@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 
 import '../../domain/models/diary/diary_enums.dart';
 import '../../domain/models/diary/diary_session.dart';
@@ -140,7 +139,9 @@ class NoteRepository implements CacheableRepository {
 
   /// Aggiunta di un elemento alla nota nel backend
   Future<void> addNoteElement(Note note, NoteElement element) async {
-    note.addElement(element, note.getElementCount());
+    if (note.id == '') {
+      return;
+    }
 
     try {
       final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(
@@ -154,6 +155,15 @@ class NoteRepository implements CacheableRepository {
       if (uploadUrl != null && element.mediaFile != null) {
         await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
       }
+
+      final noteToUpdate = _cachedNotes.firstWhere((n) => n.id == note.id);
+      final noteElementToUpdate = noteToUpdate.noteElements.firstWhere(
+        (n) => n.noteElementId == null,
+      );
+      noteElementToUpdate.noteElementId = response['note_element_id']
+          ?.toString();
+
+      note.addElement(element, note.getElementCount());
     } catch (e) {
       // rollback
       note.noteElements.removeWhere((e2) => e2 == element);
@@ -163,12 +173,17 @@ class NoteRepository implements CacheableRepository {
 
   /// Eliminazione di un elemento dalla nota nel backend
   Future<void> deleteNoteElement(Note note, NoteElement element) async {
+    if (element.noteElementId == null) {
+      note.noteElements.remove(element);
+      return;
+    }
+
     note.noteElements.removeWhere(
       (e) => e.noteElementId == element.noteElementId,
     );
 
     try {
-      _noteService.deleteNoteElement(
+      await _noteService.deleteNoteElement(
         element.noteParentId!,
         element.noteElementId!,
       );

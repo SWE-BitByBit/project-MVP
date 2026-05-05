@@ -3,8 +3,7 @@ import 'note_element.dart';
 
 /// Implementazione concreta dell'interfaccia [Note].
 class LocalNote implements Note {
-
-  /// Identificativo univoco della nota. 
+  /// Identificativo univoco della nota.
   @override
   final String id;
 
@@ -23,9 +22,9 @@ class LocalNote implements Note {
     required this.creationDate,
     required DateTime lastModified,
     List<NoteElement>? initialElements,
-  })  : _title = title,
-        _lastModified = lastModified,
-        _noteContents = initialElements ?? <NoteElement>[];
+  }) : _title = title,
+       _lastModified = lastModified,
+       _noteContents = initialElements ?? <NoteElement>[];
 
   @override
   String get title => _title;
@@ -34,8 +33,7 @@ class LocalNote implements Note {
   DateTime get updateDate => _lastModified;
 
   @override
-  List<NoteElement> get noteElements => List.unmodifiable(_noteContents);
-
+  List<NoteElement> get noteElements => _noteContents;
 
   /// Aggiorna il titolo e, se è cambiato, aggiorna automaticamente la data di modifica.
   @override

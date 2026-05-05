@@ -44,6 +44,11 @@ class DiaryViewModel extends ChangeNotifier {
     );
   }
 
+  void clearCurrentNote() {
+    _currentNote = null;
+    notifyListeners();
+  }
+
   void createNewNote(DiaryType diary) {
     final newNote = LocalNote(
       id: '',
@@ -65,12 +70,12 @@ class DiaryViewModel extends ChangeNotifier {
 
     switch (type) {
       case 'text':
-        noteElement = NoteTextElement(text ?? '');
+        noteElement = NoteTextElement(text!, noteParentId: _currentNote!.id);
         break;
       case 'image':
         if (file == null) throw "Errore: file mancante per l'immagine.";
         noteElement = NoteImageElement(
-          file.path,
+          '',
           file: file,
           noteParentId: _currentNote!.id,
         );
@@ -78,7 +83,7 @@ class DiaryViewModel extends ChangeNotifier {
       case 'audio':
         if (file == null) throw "Errore: file mancante per l'audio.";
         noteElement = NoteAudioElement(
-          file.path,
+          '',
           file: file,
           noteParentId: _currentNote!.id,
         );
@@ -86,25 +91,32 @@ class DiaryViewModel extends ChangeNotifier {
       default:
         throw "Tipo di elemento non supportato: $type";
     }
-
-    _noteRepo.addNoteElement(_currentNote!, noteElement);
+    _currentNote!.addElement(noteElement, _currentNote!.getElementCount());
     notifyListeners();
     return noteElement;
+  }
+
+  /// Metodo chiamato quando viene chiuso l'editor_widget per l'aggiunta in remoto degli elementi aggiunti
+  /// dall'utente. Evita chiamate ripetute.
+  void addRemoteElements() {
+    for (NoteElement element in _currentNote!.noteElements) {
+      if (element.noteElementId == null) {
+        _noteRepo.addNoteElement(_currentNote!, element);
+      }
+    }
   }
 
   void deleteElement(NoteElement element) {
     if (_currentNote == null) return;
 
-    final deleteFuture = _noteRepo.deleteNoteElement(_currentNote!, element);
-
-    notifyListeners();
-
-    deleteFuture.catchError((e) {
+    try {
+      _noteRepo.deleteNoteElement(_currentNote!, element);
+      notifyListeners();
+    } catch (e) {
       asyncError.value =
           "Impossibile eliminare l'elemento. Controlla la connessione.";
-      // Il repo lo ha già reinserito, quindi ridisegniamo la UI
       notifyListeners();
-    });
+    }
   }
 
   Future<void> _loadNotes(DiaryType diary) async {
