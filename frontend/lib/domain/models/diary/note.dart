@@ -8,7 +8,7 @@ abstract interface class Note {
   DateTime get updateDate;
   List<NoteElement> get noteElements;
 
-  // Setter per il titolo della nota. 
+  // Setter per il titolo della nota.
   set title(String newTitle);
 
   void updateLastModified();
@@ -16,5 +16,4 @@ abstract interface class Note {
   void removeElement(NoteElement element);
   void editNoteElement(NoteElement element, String newText);
   int getElementCount();
-
 }

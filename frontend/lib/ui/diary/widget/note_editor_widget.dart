@@ -142,7 +142,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: Image.file(element.file!),
+                    child: Image.file(element.mediaFile!),
                   ),
                 ),
 
@@ -172,7 +172,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     onDismiss: () {
                       dispose();
                     },
-                    trackUrl: element.file!.path,
+                    trackUrl: element.mediaFile!.path,
                   ),
                 ),
 

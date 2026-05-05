@@ -15,6 +15,9 @@ abstract class NoteElementDTO {
 
     switch (type) {
       case 'image':
+        if (content.isEmpty) {
+          throw Exception("Image element without file path");
+        }
         return NoteImageElement(
           content,
           file: File(content),
@@ -23,6 +26,9 @@ abstract class NoteElementDTO {
         );
 
       case 'audio':
+        if (content.isEmpty) {
+          throw Exception("Audio element without file path");
+        }
         return NoteAudioElement(
           content,
           file: File(content),

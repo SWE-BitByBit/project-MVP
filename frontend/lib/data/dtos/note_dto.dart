@@ -1,11 +1,6 @@
-import 'dart:io';
-
 import '../../domain/models/diary/note.dart';
 import '../../domain/models/diary/local_note.dart';
 import '../../domain/models/diary/note_element.dart';
-import '../../domain/models/diary/note_text_element.dart';
-import '../../domain/models/diary/note_audio_element.dart';
-import '../../domain/models/diary/note_image_element.dart';
 import '../dtos/note_element_dto.dart';
 
 /// Oggetto di trasferimento dati per la serializzazione delle Note.
@@ -13,14 +8,14 @@ import '../dtos/note_element_dto.dart';
 abstract class NoteDTO {
   /// Converte un JSON in un oggetto di Dominio [LocalNote].
   static Note fromJson(Map<String, dynamic> json) {
-    final List<dynamic> rawElements = json['elements'] ?? [];
+    final List<dynamic> rawElements = json['note_elements'] ?? [];
 
     final List<NoteElement> parsedElements = rawElements.map((elemJson) {
       return NoteElementDTO.fromJson(elemJson);
     }).toList();
 
     final creationStr = json['created_at']?.toString();
-    final updateStr = json['updated_at']?.toString();
+    final updateStr = json['last_modified_at']?.toString();
     final creationDate = DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
     final updateDate = DateTime.tryParse(updateStr ?? '') ?? creationDate;
 
@@ -46,7 +41,7 @@ abstract class NoteDTO {
       'title': note.title,
       'created_at': note.creationDate.toIso8601String(),
       'last_modified_at': note.updateDate.toIso8601String(),
-      'elements': elementsJson,
+      'note_elements': elementsJson,
     };
   }
 }

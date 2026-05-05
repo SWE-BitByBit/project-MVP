@@ -33,7 +33,7 @@ class NoteService {
       headers: _buildAuthHeaders(),
     );
 
-    if (response is Map<String, dynamic> && response['notes'] is List) {
+    if (response is Map && response['notes'] is List) {
       return (response['notes'] as List).cast<Map<String, dynamic>>();
     }
 

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
+
 import '../../domain/models/diary/diary_enums.dart';
 import '../../domain/models/diary/diary_session.dart';
 import '../../domain/models/diary/note.dart';
@@ -78,18 +80,19 @@ class NoteRepository implements CacheableRepository {
       noteId,
     );
 
-    final List<dynamic> rawElements = rawNote['elements'] ?? [];
+    final List<dynamic> rawElements = rawNote['note_elements'] ?? [];
     for (var elemJson in rawElements) {
       final type = elemJson['type']?.toString();
-      final downloadUrl = elemJson['download_url']?.toString();
 
-      if ((type == 'image' || type == 'audio') &&
-          downloadUrl != null &&
-          downloadUrl.isNotEmpty) {
-        final File downloadedFile = await _noteService.downloadFileFromUrl(
-          downloadUrl,
-        );
-        elemJson['content'] = downloadedFile.path;
+      if (type == 'image' || type == 'audio') {
+        final downloadUrl = elemJson['download_url'].toString();
+        if (downloadUrl.isNotEmpty) {
+          final File downloadedFile = await _noteService.downloadFileFromUrl(
+            downloadUrl,
+          );
+
+          elemJson['content'] = downloadedFile.path;
+        }
       }
     }
     return NoteDTO.fromJson(rawNote);
@@ -147,10 +150,9 @@ class NoteRepository implements CacheableRepository {
         jsonNoteElement,
       );
 
-      element.noteElementId = response['note_element_id']?.toString();
       final uploadUrl = response['upload_url']?.toString();
-      if (uploadUrl != null && element.file != null) {
-        await _noteService.uploadFileFromUrl(uploadUrl, element.file!);
+      if (uploadUrl != null && element.mediaFile != null) {
+        await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
       }
     } catch (e) {
       // rollback

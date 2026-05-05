@@ -46,7 +46,7 @@ class DiaryViewModel extends ChangeNotifier {
 
   void createNewNote(DiaryType diary) {
     final newNote = LocalNote(
-      id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+      id: '',
       title: '',
       creationDate: DateTime.now(),
       lastModified: DateTime.now(),
@@ -61,27 +61,35 @@ class DiaryViewModel extends ChangeNotifier {
       throw "Errore nell'aggiunta dell'elemento: nessuna nota corrente.";
     }
 
-    NoteElement elem;
+    NoteElement noteElement;
 
     switch (type) {
       case 'text':
-        elem = NoteTextElement(text ?? '');
+        noteElement = NoteTextElement(text ?? '');
         break;
       case 'image':
         if (file == null) throw "Errore: file mancante per l'immagine.";
-        elem = NoteImageElement(file.path, file: file);
+        noteElement = NoteImageElement(
+          file.path,
+          file: file,
+          noteParentId: _currentNote!.id,
+        );
         break;
       case 'audio':
         if (file == null) throw "Errore: file mancante per l'audio.";
-        elem = NoteAudioElement(file.path, file: file);
+        noteElement = NoteAudioElement(
+          file.path,
+          file: file,
+          noteParentId: _currentNote!.id,
+        );
         break;
       default:
         throw "Tipo di elemento non supportato: $type";
     }
 
-    _noteRepo.addNoteElement(_currentNote!, elem);
+    _noteRepo.addNoteElement(_currentNote!, noteElement);
     notifyListeners();
-    return elem;
+    return noteElement;
   }
 
   void deleteElement(NoteElement element) {
