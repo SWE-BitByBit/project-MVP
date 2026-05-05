@@ -13,6 +13,8 @@ from commands.add_chat_message_cmd import AddChatMessageCmd
 CHAT_NOT_FOUND = {"message": "Chat not found"}
 UNAUTHORIZED = {"message": "Unauthorized"}
 ROUTE_NOT_FOUND = {"message": "Route not found"}
+MISSING_ARGUMENTS = {"message": "Missing arguments"}
+TITLE_TOO_LONG = {"message": "Title too long"}
 
 
 class ChatbotController:
@@ -116,6 +118,14 @@ class ChatbotController:
         chat = self._crud_service.get_chat(cmd)
         if not chat:
             return self._response(404, CHAT_NOT_FOUND)
+        
+        title = body.get("title")
+
+        if not title or title.strip() == "":
+            return self._response(400, MISSING_ARGUMENTS)
+        
+        if len(title) > 40:
+            return self._response(400, TITLE_TOO_LONG)
 
         update_cmd = UpdateChatCmd(
             user_id=user_id,
@@ -134,6 +144,9 @@ class ChatbotController:
 
         message = body.get("message")
         response_mode = body.get("response_mode", "default")
+
+        if not message:
+            return self._response(400, MISSING_ARGUMENTS)
 
         llm_response = self._llm_service.get_message_response(chat, message, response_mode)
         if not llm_response:

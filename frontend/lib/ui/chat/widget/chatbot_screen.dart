@@ -97,7 +97,7 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
             ),
           ],
         ),
-        drawer: const ChatHistoryWidget(),
+        drawer: Drawer(child: const ChatHistoryWidget()),
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -116,17 +116,6 @@ class _ChatbotScreenViewState extends State<ChatbotScreenView> {
                           icon: const Icon(Icons.menu),
                           onPressed: () => Scaffold.of(context).openDrawer(),
                           tooltip: 'Cronologia chat',
-                        ),
-                        Expanded(
-                          child: Consumer<ChatbotViewModel>(
-                            builder: (context, vm, child) => Text(
-                              vm.currentChat?.title ?? 'Nuova Conversazione',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
                         ),
                       ],
                     ),

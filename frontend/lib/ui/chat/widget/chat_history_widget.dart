@@ -35,7 +35,7 @@ class ChatHistoryWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                viewModel.deleteChat(chatId);
+                viewModel.deleteChat.run(chatId);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text(
@@ -47,6 +47,46 @@ class ChatHistoryWidget extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _showEditTitleDialog(
+    BuildContext context,
+    dynamic vm,
+    String chatId,
+    String currentTitle,
+  ) async {
+    final controller = TextEditingController(text: currentTitle);
+
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modifica titolo'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Nuovo titolo'),
+          onSubmitted: (value) {
+            Navigator.pop(context, value.trim());
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context, controller.text.trim());
+            },
+            child: const Text('Salva'),
+          ),
+        ],
+      ),
+    );
+
+    if (newTitle != null && newTitle != currentTitle) {
+      await vm.updateTitle.run((chatId: chatId, newTitle: newTitle));
+    }
   }
 
   @override
@@ -86,29 +126,18 @@ class ChatHistoryWidget extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: EdgeInsets
-                    .zero, // Rimuove il padding di default che stacca la lista dall'header
+                padding: EdgeInsets.zero,
                 itemCount: chats.length,
                 itemBuilder: (context, index) {
                   final chat = chats[index];
-
                   final isSelected = vm.currentChat?.id == chat.id;
 
                   return ListTile(
-                    leading: Icon(
-                      Icons.history,
-                      // UX: L'icona si colora se la chat è attiva
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant,
-                    ),
                     title: Text(
                       chat.title,
-                      maxLines:
-                          1, // Previene che titoli troppo lunghi rompano il layout
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        // Il testo diventa grassetto se la chat è attiva
                         fontWeight: isSelected
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -117,27 +146,60 @@ class ChatHistoryWidget extends StatelessWidget {
                             : colorScheme.onSurface,
                       ),
                     ),
-
-                    // Evidenziazione di background per la chat attiva
                     selected: isSelected,
                     selectedTileColor: colorScheme.primaryContainer.withValues(
                       alpha: 0.3,
                     ),
-
                     onTap: () {
                       Navigator.pop(context);
-
                       vm.openChat.run(chat.id);
                     },
+                    trailing: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (action) async {
+                        if (action == 'edit') {
+                          await _showEditTitleDialog(
+                            context,
+                            vm,
+                            chat.id,
+                            chat.title,
+                          );
+                        }
 
-                    trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        color: colorScheme.error,
-                      ),
-                      onPressed: () {
-                        vm.deleteChat.run(chat.id);
+                        if (action == 'delete') {
+                          _showDeleteConfirmation(
+                            context,
+                            vm,
+                            chat.id,
+                            chat.title,
+                          );
+                        }
                       },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined),
+                              SizedBox(width: 12),
+                              Text('Modifica titolo'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, color: Colors.red),
+                              SizedBox(width: 12),
+                              Text(
+                                'Elimina nota',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },

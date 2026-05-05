@@ -12,6 +12,7 @@ abstract class Chat {
 
   /// Aggiunge un messaggio alla chat e aggiorna l'updateDate.
   void addMessage(ChatMessage message);
+  void removeMessage(String messageId);
 
   /// Setter per aggiornare il titolo della chat.
   set title(String newTitle);

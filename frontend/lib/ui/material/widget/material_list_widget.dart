@@ -42,9 +42,7 @@ class _ResourceCardWidget extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 0,
       color: colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ExpansionTile(
         leading: Icon(
           resource.type.icon,
@@ -76,7 +74,8 @@ class _ResourceCardWidget extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 // Mostra il testo se esiste
-                if (resource.content != null && resource.content!.isNotEmpty) ...[
+                if (resource.content != null &&
+                    resource.content!.isNotEmpty) ...[
                   Text(
                     resource.content!,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -92,6 +91,7 @@ class _ResourceCardWidget extends StatelessWidget {
                   FilledButton.icon(
                     icon: const Icon(Icons.open_in_browser),
                     label: const Text('Visita il Link'),
+                    key: Key('open_link_button_${resource.id}'),
                     style: FilledButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,

@@ -13,7 +13,6 @@ import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_mode_info_di
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
 
-
 import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
 import '../../../../testing/mocks/chatbot/mock_chat.dart';
 
@@ -53,7 +52,9 @@ void main() {
     openChatIsRunningNotifier = ValueNotifier<bool>(false);
     createChatIsRunningNotifier = ValueNotifier<bool>(false);
     sendMessageIsRunningNotifier = ValueNotifier<bool>(false);
-    sendMessageErrorsNotifier = ValueNotifier<CommandError<SendMessageParam>?>(null);
+    sendMessageErrorsNotifier = ValueNotifier<CommandError<SendMessageParam>?>(
+      null,
+    );
 
     // Inizializzazione Mocks Comandi
     mockLoadChatPreviews = MockCommand<void, void>();
@@ -71,7 +72,9 @@ void main() {
 
     // Setup mockLoadChatPreviews
     when(() => mockViewModel.loadChatPreviews).thenReturn(mockLoadChatPreviews);
-    when(() => mockLoadChatPreviews.isRunning).thenReturn(loadIsRunningNotifier);
+    when(
+      () => mockLoadChatPreviews.isRunning,
+    ).thenReturn(loadIsRunningNotifier);
     when(() => mockLoadChatPreviews.errors).thenReturn(loadErrorsNotifier);
     when(() => mockLoadChatPreviews.run(any())).thenAnswer((_) async {});
 
@@ -82,7 +85,9 @@ void main() {
 
     // Setup mockCreateChat (usato da ChatHistoryWidget -> ChatbotCreateChatWidget)
     when(() => mockViewModel.createChat).thenReturn(mockCreateChat);
-    when(() => mockCreateChat.isRunning).thenReturn(createChatIsRunningNotifier);
+    when(
+      () => mockCreateChat.isRunning,
+    ).thenReturn(createChatIsRunningNotifier);
     when(() => mockCreateChat.run(any())).thenAnswer((_) async {});
 
     // Setup mockDeleteChat (usato da ChatHistoryWidget)
@@ -91,7 +96,9 @@ void main() {
 
     // Setup mockSendMessage (usato da ChatbotSendMessageWidget)
     when(() => mockViewModel.sendMessage).thenReturn(mockSendMessage);
-    when(() => mockSendMessage.isRunning).thenReturn(sendMessageIsRunningNotifier);
+    when(
+      () => mockSendMessage.isRunning,
+    ).thenReturn(sendMessageIsRunningNotifier);
     when(() => mockSendMessage.errors).thenReturn(sendMessageErrorsNotifier);
     when(() => mockSendMessage.run(any())).thenAnswer((_) async {});
   });
@@ -108,40 +115,51 @@ void main() {
   }
 
   group('ChatbotScreenView', () {
-    testWidgets('Mostra CircularProgressIndicator durante il caricamento iniziale vuoto', (tester) async {
-      loadIsRunningNotifier.value = true;
-      when(() => mockViewModel.chats).thenReturn([]);
+    testWidgets(
+      'Mostra CircularProgressIndicator durante il caricamento iniziale vuoto',
+      (tester) async {
+        loadIsRunningNotifier.value = true;
+        when(() => mockViewModel.chats).thenReturn([]);
 
-      await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      },
+    );
 
-    testWidgets('Mostra ErrorIndicator se loadChatPreviews fallisce e la lista è vuota', (tester) async {
-      loadErrorsNotifier.value = CommandError<void>(
-        error: Exception('Network Error'),
-        stackTrace: StackTrace.empty,
-      );
-      when(() => mockViewModel.chats).thenReturn([]);
+    testWidgets(
+      'Mostra ErrorIndicator se loadChatPreviews fallisce e la lista è vuota',
+      (tester) async {
+        loadErrorsNotifier.value = CommandError<void>(
+          error: Exception('Network Error'),
+          stackTrace: StackTrace.empty,
+        );
+        when(() => mockViewModel.chats).thenReturn([]);
 
-      await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(ErrorIndicator), findsOneWidget);
-      expect(find.text('Errore di connessione'), findsOneWidget);
+        expect(find.byType(ErrorIndicator), findsOneWidget);
+        expect(find.text('Errore di connessione'), findsOneWidget);
 
-      // Verifica il pulsante Riprova
-      await tester.tap(find.text('Riprova'));
-      verify(() => mockLoadChatPreviews.run(null)).called(1);
-    });
+        // Verifica il pulsante Riprova
+        await tester.tap(find.text('Riprova'));
+        verify(() => mockLoadChatPreviews.run(null)).called(1);
+      },
+    );
 
-    testWidgets('Mostra messaggio di fallback se currentChat è null', (tester) async {
+    testWidgets('Mostra messaggio di fallback se currentChat è null', (
+      tester,
+    ) async {
       // Dati caricati ma nessuna chat selezionata
       when(() => mockViewModel.chats).thenReturn([MockChat()]);
       when(() => mockViewModel.currentChat).thenReturn(null);
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('Seleziona una conversazione dal menu.'), findsOneWidget);
+      expect(
+        find.text('Seleziona una conversazione dal menu.'),
+        findsOneWidget,
+      );
       expect(find.byType(ChatWidget), findsNothing);
     });
 
@@ -156,19 +174,22 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byType(ChatWidget), findsOneWidget);
-      // Il titolo della chat dovrebbe apparire nella barra superiore
-      expect(find.text('Chat di Test'), findsOneWidget);
     });
 
-    testWidgets('Mostra LinearProgressIndicator quando openChat è in esecuzione', (tester) async {
-      openChatIsRunningNotifier.value = true;
+    testWidgets(
+      'Mostra LinearProgressIndicator quando openChat è in esecuzione',
+      (tester) async {
+        openChatIsRunningNotifier.value = true;
 
-      await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    });
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      },
+    );
 
-    testWidgets('Apre la modale informativa al tap sull\'icona info', (tester) async {
+    testWidgets('Apre la modale informativa al tap sull\'icona info', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.tap(find.byIcon(Icons.info_outline));
@@ -177,13 +198,16 @@ void main() {
       expect(find.byType(ChatbotModeInfoDialog), findsOneWidget);
     });
 
-    testWidgets('Mostra una SnackBar quando asyncError emette un valore', (tester) async {
+    testWidgets('Mostra una SnackBar quando asyncError emette un valore', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       // Triggeriamo l'errore asincrono
       asyncErrorNotifier.value = "Errore di connessione al server AI";
-      await tester.pump(); // Usiamo pump e non pumpAndSettle per dare tempo alla SnackBar di apparire
+      await tester
+          .pump(); // Usiamo pump e non pumpAndSettle per dare tempo alla SnackBar di apparire
 
       expect(find.text('Errore di connessione al server AI'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);

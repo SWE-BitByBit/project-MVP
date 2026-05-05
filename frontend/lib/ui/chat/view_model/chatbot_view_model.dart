@@ -27,19 +27,34 @@ class ChatbotViewModel extends ChangeNotifier {
   late final Command<void, void> createChat;
   late final Command<String, void> openChat;
   late final Command<String, void> deleteChat;
-  late final Command<({Chat chat, String content, ChatMode mode}), void> sendMessage;
+  late final Command<({String chatId, String newTitle}), void> updateTitle;
+  late final Command<({Chat chat, String content, ChatMode mode}), void>
+  sendMessage;
 
-  ChatbotViewModel(
-      this._repository, {
-        required AuthRepository authRepository,
-      }) : _authRepository = authRepository {
-
-    loadChatPreviews = Command.createAsyncNoParam<void>(_loadChatPreviews, initialValue: null);
-    createChat = Command.createAsyncNoParam<void>(_createChat, initialValue: null);
+  ChatbotViewModel(this._repository, {required AuthRepository authRepository})
+    : _authRepository = authRepository {
+    loadChatPreviews = Command.createAsyncNoParam<void>(
+      _loadChatPreviews,
+      initialValue: null,
+    );
+    createChat = Command.createAsyncNoParam<void>(
+      _createChat,
+      initialValue: null,
+    );
     openChat = Command.createAsync<String, void>(_openChat, initialValue: null);
-    deleteChat = Command.createAsync<String, void>(_deleteChat, initialValue: null);
-    sendMessage = Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(_sendMessage, initialValue: null);
-
+    deleteChat = Command.createAsync<String, void>(
+      _deleteChat,
+      initialValue: null,
+    );
+    sendMessage =
+        Command.createAsync<({Chat chat, String content, ChatMode mode}), void>(
+          _sendMessage,
+          initialValue: null,
+        );
+    updateTitle = Command.createAsync<({String chatId, String newTitle}), void>(
+      _updateTitle,
+      initialValue: null,
+    );
     loadChatPreviews.run();
   }
 
@@ -120,7 +135,9 @@ class ChatbotViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _sendMessage(({Chat chat, String content, ChatMode mode}) args) async {
+  Future<void> _sendMessage(
+    ({Chat chat, String content, ChatMode mode}) args,
+  ) async {
     Chat activeChat = args.chat;
     String userContent = args.content.trim();
 
@@ -135,9 +152,8 @@ class ChatbotViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-
       if (activeChat is LocalChat && activeChat.id.startsWith('virtual_')) {
-        final realChat = await _repository.createChat();
+        final realChat = await _repository.createChat(optimisticMsg);
 
         realChat.addMessage(optimisticMsg);
 
@@ -148,9 +164,9 @@ class ChatbotViewModel extends ChangeNotifier {
       }
 
       final response = await _repository.sendMessage(
-          activeChat,
-          userContent,
-          args.mode
+        activeChat,
+        userContent,
+        args.mode,
       );
 
       activeChat.addMessage(response.response);
@@ -162,10 +178,43 @@ class ChatbotViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // ROLLBACK: Se c'è un errore di rete, toglie il messaggio finto dalla UI
-      activeChat.messages.removeWhere((msg) => msg.id == optimisticMsg.id);
+      activeChat.removeMessage(optimisticMsg.id);
       asyncError.value = "Errore nell'invio del messaggio.";
       notifyListeners();
       rethrow;
+    }
+  }
+
+  Future<void> _updateTitle(({String chatId, String newTitle}) args) async {
+    final chat = chats.firstWhere((c) => c.id == args.chatId);
+    final oldTitle = chat.title;
+    final trimmedTitle = args.newTitle.trim();
+
+    if (trimmedTitle.isEmpty) {
+      asyncError.value = "Il titolo non può essere vuoto.";
+      return;
+    }
+
+    if (trimmedTitle.length > 40) {
+      asyncError.value = "Il titolo non può superare i 40 caratteri.";
+      return;
+    }
+
+    chat.title = trimmedTitle;
+    notifyListeners();
+
+    try {
+      await _repository.updateChatTitle(args.chatId, trimmedTitle);
+    } catch (e) {
+      // Rollback
+      chat.title = oldTitle;
+      notifyListeners();
+
+      if (e.toString().contains("too long")) {
+        asyncError.value = "Il titolo non può superare i 40 caratteri.";
+      } else {
+        asyncError.value = "Errore nell'aggiornamento del titolo.";
+      }
     }
   }
 
@@ -186,6 +235,7 @@ class ChatbotViewModel extends ChangeNotifier {
     openChat.dispose();
     deleteChat.dispose();
     sendMessage.dispose();
+    updateTitle.dispose();
     super.dispose();
   }
 }
