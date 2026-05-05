@@ -62,6 +62,62 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
     super.dispose();
   }
 
+  Widget _buildLocationButton(SafePlaceViewModel vm) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: vm.getUserLocation.isRunning,
+      builder: (context, isRunning, child) {
+        return FloatingActionButton(
+          heroTag: "btn_location",
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          onPressed: isRunning
+              ? null
+              : () async {
+                  await vm.getUserLocation.runAsync();
+                  if (vm.getUserLocation.errors.value == null &&
+                      vm.userPosition != null) {
+                    _mapController.move(
+                      LatLng(
+                        vm.userPosition!.latitude,
+                        vm.userPosition!.longitude,
+                      ),
+                      15.0,
+                    );
+                  }
+                },
+          child: isRunning
+              ? const CircularProgressIndicator()
+              : Icon(
+                  Icons.my_location,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailsButton() {
+    return Consumer<SafePlaceViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.selectedPlace == null) {
+          return const SizedBox.shrink();
+        }
+        return FloatingActionButton.extended(
+          heroTag: "btn_details",
+          onPressed: () => _showPlaceDetails(context, viewModel.selectedPlace!),
+          icon: Icon(
+            Icons.info_outline,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          label: Text(
+            viewModel.selectedPlace!.name,
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.read<SafePlaceViewModel>();
@@ -99,8 +155,7 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
                     child: ErrorIndicator(
                       title: "Errore nel caricamento",
                       label: "Prego riprovare",
-                      onPressed: () =>
-                          vm.loadPlaces.run(null),
+                      onPressed: () => vm.loadPlaces.run(null),
                     ),
                   );
                 }
@@ -116,60 +171,9 @@ class _SafePlaceMapScreenBodyState extends State<_SafePlaceMapScreenBody> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ValueListenableBuilder<bool>(
-            valueListenable: vm.getUserLocation.isRunning,
-            builder: (context, isRunning, child) {
-              return FloatingActionButton(
-                heroTag: "btn_location",
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                onPressed: isRunning
-                    ? null
-                    : () async {
-                        await vm.getUserLocation.runAsync();
-                        if (vm.getUserLocation.errors.value == null &&
-                            vm.userPosition != null) {
-                          _mapController.move(
-                            LatLng(
-                              vm.userPosition!.latitude,
-                              vm.userPosition!.longitude,
-                            ),
-                            15.0,
-                          );
-                        }
-                      },
-                child: isRunning
-                    ? const CircularProgressIndicator()
-                    : Icon(
-                        Icons.my_location,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-              );
-            },
-          ),
+          _buildLocationButton(vm),
           const SizedBox(height: 16),
-          Consumer<SafePlaceViewModel>(
-            builder: (context, viewModel, child) {
-              if (viewModel.selectedPlace == null) {
-                return const SizedBox.shrink();
-              }
-              return FloatingActionButton.extended(
-                heroTag: "btn_details",
-                onPressed: () =>
-                    _showPlaceDetails(context, viewModel.selectedPlace!),
-                icon: Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                label: Text(
-                  viewModel.selectedPlace!.name,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
-              );
-            },
-          ),
+          _buildDetailsButton(),
         ],
       ),
     );

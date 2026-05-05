@@ -43,9 +43,77 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
     _controller.clear();
   }
 
+  Widget _buildTextInput(BuildContext context, bool isEnabled) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(18.0),
+        ),
+        child: TextField(
+          controller: _controller,
+          enabled: isEnabled,
+          maxLines: 5,
+          minLines: 1,
+          textInputAction: TextInputAction.newline,
+          decoration: InputDecoration(
+            hintText: isEnabled
+                ? 'Scrivi un messaggio...'
+                : 'Seleziona una chat prima',
+            hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSendButton(
+    BuildContext context,
+    ChatbotViewModel vm,
+    bool canSend,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: vm.sendMessage.isRunning,
+      builder: (context, isRunning, _) {
+        return Container(
+          decoration: BoxDecoration(
+            color: canSend ? colorScheme.primary : colorScheme.surface,
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: isRunning
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary,
+                    ),
+                  )
+                : Icon(
+                    Icons.send_rounded,
+                    color: canSend
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+            onPressed: canSend ? () => _sendMessage(vm) : null,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final hasText = _controller.text.trim().isNotEmpty;
 
     return SafeArea(
@@ -53,7 +121,6 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
         decoration: BoxDecoration(color: Colors.teal.shade100),
-        // IL CONSUMER: Avvolge SOLO i componenti che dipendono dal ViewModel
         child: Consumer<ChatbotViewModel>(
           builder: (context, vm, child) {
             final hasActiveChat = vm.currentChat != null;
@@ -61,72 +128,12 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // --- CAMPO DI TESTO ---
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(18.0),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      enabled: hasActiveChat,
-                      maxLines: 5,
-                      minLines: 1,
-                      textInputAction: TextInputAction.newline,
-                      decoration: InputDecoration(
-                        hintText: hasActiveChat
-                            ? 'Scrivi un messaggio...'
-                            : 'Seleziona una chat prima',
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 12.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildTextInput(context, hasActiveChat),
 
                 const SizedBox(width: 8.0),
 
                 // --- PULSANTE INVIA ---
-                ValueListenableBuilder<bool>(
-                  valueListenable: vm.sendMessage.isRunning,
-                  builder: (context, isRunning, _) {
-                    final canSend = hasText && hasActiveChat && !isRunning;
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: canSend
-                            ? colorScheme.primary
-                            : colorScheme.surface,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: isRunning
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colorScheme.primary,
-                                ),
-                              )
-                            : Icon(
-                                Icons.send_rounded,
-                                color: canSend
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurfaceVariant,
-                              ),
-                        onPressed: canSend ? () => _sendMessage(vm) : null,
-                      ),
-                    );
-                  },
-                ),
+                _buildSendButton(context, vm, hasActiveChat && hasText),
               ],
             );
           },

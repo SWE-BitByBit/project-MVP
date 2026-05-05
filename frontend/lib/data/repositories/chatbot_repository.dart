@@ -159,7 +159,7 @@ class ChatbotRepository implements CacheableRepository {
     final index = _cachedChats.indexWhere((c) => c.id == chatId);
 
     if (index != -1) {
-      _cachedChats[index] = updatedChat;
+      _cachedChats[index].title = updatedChat.title;
       _sortCache();
     }
   }

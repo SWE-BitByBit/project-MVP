@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../../domain/models/chatbot/chat.dart';
 import '../view_model/chatbot_view_model.dart';
 import 'chatbot_create_chat_widget.dart';
 
@@ -57,36 +57,97 @@ class ChatHistoryWidget extends StatelessWidget {
   ) async {
     final controller = TextEditingController(text: currentTitle);
 
-    final newTitle = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modifica titolo'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Nuovo titolo'),
-          onSubmitted: (value) {
-            Navigator.pop(context, value.trim());
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annulla'),
+    final newTitle =
+        await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Modifica titolo'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: 'Nuovo titolo'),
+              onSubmitted: (value) {
+                Navigator.pop(context, value.trim());
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annulla'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(context, controller.text.trim());
+                },
+                child: const Text('Salva'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context, controller.text.trim());
-            },
-            child: const Text('Salva'),
+        ).then((newTitle) {
+          if (newTitle != null && newTitle != currentTitle) {
+            vm.updateTitle.run((chatId: chatId, newTitle: newTitle));
+          }
+        });
+  }
+
+  Widget _buildChatTile(
+    BuildContext context,
+    ChatbotViewModel vm,
+    Chat chat,
+    bool isSelected,
+    ColorScheme colorScheme,
+  ) {
+    return ListTile(
+      title: Text(
+        chat.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+        ),
+      ),
+      selected: isSelected,
+      selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
+      onTap: () {
+        Navigator.pop(context);
+        vm.openChat.run(chat.id);
+      },
+      trailing: PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert),
+        onSelected: (action) async {
+          if (action == 'edit') {
+            _showEditTitleDialog(context, vm, chat.id, chat.title);
+          }
+
+          if (action == 'delete') {
+            _showDeleteConfirmation(context, vm, chat.id, chat.title);
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'edit',
+            child: const Row(
+              children: [
+                const Icon(Icons.edit_outlined),
+                const SizedBox(width: 12),
+                const Text('Modifica titolo'),
+              ],
+            ),
+          ),
+          const PopupMenuItem(
+            value: 'delete',
+            child: const Row(
+              children: [
+                const Icon(Icons.delete_outline, color: Colors.red),
+                const SizedBox(width: 12),
+                const Text('Elimina nota', style: TextStyle(color: Colors.red)),
+              ],
+            ),
           ),
         ],
       ),
     );
-
-    if (newTitle != null && newTitle != currentTitle) {
-      await vm.updateTitle.run((chatId: chatId, newTitle: newTitle));
-    }
   }
 
   @override
@@ -132,75 +193,12 @@ class ChatHistoryWidget extends StatelessWidget {
                   final chat = chats[index];
                   final isSelected = vm.currentChat?.id == chat.id;
 
-                  return ListTile(
-                    title: Text(
-                      chat.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.onSurface,
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedTileColor: colorScheme.primaryContainer.withValues(
-                      alpha: 0.3,
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      vm.openChat.run(chat.id);
-                    },
-                    trailing: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert),
-                      onSelected: (action) async {
-                        if (action == 'edit') {
-                          await _showEditTitleDialog(
-                            context,
-                            vm,
-                            chat.id,
-                            chat.title,
-                          );
-                        }
-
-                        if (action == 'delete') {
-                          _showDeleteConfirmation(
-                            context,
-                            vm,
-                            chat.id,
-                            chat.title,
-                          );
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined),
-                              SizedBox(width: 12),
-                              Text('Modifica titolo'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline, color: Colors.red),
-                              SizedBox(width: 12),
-                              Text(
-                                'Elimina nota',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  return _buildChatTile(
+                    context,
+                    vm,
+                    chat,
+                    isSelected,
+                    colorScheme,
                   );
                 },
               );

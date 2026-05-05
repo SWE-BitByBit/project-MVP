@@ -17,8 +17,8 @@ class DiaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-    create: (_) => getIt<DiaryViewModel>(),
-    child: const DiaryStateSwitcher(),
+      create: (_) => getIt<DiaryViewModel>(),
+      child: const DiaryStateSwitcher(),
     );
   }
 }
@@ -33,9 +33,7 @@ class DiaryStateSwitcher extends StatelessWidget {
       builder: (context, accessVm, child) {
         if (accessVm.isCheckingStatus) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
         if (accessVm.isAuthenticated) {

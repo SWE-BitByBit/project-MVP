@@ -230,8 +230,9 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
       pickedFile = File(image.path);
     } else if (type == 'audio') {
       final pickResult = await FilePicker.pickFiles(type: FileType.audio);
-      if (pickResult == null)
+      if (pickResult == null) {
         return; // L'utente ha chiuso il picker senza scegliere
+      }
       pickedFile = File(pickResult.files.single.path!);
     } else if (type == 'text') {
       // Per il testo non serve un file, ma vogliamo che la tastiera si apra subito
@@ -333,8 +334,6 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
             if (DiarySession.session.loggedDiary != null) {
               bool isTitleEmpty = widget.selectedNote.title.isEmpty;
               bool isBodyEmpty = widget.selectedNote.noteElements.isEmpty;
-              print("isTileEmpty: $isTitleEmpty, isBodyEmpty: $isBodyEmpty");
-              print("Note ID: ${widget.selectedNote.id}");
 
               if (isTitleEmpty && isBodyEmpty) {
               } else {
