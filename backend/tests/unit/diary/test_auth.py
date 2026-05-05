@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 src_diary_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src/diary"))
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
@@ -98,11 +99,14 @@ def call(controller, route, body):
 def test_set_real_password(setup_auth_stack):
     controller = setup_auth_stack
 
-    res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
-        "user_id": "user1",
+    body = __import__("json").dumps({
         "password": "Secret123!",
-        "diary_type": "REAL_DIARY"
-    }))
+        "previous_password": "",
+        "diary_type": "real_diary"
+    })
+
+    res = call(controller, "POST /diary/auth/set_password", body)
+
     assert res["statusCode"] == 200
 
 
@@ -112,10 +116,10 @@ def test_set_real_password(setup_auth_stack):
 def test_set_fake_password(setup_auth_stack):
     controller = setup_auth_stack
 
-    res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
+    res = call(controller, "POST /diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
         "password": "Fake12345!",
-        "diary_type": "FAKE_DIARY"
+        "diary_type": "fake_diary"
     }))
 
     assert res["statusCode"] == 200
@@ -127,16 +131,16 @@ def test_set_fake_password(setup_auth_stack):
 def test_real_fake_must_be_different(setup_auth_stack):
     controller = setup_auth_stack
 
-    call(controller, "/diary/auth/set_password", __import__("json").dumps({
+    call(controller, "POST /diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
         "password": "Samepass1!",
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     }))
 
-    res = call(controller, "/diary/auth/set_password", __import__("json").dumps({
+    res = call(controller, "POST /diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
         "password": "Samepass1!",
-        "diary_type": "FAKE_DIARY"
+        "diary_type": "fake_diary"
     }))
 
     assert res["statusCode"] in (400, 500)
@@ -148,19 +152,19 @@ def test_real_fake_must_be_different(setup_auth_stack):
 def test_login_real(setup_auth_stack):
     controller = setup_auth_stack
 
-    call(controller, "/diary/auth/set_password", __import__("json").dumps({
+    call(controller, "POST /diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
         "password": "Realpass1!",
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     }))
 
-    res = call(controller, "/diary/auth/login", __import__("json").dumps({
+    res = call(controller, "POST /diary/auth/login", __import__("json").dumps({
         "user_id": "user1",
         "password": "Realpass1!"
     }))
 
     assert res["statusCode"] == 200
-    assert __import__("json").loads(res["body"])["diary_type"] == "REAL_DIARY"
+    assert __import__("json").loads(res["body"])["diary_type"] == "real_diary"
 
 
 # -------------------------
@@ -169,7 +173,7 @@ def test_login_real(setup_auth_stack):
 def test_login_invalid(setup_auth_stack):
     controller = setup_auth_stack
 
-    res = call(controller, "/diary/auth/login", __import__("json").dumps({
+    res = call(controller, "POST /diary/auth/login", __import__("json").dumps({
         "user_id": "userX",
         "password": "Wrongpass1!"
     }))
@@ -183,15 +187,15 @@ def test_login_invalid(setup_auth_stack):
 def test_status(setup_auth_stack):
     controller = setup_auth_stack
 
-    call(controller, "/diary/auth/set_password", __import__("json").dumps({
+    call(controller, "POST /diary/auth/set_password", __import__("json").dumps({
         "user_id": "user1",
         "password": "Realpass1!",
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     }))
 
-    res = call(controller, "/diary/auth/status", __import__("json").dumps({
+    res = call(controller, "GET /diary/auth/status", __import__("json").dumps({
         "user_id": "user1",
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     }))
 
     body = __import__("json").loads(res["body"])

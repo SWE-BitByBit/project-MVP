@@ -64,12 +64,8 @@ class ChatbotController:
         return event.get("rawPath", "")
 
     def _split_path(self, event):
-        stage_path = ['mvp']
         path = self._get_path(event)
-        path = [p for p in path.split("/") if p]
-        if len(path) > 1 and path[0] in stage_path:
-            return path[1:]
-        return path
+        return [p for p in path.split("/") if p]
 
     def _get_user_id(self, event):
         claims = (

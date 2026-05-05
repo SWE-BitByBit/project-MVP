@@ -123,7 +123,6 @@ class ChatbotViewModel extends ChangeNotifier {
     final index = chats.indexWhere((c) => c.id == chatId);
 
     if (index == -1) return;
-
     final chat = chats[index];
 
     if (chat is ProxyChat) {

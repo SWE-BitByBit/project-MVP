@@ -8,7 +8,7 @@ def test_add_note_with_media(controller, aws_s3_client):
         "title": "Note with image",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": [
             {"type": "image", "content": "fake"}
         ]
@@ -16,7 +16,7 @@ def test_add_note_with_media(controller, aws_s3_client):
 
     event = build_event("PUT /note", body)
     response = controller.handle_request(event, {})
-
+    print(response)
     assert response["statusCode"] == 201
     body = json.loads(response["body"])
 
@@ -34,7 +34,7 @@ def test_get_note_with_media(controller):
         "title": "Note",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": [{"type": "image", "content": "x"}]
     }), {})
 
@@ -43,7 +43,7 @@ def test_get_note_with_media(controller):
     # get
     event = build_event("GET /notes/{note_id}", {
         "note_id": note_id,
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     })
 
     response = controller.handle_request(event, {})
@@ -61,7 +61,7 @@ def test_delete_note_removes_s3_objects(controller, aws_s3_client):
         "title": "Delete test",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": [{"type": "image", "content": "x"}]
     }), {})
 
@@ -79,7 +79,7 @@ def test_delete_note_removes_s3_objects(controller, aws_s3_client):
     # delete note
     delete_event = build_event("DELETE /notes/{note_id}", {
         "note_id": note_id,
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     })
 
     controller.handle_request(delete_event, {})
@@ -97,7 +97,7 @@ def test_add_note_element_with_media(controller):
         "title": "Note",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": []
     }), {})
 
@@ -123,7 +123,7 @@ def test_delete_note_element_removes_s3(controller, aws_s3_client):
         "title": "Note",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": []
     }), {})
 
@@ -167,7 +167,7 @@ def test_user_cannot_access_other_user_note(controller):
         "title": "Secret",
         "created_at": "2025",
         "last_modified_at": "2025",
-        "diary_type": "REAL_DIARY",
+        "diary_type": "real_diary",
         "elements": []
     }, user_id="user1"), {})
 
@@ -176,7 +176,7 @@ def test_user_cannot_access_other_user_note(controller):
     # user2 prova a leggerla
     event = build_event("GET /notes/{note_id}", {
         "note_id": note_id,
-        "diary_type": "REAL_DIARY"
+        "diary_type": "real_diary"
     }, user_id="user2")
 
     response = controller.handle_request(event, {})
