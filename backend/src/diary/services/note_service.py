@@ -30,6 +30,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
         self._file_repository = file_repository
 
     def add_note(self, cmd: AddNoteCmd, note_id: str) -> dict:
+        print(f"[DEBUG] add_note chiamato con note_id={note_id}, user_id={cmd.user_id}")
         if note_id:
             existing_note =  self._note_repository.get(
                 cmd.user_id,
@@ -55,15 +56,17 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             diary_type=cmd.diary_type,
             message_elements=[]
         )
+        print(f"[DEBUG] Nota creata: {note.note_id}")
 
         note_dict = NoteDTO.from_domain(note).to_dict()
         note_dict["note_elements"] = []
 
         for element in cmd.note_elements or []:
+            print(f"[DEBUG] Elaboro elemento: type={element.type}, content={element.content}")
             note_element_id = str(ULID())
 
             if element.type in ["image", "audio"]:
-
+                print(f"[DEBUG] Generazione presigned URL per {element.type}")
                 key = f"{cmd.user_id}/{note.note_id}/{note_element_id}"
 
                 note_element = NoteElement(
@@ -78,14 +81,15 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
                     upload_url = self._file_repository.generate_presigned_url(
                         "put_object",
                         {
-                            "Bucket": os.environ["BUCKET_NAME"], 
+                            "Bucket": os.environ["S3_BUCKET_NOTES_NAME"], 
                             "Key": key
                         }
                     )
                     note_element_dict["upload_url"] = upload_url
-
+                    print("[DEBUG] URL generato OK")
                 except ClientError as e:
-                    raise RuntimeError(f"Error generating presigned URL for element {element.note_element_id}") from e
+                    print(f"[DEBUG] ClientError: {e}")
+                    raise RuntimeError("Error generating presigned URL for element") from e
                 
             else:
                 
@@ -101,8 +105,9 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
             note.message_elements.append(note_element)
             note_dict["note_elements"].append(note_element_dict)
 
+        print("[DEBUG] Salvataggio nota su DynamoDB")
         self._note_repository.add(note)
-
+        print("[DEBUG] Nota salvata OK")
         return note_dict
 
     def get_note(self, cmd: GetNoteCmd) -> Optional[dict]:
@@ -194,7 +199,7 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
                 upload_url = self._file_repository.generate_presigned_url(
                     "put_object",
                     {
-                        "Bucket": os.environ["BUCKET_NAME"], 
+                        "Bucket": os.environ["S3_BUCKET_NOTES_NAME"], 
                         "Key": key
                     }
                 )

@@ -54,7 +54,7 @@ Resources:
       CodeUri: src/diary/
       Handler: lambda_handler.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
       Environment:
         Variables:
           REGION: eu-south-1

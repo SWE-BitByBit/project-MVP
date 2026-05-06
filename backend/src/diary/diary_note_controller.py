@@ -1,5 +1,6 @@
 import json
 from ulid import ULID
+import traceback
 
 from commands.add_note_command import AddNoteCmd
 from commands.get_note_command import GetNoteCmd
@@ -82,7 +83,9 @@ class DiaryNoteController:
     
             return self.response(200, response)
     
-        except Exception:
+        except Exception as e:
+            print(f"[ERROR] Eccezione in _note_add: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             return self.response(500, SERVER_ERROR)
     
 
