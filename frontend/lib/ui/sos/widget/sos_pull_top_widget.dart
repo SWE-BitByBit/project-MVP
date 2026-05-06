@@ -14,6 +14,94 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
 
   final double _triggerThreshold = 550.0;
 
+  Future<void> _triggerOfflineSos() async {
+    final vm = context.read<SosViewModel>();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade200,
+        behavior: SnackBarBehavior.floating,
+        content: Row(
+          children: [
+            Column(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.white),
+                SizedBox(width: 10),
+
+                Text(
+                  'Nessuna connessione rilevata, attivare allarme sonoro?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        try {
+                          await vm.sendAlert.runAsync();
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Text(
+                                    "🚨 ALLARME SONORO ATTIVATO!",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: Colors.green.shade700,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Text(
+                                    "Errore nell'attivazione dell'allarme sonoro",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: Text(
+                        'Attiva allarme sonoro',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _triggerSos() async {
     final vm = context.read<SosViewModel>();
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -25,35 +113,21 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: vm.isConnected
-              ? const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
 
-                    Text(
-                      '🚨 SOS INVIATO!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                )
-              : const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
-
-                    Text(
-                      '🚨 ALLARME ATTIVATO!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+              Text(
+                '🚨 SOS INVIATO!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
+              ),
+            ],
+          ),
+
           backgroundColor: Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -62,45 +136,25 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
       if (!mounted) return;
       // ERRORE
       ScaffoldMessenger.of(context).showSnackBar(
-        vm.isConnected
-            ? SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.white),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        ' INVIO FALLITO. Controlla la connessione.',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  ' INVIO FALLITO. Controlla la connessione.',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-              )
-            : SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.white),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        ' ATTIVAZIONE ALLARME SONORO FALLITA.',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                behavior: SnackBarBehavior.floating,
               ),
+            ],
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -111,6 +165,7 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
     final progress = (_dragOffset / _triggerThreshold).clamp(0.0, 1.0);
     final currentOpacity = 0.4 + (0.6 * progress);
     final vm = context.read<SosViewModel>();
+
     return ValueListenableBuilder<bool>(
       valueListenable: vm.sendAlert.isRunning,
       builder: (context, isRunning, child) {
@@ -128,7 +183,11 @@ class _SosPullTopWidgetState extends State<SosPullTopWidget> {
               ? null
               : (details) {
                   if (_dragOffset > _triggerThreshold) {
-                    _triggerSos();
+                    if (vm.isConnected) {
+                      _triggerSos();
+                    } else {
+                      _triggerOfflineSos();
+                    }
                   }
                   setState(() {
                     _dragOffset = 0;
