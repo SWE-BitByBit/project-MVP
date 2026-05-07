@@ -100,7 +100,7 @@ class DiaryViewModel extends ChangeNotifier {
   /// dall'utente. Evita chiamate ripetute.
   void addRemoteElements() {
     for (NoteElement element in _currentNote!.noteElements) {
-      if (element.noteElementId == null) {
+      if (element.noteElementId == null && _currentNote!.id.isNotEmpty) {
         _noteRepo.addNoteElement(_currentNote!, element);
       }
     }

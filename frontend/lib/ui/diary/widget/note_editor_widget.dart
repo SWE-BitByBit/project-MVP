@@ -250,6 +250,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     // 3. Aggiornamento visivo della UI
     setState(() {
       _elements.add(_createCard(newElement, requestFocus: requestFocus));
+      /* widget.selectedNote.addElement(
+        newElement,
+        widget.selectedNote.getElementCount(),
+      ); */
       _lastUpdated = widget.selectedNote.updateDate;
     });
   }

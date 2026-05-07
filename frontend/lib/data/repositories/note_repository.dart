@@ -90,20 +90,40 @@ class NoteRepository implements CacheableRepository {
             downloadUrl,
           );
 
-          elemJson['content'] = downloadedFile.path;
+          elemJson['media_file'] = downloadedFile.path;
         }
       }
     }
     return NoteDTO.fromJson(rawNote);
   }
 
-  /// Crea o aggiorna una nota nel backend e aggiorna la cache locale.
+  /// Crea una nota nel backend e aggiorna la cache locale.
   Future<Note> saveNote(DiaryType targetDiary, Note note) async {
     final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
     final Map<String, dynamic> rawResponse = await _noteService.saveNote(
       targetDiary,
       jsonNote,
     );
+
+    final List<dynamic> rawElements = rawResponse['note_elements'] ?? [];
+
+    for (int i = 0; i < rawElements.length; i++) {
+      final elemJson = rawElements[i];
+      final type = elemJson['type']?.toString();
+
+      if (type == 'image' || type == 'audio') {
+        final uploadUrl = elemJson['upload_url'].toString();
+        if (uploadUrl.isNotEmpty) {
+          final localElement = note.noteElements[i];
+          if (localElement.mediaFile != null) {
+            await _noteService.uploadFileFromUrl(
+              uploadUrl,
+              localElement.mediaFile!,
+            );
+          }
+        }
+      }
+    }
 
     final Note savedNote = NoteDTO.fromJson(rawResponse);
 

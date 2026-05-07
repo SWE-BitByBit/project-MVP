@@ -20,7 +20,7 @@ abstract class NoteElementDTO {
         }
         return NoteImageElement(
           content,
-          file: File(content),
+          file: File(json['media_file']),
           noteParentId: noteId,
           noteElementId: elementId,
         );
