@@ -134,13 +134,13 @@ void main() {
       scaffoldKey.currentState?.openDrawer();
       await tester.pumpAndSettle();
 
-      final dots_btns = find.byIcon(Icons.more_vert);
-      await tester.tap(dots_btns.first);
+      final dotsBtns = find.byIcon(Icons.more_vert);
+      await tester.tap(dotsBtns.first);
       await tester.pumpAndSettle();
 
       // Troviamo tutti i bottoni "cestino"
-      final delete_btns = find.byIcon(Icons.delete_outline);
-      await tester.tap(delete_btns.first);
+      final deleteBtns = find.byIcon(Icons.delete_outline);
+      await tester.tap(deleteBtns.first);
       await tester.pumpAndSettle();
 
       // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma

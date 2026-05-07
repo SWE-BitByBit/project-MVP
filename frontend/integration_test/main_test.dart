@@ -65,7 +65,7 @@ void main() {
                              details.exception.toString().contains('SocketException') ||
                              details.exception.toString().contains('ClientException');
     if (isImageError) {
-      debugdebugPrint('Nota: Errore risorsa immagine ignorato nel test: ${details.exception}');
+      debugPrint('Nota: Errore risorsa immagine ignorato nel test: ${details.exception}');
       return;
     }
     FlutterError.presentError(details);

@@ -5,12 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_actions_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 
 import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
-import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
 
 
 void main() {

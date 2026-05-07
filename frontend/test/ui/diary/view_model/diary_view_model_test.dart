@@ -7,7 +7,6 @@ import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dar
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_text_element.dart';
 
 import '../../../../testing/mocks/diary/mock_note_repository.dart';
 import '../../../../testing/mocks/diary/mock_diary_account_repository.dart';
