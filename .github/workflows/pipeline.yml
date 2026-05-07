@@ -36,6 +36,12 @@ jobs:
         working-directory: backend
         run: make coverage # genera coverage.xml
 
+      - name: Upload coverage.xml as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
+
       - name: SonarCloud Scan - Backend
         uses: SonarSource/sonarqube-scan-action@v7
         env:
