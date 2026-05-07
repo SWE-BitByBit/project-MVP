@@ -31,7 +31,7 @@ abstract class NoteElementDTO {
         }
         return NoteAudioElement(
           content,
-          file: File(content),
+          file: File(json['media_file']),
           noteParentId: noteId,
           noteElementId: elementId,
         );
