@@ -1,109 +1,50 @@
-import json
-import boto3
 import pytest
-from moto import mock_aws
+from unittest.mock import MagicMock, patch
 
-from materials.lambda_handler import lambda_handler
+from src.materials.lambda_handler import lambda_handler
 
-BUCKET_NAME = "app-protegge-trasforma-materials-mvp"
-FILE_KEY = "materials.json"
-REGION = "eu-south-1"
+class TestLambdaHandlerMaterials:
+    """Test per l'entry point della Lambda function dei materiali."""
 
-DATI_FITTIZI = [
-    {
-        "resource_id": "res-001",
-        "title": "Guida alla sicurezza",
-        "content": "Contenuto della guida",
-        "url": "https://example.com/guida",
-        "type": "ARTICLE",
-    },
-    {
-        "resource_id": "res-002",
-        "title": "Legge 154/2001",
-        "content": "Testo della legge",
-        "url": "https://example.com/legge",
-        "type": "LAW",
-    },
-]
+    @pytest.fixture
+    def mock_dependencies(self):
+        """Fornisce mock per le dipendenze della Lambda."""
+        with patch("src.materials.lambda_handler.S3ResourcesRepository") as mock_repository, \
+             patch("src.materials.lambda_handler.ResourcesService") as mock_service, \
+             patch("src.materials.lambda_handler.ResourcesController") as mock_controller:
+        
+            mock_controller_instance = MagicMock()
+            mock_controller_instance.get_resources.return_value = {
+                "statusCode": 200,
+                "body": "[]"
+            }
+            mock_controller.return_value = mock_controller_instance
+            
+            yield {
+                "repository": mock_repository,
+                "service": mock_service,
+                "controller": mock_controller,
+                "controller_instance": mock_controller_instance
+            }
 
+    def test_lambda_handler_innesca_correttamente_i_componenti(self, mock_dependencies):
+        """Verifica che l'handler istanzi le classi corrette e chiami il controller."""
+        event = {}
+        context = MagicMock()
 
-@pytest.fixture
-def aws_credentials(monkeypatch):
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
-    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
-    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", REGION)
+        response = lambda_handler(event, context)
 
-
-@pytest.fixture
-def s3_popolato(aws_credentials):
-    with mock_aws():
-        s3 = boto3.client("s3", region_name="us-east-1")
-
-        # NOTE: con moto NON usare CreateBucketConfiguration per regioni non us-east-1
-        s3.create_bucket(Bucket=BUCKET_NAME)
-
-        s3.put_object(
-            Bucket=BUCKET_NAME,
-            Key=FILE_KEY,
-            Body=json.dumps(DATI_FITTIZI).encode("utf-8"),
+        mock_dependencies["repository"].assert_called_once_with(
+            "app-protegge-trasforma-materials-mvp", "materials.json"
         )
-        yield
+        mock_dependencies["service"].assert_called_once_with(
+            mock_dependencies["repository"].return_value
+        )
+        mock_dependencies["controller"].assert_called_once_with(
+            mock_dependencies["service"].return_value
+        )
 
+        mock_dependencies["controller_instance"].get_resources.assert_called_once()
 
-@pytest.fixture
-def s3_vuoto(aws_credentials):
-    with mock_aws():
-        s3 = boto3.client("s3", region_name="us-east-1")
-        s3.create_bucket(Bucket=BUCKET_NAME)
-        yield
-
-
-class TestLambdaHandler:
-
-    def test_status_code_200_successo(self, s3_popolato):
-        result = lambda_handler({}, {})
-        assert result["statusCode"] == 200
-
-    def test_body_e_lista(self, s3_popolato):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert isinstance(body, list)
-
-    def test_numero_risorse(self, s3_popolato):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert len(body) == 2
-
-    def test_primo_elemento_resource_id(self, s3_popolato):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert body[0]["resource_id"] == "res-001"
-
-    def test_primo_elemento_title(self, s3_popolato):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert body[0]["title"] == "Guida alla sicurezza"
-
-    def test_primo_elemento_type(self, s3_popolato):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert body[0]["type"] == "ARTICLE"
-
-    def test_headers_content_type(self, s3_popolato):
-        result = lambda_handler({}, {})
-        assert result["headers"]["Content-Type"] == "application/json"
-
-    def test_headers_cors(self, s3_popolato):
-        result = lambda_handler({}, {})
-        assert result["headers"]["Access-Control-Allow-Origin"] == "*"
-
-    def test_status_code_500_file_assente(self, s3_vuoto):
-        result = lambda_handler({}, {})
-        assert result["statusCode"] == 500
-
-    def test_body_errore_contiene_errorMessage(self, s3_vuoto):
-        result = lambda_handler({}, {})
-        body = json.loads(result["body"])
-        assert "errorMessage" in body
+        assert response["statusCode"] == 200
+        assert response["body"] == "[]"

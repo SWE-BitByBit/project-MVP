@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from lambda_handler import lambda_handler
+from src.trusted_contact.lambda_handler import lambda_handler
 from conftest import build_event
 
 

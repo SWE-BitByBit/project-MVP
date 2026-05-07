@@ -14,3 +14,5 @@ modules_to_clean = ["ports", "controller", "repository", "models", "service", "s
 for mod in list(sys.modules.keys()):
     if any(mod == clean_mod or mod.startswith(clean_mod + ".") for clean_mod in modules_to_clean):
         del sys.modules[mod]
+        import importlib
+        importlib.invalidate_caches()

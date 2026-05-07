@@ -42,6 +42,8 @@ import '../ui/diary/view_model/diary_view_model.dart';
 final getIt = GetIt.instance;
 
 void setupLocator() {
+  if (getIt.isRegistered<LocationService>()) return;
+
   // 1. CORE / GLOBAL SERVICES
   _setupCore();
 

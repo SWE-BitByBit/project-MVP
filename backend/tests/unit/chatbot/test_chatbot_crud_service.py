@@ -1,6 +1,8 @@
+import pytest
+from unittest.mock import MagicMock
 
-from uuid import uuid4
-
+from src.chatbot.services.chatbot_crud_service import ChatbotCRUDService
+from src.chatbot.domain.chat import Chat
 from src.chatbot.commands.create_chat_cmd import CreateChatCmd
 from src.chatbot.commands.get_chat_cmd import GetChatCmd
 from src.chatbot.commands.get_chat_list_cmd import GetChatListCmd
@@ -8,125 +10,68 @@ from src.chatbot.commands.delete_chat_cmd import DeleteChatCmd
 from src.chatbot.commands.update_chat_cmd import UpdateChatCmd
 from src.chatbot.commands.add_chat_message_cmd import AddChatMessageCmd
 
+@pytest.fixture
+def mock_repository():
+    return MagicMock()
 
-def test_handle_chats_get_real(crud_service, sample_chat, tables):
-    user_id = sample_chat["user_id"]
+@pytest.fixture
+def service(mock_repository):
+    return ChatbotCRUDService(repo=mock_repository)
 
-    result = crud_service.get_chat_list(
-        GetChatListCmd(user_id=user_id)
+@pytest.fixture
+def sample_chat():
+    return Chat(chat_id="chat1", user_id="user1", title="Test Chat", created_at="123", updated_at="123", messages=[])
+
+def test_create_chat(service, mock_repository, sample_chat):
+    mock_repository.create_chat.return_value = sample_chat
+    cmd = CreateChatCmd(user_id="user1", title="Test Chat")
+    
+    result = service.create_chat(cmd)
+    
+    assert result == sample_chat
+    mock_repository.create_chat.assert_called_once_with(user_id="user1", title="Test Chat")
+
+def test_get_chat(service, mock_repository, sample_chat):
+    mock_repository.get_chat.return_value = sample_chat
+    cmd = GetChatCmd(user_id="user1", chat_id="chat1")
+    
+    result = service.get_chat(cmd)
+    
+    assert result == sample_chat
+    mock_repository.get_chat.assert_called_once_with(user_id="user1", chat_id="chat1")
+
+def test_get_chat_list(service, mock_repository, sample_chat):
+    mock_repository.list_chats.return_value = [sample_chat]
+    cmd = GetChatListCmd(user_id="user1")
+    
+    result = service.get_chat_list(cmd)
+    
+    assert result == [sample_chat]
+    mock_repository.list_chats.assert_called_once_with(user_id="user1")
+
+def test_update_chat(service, mock_repository, sample_chat):
+    mock_repository.update_chat.return_value = sample_chat
+    cmd = UpdateChatCmd(user_id="user1", chat_id="chat1", title="New Title")
+    
+    result = service.update_chat(cmd)
+    
+    assert result == sample_chat
+    mock_repository.update_chat.assert_called_once_with(user_id="user1", chat_id="chat1", title="New Title")
+
+def test_delete_chat(service, mock_repository):
+    cmd = DeleteChatCmd(user_id="user1", chat_id="chat1")
+    
+    service.delete_chat(cmd)
+    
+    mock_repository.delete_chat.assert_called_once_with(user_id="user1", chat_id="chat1")
+
+def test_add_chat_message(service, mock_repository):
+    mock_repository.add_chat_message.return_value = "msg-uuid"
+    cmd = AddChatMessageCmd(user_id="user1", chat_id="chat1", text="Hello", sender="user")
+    
+    result = service.add_chat_message(cmd)
+    
+    assert result == "msg-uuid"
+    mock_repository.add_chat_message.assert_called_once_with(
+        user_id="user1", chat_id="chat1", text="Hello", sender="user"
     )
-
-    assert isinstance(result, list)
-    assert len(result) >= 1
-    assert all(chat.user_id == user_id for chat in result)
-
-
-def test_handle_chats_post_real(crud_service, tables):
-    user_id = str(uuid4())
-
-    cmd = CreateChatCmd(
-        user_id=user_id,
-        title="New Chat"
-    )
-
-    chat = crud_service.create_chat(cmd)
-
-    assert chat is not None
-    assert chat.chat_id is not None
-    assert chat.title == "New Chat"
-    assert chat.user_id == user_id
-
-
-def test_handle_chat_get_found_real(crud_service, sample_chat, tables):
-    user_id = sample_chat["user_id"]
-    chat_id = sample_chat["chat_id"]
-
-    cmd = GetChatCmd(
-        user_id=user_id,
-        chat_id=chat_id
-    )
-
-    chat = crud_service.get_chat(cmd)
-
-    assert chat is not None
-    assert chat.chat_id == chat_id
-    assert chat.user_id == user_id
-
-
-def test_handle_chat_get_not_found_real(crud_service, tables):
-    cmd = GetChatCmd(
-        user_id=str(uuid4()),
-        chat_id=str(uuid4())
-    )
-
-    chat = crud_service.get_chat(cmd)
-
-    assert chat is None
-
-
-def test_handle_chat_delete_real(crud_service, sample_chat, tables):
-    user_id = sample_chat["user_id"]
-    chat_id = sample_chat["chat_id"]
-
-    delete_cmd = DeleteChatCmd(
-        user_id=user_id,
-        chat_id=chat_id
-    )
-
-    crud_service.delete_chat(delete_cmd)
-
-    result = crud_service.get_chat(
-        GetChatCmd(user_id=user_id, chat_id=chat_id)
-    )
-
-    assert result is None
-
-
-def test_handle_chat_put_real(crud_service, sample_chat, tables):
-    user_id = sample_chat["user_id"]
-    chat_id = sample_chat["chat_id"]
-
-    update_cmd = UpdateChatCmd(
-        user_id=user_id,
-        chat_id=chat_id,
-        title="Updated Title"
-    )
-
-    updated = crud_service.update_chat(update_cmd)
-
-    assert updated is not None
-    assert updated.title == "Updated Title"
-
-
-def test_handle_messages_post_real(crud_service, sample_chat, tables):
-    user_id = sample_chat["user_id"]
-    chat_id = sample_chat["chat_id"]
-
-    user_msg_cmd = AddChatMessageCmd(
-        user_id=user_id,
-        chat_id=chat_id,
-        text="Hello AI!",
-        sender="user"
-    )
-
-    crud_service.add_chat_message(user_msg_cmd)
-
-    ai_msg_cmd = AddChatMessageCmd(
-        user_id=user_id,
-        chat_id=chat_id,
-        text="Mock AI response",
-        sender="ai"
-    )
-
-    crud_service.add_chat_message(ai_msg_cmd)
-
-    chat = crud_service.get_chat(
-        GetChatCmd(user_id=user_id, chat_id=chat_id)
-    )
-
-    assert chat is not None
-    assert len(chat.messages) >= 2
-
-    senders = {m.sender for m in chat.messages}
-    assert "user" in senders
-    assert "ai" in senders

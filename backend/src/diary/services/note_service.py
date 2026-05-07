@@ -144,26 +144,27 @@ class NoteService(GetNotePort, SetNotePort, DeleteNotePort, SetNoteElementPort):
 
 
     def delete_note(self, cmd: DeleteNoteCmd) -> bool:
-        note: Note = self._note_repository.get(
-            cmd.user_id,
-            cmd.note_id,
-            cmd.diary_type
-        )
-
-        for element in note.message_elements:
-            if element.type in ["image", "audio"]:
-                self._file_repository.delete_object(key=element.content)
-
         try:
+            note: Note = self._note_repository.get(
+                cmd.user_id,
+                cmd.note_id,
+                cmd.diary_type
+            )
+
+            if not note:
+                return False
+
+            for element in note.message_elements:
+                if element.type in ["image", "audio"]:
+                    self._file_repository.delete_object(key=element.content)
+
             self._note_repository.delete(
                 cmd.user_id,
                 cmd.note_id,
                 cmd.diary_type
             )
             return True
-        except RuntimeError:
-            return False
-        except KeyError:
+        except (RuntimeError, KeyError, AttributeError):
             return False
 
     def list_notes(self, cmd: GetNotesCmd) -> List[Note]:

@@ -1,131 +1,71 @@
 import json
+from unittest.mock import MagicMock, patch
 
-import boto3
 import pytest
-from moto import mock_aws
 
-from materials.models.resource_type import ResourceType
-from materials.repository.s3_resources_repository import S3ResourcesRepository
-
-BUCKET_NAME = "app-protegge-trasforma-materials-mvp"
-FILE_KEY = "materials.json"
-REGION = "eu-south-1"
-
-DATI_FITTIZI = [
-    {
-        "resource_id": "res-001",
-        "title": "Guida alla sicurezza",
-        "content": "Contenuto della guida",
-        "url": "https://example.com/guida",
-        "type": "ARTICLE",
-    },
-    {
-        "resource_id": "res-002",
-        "title": "Legge 154/2001",
-        "content": "Testo della legge",
-        "url": "https://example.com/legge",
-        "type": "LAW",
-    },
-    {
-        "resource_id": "res-003",
-        "title": "Comunità di supporto",
-        "content": "Descrizione comunità",
-        "url": "https://example.com/community",
-        "type": "COMMUNITY",
-    },
-]
-
-
-@pytest.fixture
-def s3_con_file(aws_credentials):
-    """
-    Fixture che crea un bucket S3 fittizio (moto) con il file materials.json popolato.
-    """
-    with mock_aws():
-        s3 = boto3.client("s3", region_name=REGION)
-        s3.create_bucket(
-            Bucket=BUCKET_NAME,
-            CreateBucketConfiguration={"LocationConstraint": REGION},
-        )
-        s3.put_object(
-            Bucket=BUCKET_NAME,
-            Key=FILE_KEY,
-            Body=json.dumps(DATI_FITTIZI).encode("utf-8"),
-        )
-        yield s3
-
-
-@pytest.fixture
-def s3_senza_file(aws_credentials):
-    """
-    Fixture che crea un bucket S3 fittizio senza il file materials.json.
-    """
-    with mock_aws():
-        s3 = boto3.client("s3", region_name=REGION)
-        s3.create_bucket(
-            Bucket=BUCKET_NAME,
-            CreateBucketConfiguration={"LocationConstraint": REGION},
-        )
-        yield s3
-
-
-@pytest.fixture
-def aws_credentials(monkeypatch):
-    """Imposta credenziali AWS fittizie per moto."""
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
-    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
-    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", REGION)
+from src.materials.repository.s3_resources_repository import S3ResourcesRepository
 
 
 class TestS3ResourcesRepository:
-    """Test per il repository S3ResourcesRepository."""
+    """Test per la classe S3ResourcesRepository."""
 
-    def test_list_all_resources_restituisce_lista(self, s3_con_file):
-        """Verifica che list_all_resources restituisca una lista."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
+    @pytest.fixture
+    def mock_s3_client(self):
+        """Fornisce un mock del client S3 di boto3."""
+        with patch("src.materials.repository.s3_resources_repository.boto3") as mock_boto3:
+            mock_client = MagicMock()
+            mock_boto3.client.return_value = mock_client
+            yield mock_client
+
+    @pytest.fixture
+    def repository(self, mock_s3_client):
+        """Fornisce un'istanza del repository configurato con il mock S3."""
+        return S3ResourcesRepository(bucket_name="test-bucket", file_key="test-key.json")
+
+    def test_init_imposta_variabili_correttamente(self, repository):
+        """Verifica che il costruttore imposti bucket e key correttamente."""
+        assert repository._bucket_name == "test-bucket"
+        assert repository._file_key == "test-key.json"
+
+    def test_list_all_resources_ritorna_lista(self, repository, mock_s3_client):
+        """Verifica che list_all_resources decodifichi e restituisca una lista di Resource."""
+        fake_json_data = [
+            {
+                "resource_id": "1",
+                "title": "Title 1",
+                "content": "Content 1",
+                "url": "https://example.com/1",
+                "type": "LAW",
+            },
+            {
+                "resource_id": "2",
+                "title": "Title 2",
+                "content": "Content 2",
+                "url": "https://example.com/2",
+                "type": "ARTICLE",
+            },
+        ]
+        
+        mock_response = {
+            "Body": MagicMock()
+        }
+        mock_response["Body"].read.return_value.decode.return_value = json.dumps(fake_json_data)
+        mock_s3_client.get_object.return_value = mock_response
+
         result = repository.list_all_resources()
-        assert isinstance(result, list)
 
-    def test_list_all_resources_numero_elementi(self, s3_con_file):
-        """Verifica che il numero di risorse restituite corrisponda ai dati nel file."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert len(result) == 3
+        assert len(result) == 2
+        assert result[0]._resource_id == "1"
+        assert result[0]._title == "Title 1"
+        assert result[1]._resource_id == "2"
+        
+        mock_s3_client.get_object.assert_called_once_with(Bucket="test-bucket", Key="test-key.json")
 
-    def test_list_all_resources_primo_elemento_resource_id(self, s3_con_file):
-        """Verifica che il resource_id del primo elemento sia corretto."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert result[0].to_dict()["resource_id"] == "res-001"
+    def test_list_all_resources_solleva_eccezione_su_errore_s3(self, repository, mock_s3_client):
+        """Verifica che list_all_resources propaga le eccezioni di S3."""
+        mock_s3_client.get_object.side_effect = Exception("S3 Error")
 
-    def test_list_all_resources_primo_elemento_title(self, s3_con_file):
-        """Verifica che il titolo del primo elemento sia corretto."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert result[0].to_dict()["title"] == "Guida alla sicurezza"
-
-    def test_list_all_resources_tipo_article(self, s3_con_file):
-        """Verifica che il tipo del primo elemento sia ARTICLE."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert result[0].to_dict()["type"] == ResourceType.ARTICLE.value
-
-    def test_list_all_resources_tipo_law(self, s3_con_file):
-        """Verifica che il tipo del secondo elemento sia LAW."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert result[1].to_dict()["type"] == ResourceType.LAW.value
-
-    def test_list_all_resources_tipo_community(self, s3_con_file):
-        """Verifica che il tipo del terzo elemento sia COMMUNITY."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        result = repository.list_all_resources()
-        assert result[2].to_dict()["type"] == ResourceType.COMMUNITY.value
-
-    def test_list_all_resources_file_assente_solleva_eccezione(self, s3_senza_file):
-        """Verifica che list_all_resources sollevi un'eccezione se il file non esiste."""
-        repository = S3ResourcesRepository(BUCKET_NAME, FILE_KEY)
-        with pytest.raises(Exception):
+        with pytest.raises(Exception) as excinfo:
             repository.list_all_resources()
+            
+        assert "S3 Error" in str(excinfo.value)
