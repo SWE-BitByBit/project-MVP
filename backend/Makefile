@@ -31,11 +31,11 @@ coverage:
 	export TABLE_MESSAGES=chats_messages_mvp && \
 	source ./venv/bin/activate && \
 	coverage erase && \
-	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/chatbot/ && \
-	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/diary/ && \
-	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/materials/ && \
-	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/safe_places/ && \
-	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/trusted_contact/ && \
+	coverage run --append --source=src --branch -m pytest --junitxml=pytest.xml tests/unit/chatbot/ && \
+	coverage run --append --source=src --branch -m pytest --junitxml=pytest.xml tests/unit/diary/ && \
+	coverage run --append --source=src --branch -m pytest --junitxml=pytest.xml tests/unit/materials/ && \
+	coverage run --append --source=src --branch -m pytest --junitxml=pytest.xml tests/unit/safe_places/ && \
+	coverage run --append --source=src --branch -m pytest --junitxml=pytest.xml tests/unit/trusted_contact/ && \
 	coverage xml -o coverage.xml && \
 	coverage report --show-missing | tee pytest-coverage.txt
 
