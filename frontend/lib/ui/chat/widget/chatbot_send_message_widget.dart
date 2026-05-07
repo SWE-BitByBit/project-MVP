@@ -105,7 +105,7 @@ class _ChatbotSendMessageWidgetState extends State<ChatbotSendMessageWidget> {
                         ? colorScheme.onPrimary
                         : colorScheme.onSurfaceVariant,
                   ),
-            onPressed: canSend ? () => _sendMessage(vm) : null,
+            onPressed: (canSend && !isRunning) ? () => _sendMessage(vm) : null,
           ),
         );
       },

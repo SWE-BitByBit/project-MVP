@@ -46,10 +46,10 @@ class SosViewModel extends ChangeNotifier {
   Future<void> _sendOfflineSosAlert() async {
     final audioSession = await AudioSession.instance;
     await audioSession.configure(
-      AudioSessionConfiguration(
+      const AudioSessionConfiguration(
         avAudioSessionCategory: AVAudioSessionCategory.playback,
         avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
-        androidAudioAttributes: const AndroidAudioAttributes(
+        androidAudioAttributes: AndroidAudioAttributes(
           contentType: AndroidAudioContentType.unknown,
           flags: AndroidAudioFlags.audibilityEnforced,
           usage: AndroidAudioUsage.alarm,

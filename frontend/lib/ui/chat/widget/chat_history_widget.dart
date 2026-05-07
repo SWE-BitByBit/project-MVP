@@ -125,23 +125,23 @@ class ChatHistoryWidget extends StatelessWidget {
           }
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'edit',
-            child: const Row(
+            child: Row(
               children: [
-                const Icon(Icons.edit_outlined),
-                const SizedBox(width: 12),
-                const Text('Modifica titolo'),
+                Icon(Icons.edit_outlined),
+                SizedBox(width: 12),
+                Text('Modifica titolo'),
               ],
             ),
           ),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'delete',
-            child: const Row(
+            child: Row(
               children: [
-                const Icon(Icons.delete_outline, color: Colors.red),
-                const SizedBox(width: 12),
-                const Text('Elimina nota', style: TextStyle(color: Colors.red)),
+                Icon(Icons.delete_outline, color: Colors.red),
+                SizedBox(width: 12),
+                Text('Elimina nota', style: TextStyle(color: Colors.red)),
               ],
             ),
           ),
