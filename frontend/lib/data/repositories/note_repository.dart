@@ -98,120 +98,91 @@ class NoteRepository implements CacheableRepository {
     return NoteDTO.fromJson(rawNote);
   }
 
-  /// Crea una nota nel backend e aggiorna la cache locale.
-  Future<Note> saveNote(DiaryType targetDiary, Note note) async {
-    final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
+  /// CREAZIONE: Registra una nuova nota sul backend per ottenere l'ID reale.
+  /// Simile a `createChat` del Chatbot. Non carica gli elementi, solo la nota "guscio".
+  Future<Note> createNote(DiaryType targetDiary, Note virtualNote) async {
+    final Map<String, dynamic> jsonNote = NoteDTO.toJson(virtualNote);
+
+    if (jsonNote['title'] == null || jsonNote['title'].toString().trim().isEmpty) {
+      jsonNote['title'] = "Nota senza titolo";
+    }
+
     final Map<String, dynamic> rawResponse = await _noteService.saveNote(
       targetDiary,
       jsonNote,
     );
 
-    final List<dynamic> rawElements = rawResponse['note_elements'] ?? [];
-
-    for (int i = 0; i < rawElements.length; i++) {
-      final elemJson = rawElements[i];
-      final type = elemJson['type']?.toString();
-
-      if (type == 'image' || type == 'audio') {
-        final uploadUrl = elemJson['upload_url'].toString();
-        if (uploadUrl.isNotEmpty) {
-          final localElement = note.noteElements[i];
-          if (localElement.mediaFile != null) {
-            await _noteService.uploadFileFromUrl(
-              uploadUrl,
-              localElement.mediaFile!,
-            );
-          }
-        }
-      }
-    }
-
     final Note savedNote = NoteDTO.fromJson(rawResponse);
 
-    final index = _cachedNotes.indexWhere((n) => n.id == savedNote.id);
-    if (index != -1) {
-      _cachedNotes[index] = savedNote;
-    } else {
-      _cachedNotes.insert(0, savedNote);
-    }
-
+    // Inseriamo la nota reale in testa alla cache
+    _cachedNotes.insert(0, savedNote);
     _sortCache();
+
     return savedNote;
   }
 
-  /// Elimina una nota dal backend e, in modo ottimistico, dalla cache.
+  /// AGGIORNAMENTO TITOLO: Invia un aggiornamento al server per il titolo della nota.
+  Future<void> updateNoteTitle(DiaryType targetDiary, Note note) async {
+    final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
+
+    if (jsonNote['title'] == null || jsonNote['title'].toString().trim().isEmpty) {
+      jsonNote['title'] = "Nota senza titolo";
+    }
+
+    await _noteService.saveNote(targetDiary, jsonNote);
+
+    _sortCache();
+  }
+
+  /// ELIMINAZIONE NOTA: Identico al Chatbot (Optimistic Delete)
   Future<void> deleteNote(DiaryType targetDiary, Note note) async {
     final noteToDelete = _cachedNotes.firstWhere((n) => n.id == note.id);
     final index = _cachedNotes.indexOf(noteToDelete);
 
-    if (index == -1) {
-      return;
-    }
+    if (index == -1) return;
 
+    // Rimozione ottimistica dalla cache
     _cachedNotes.removeAt(index);
 
     try {
       await _noteService.deleteNote(targetDiary, note.id);
     } catch (e) {
+      // Rollback in caso di errore
       _cachedNotes.insert(index, noteToDelete);
       rethrow;
     }
   }
 
-  /// Aggiunta di un elemento alla nota nel backend
-  Future<void> addNoteElement(Note note, NoteElement element) async {
-    if (note.id == '') {
-      return;
+  /// AGGIUNTA ELEMENTO: Salva il singolo elemento e aggiorna il suo ID.
+  Future<void> addNoteElement(NoteElement element) async {
+    if (element.noteParentId == null || element.noteParentId!.startsWith('virtual_')) {
+      throw Exception("Impossibile aggiungere un elemento remoto senza un Parent ID reale.");
     }
 
-    try {
-      final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(
-        element,
-      );
-      final Map<String, dynamic> response = await _noteService.saveNoteElement(
-        jsonNoteElement,
-      );
-
-      final uploadUrl = response['upload_url']?.toString();
-      if (uploadUrl != null && element.mediaFile != null) {
-        await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
-      }
-
-      final noteToUpdate = _cachedNotes.firstWhere((n) => n.id == note.id);
-      final noteElementToUpdate = noteToUpdate.noteElements.firstWhere(
-        (n) => n.noteElementId == null,
-      );
-      noteElementToUpdate.noteElementId = response['note_element_id']
-          ?.toString();
-
-      note.addElement(element, note.getElementCount());
-    } catch (e) {
-      // rollback
-      note.noteElements.removeWhere((e2) => e2 == element);
-      rethrow;
-    }
-  }
-
-  /// Eliminazione di un elemento dalla nota nel backend
-  Future<void> deleteNoteElement(Note note, NoteElement element) async {
-    if (element.noteElementId == null) {
-      note.noteElements.remove(element);
-      return;
-    }
-
-    note.noteElements.removeWhere(
-      (e) => e.noteElementId == element.noteElementId,
+    final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(element);
+    final Map<String, dynamic> response = await _noteService.saveNoteElement(
+      jsonNoteElement,
     );
 
-    try {
-      await _noteService.deleteNoteElement(
-        element.noteParentId!,
-        element.noteElementId!,
-      );
-    } catch (e) {
-      // rollback
-      note.addElement(element, note.getElementCount());
-      rethrow;
+    // Gestione upload S3 per i media
+    final uploadUrl = response['upload_url']?.toString();
+    if (uploadUrl != null && element.mediaFile != null) {
+      await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
     }
+
+    // Aggiorniamo l'ID dell'istanza in locale con quello fornito dal backend
+    element.noteElementId = response['note_element_id']?.toString();
+  }
+
+  /// ELIMINAZIONE ELEMENTO: Rimuove l'elemento dal backend.
+  Future<void> deleteNoteElement(NoteElement element) async {
+    if (element.noteElementId == null || element.noteParentId == null) {
+      return; // Elemento non ancora sincronizzato col server, nulla da fare
+    }
+
+    await _noteService.deleteNoteElement(
+      element.noteParentId!,
+      element.noteElementId!,
+    );
   }
 }

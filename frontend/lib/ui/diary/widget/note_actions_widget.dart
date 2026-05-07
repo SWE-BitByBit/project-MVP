@@ -40,7 +40,7 @@ class NoteActionsWidget extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 130.0),
             child: FloatingActionButton(
               onPressed: () async {
-                vm.createNewNote(diarySession.loggedDiary!);
+                vm.createNewNote();
 
                 // await vm.saveNote.runAsync((
                 // note: vm.currentNote!,

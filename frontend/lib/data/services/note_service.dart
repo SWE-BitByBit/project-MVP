@@ -100,7 +100,7 @@ class NoteService {
     final tempDir = await getTemporaryDirectory();
     final String filePath;
     if (mediaType == 'audio') {
-      filePath = '${tempDir.path}/audio_$_imageCounter';
+      filePath = '${tempDir.path}/audio_$_audioCounter';
       _audioCounter += 1;
     } else if (mediaType == 'image') {
       filePath = '${tempDir.path}/image_$_imageCounter';
