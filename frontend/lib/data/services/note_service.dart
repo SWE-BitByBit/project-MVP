@@ -10,6 +10,9 @@ import '../network/api_client.dart';
 class NoteService {
   final ApiClient _apiClient;
 
+  static int _audioCounter = 0;
+  static int _imageCounter = 0;
+
   static const String _basePath = '/notes';
 
   NoteService({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -93,9 +96,18 @@ class NoteService {
   }
 
   /// Utilizza il presigned url per fare il download del media dal bucket S3
-  Future<File> downloadFileFromUrl(String downloadUrl) async {
+  Future<File> downloadFileFromUrl(String downloadUrl, String mediaType) async {
     final tempDir = await getTemporaryDirectory();
-    final filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}';
+    final String filePath;
+    if (mediaType == 'image') {
+      filePath = '${tempDir.path}/image_$_imageCounter';
+      _audioCounter += 1;
+    } else if (mediaType == 'image') {
+      filePath = '${tempDir.path}/image_$_imageCounter';
+      _imageCounter += 1;
+    } else {
+      filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}';
+    }
 
     final response = await http.get(Uri.parse(downloadUrl));
 
