@@ -43,18 +43,11 @@ class DiaryAccessViewModel extends ChangeNotifier {
     if (DiarySession.session.isDiaryAuth == true) {
       _isAuthenticated = true;
     } else {
-      // Controlla prima se c'è una sessione salvata
-      final hasSession = await DiarySession.session.restoreSession();
-      if (hasSession) {
-        _isAuthenticated = true;
-      } else {
-        // Se non c'è sessione, interroga il backend.
         try {
           needsInitialSetup = !(await _accRepo.checkHasRealPassword());
         } catch (e) {
           needsInitialSetup = false;
         }
-      }
     }
 
     isCheckingStatus = false;

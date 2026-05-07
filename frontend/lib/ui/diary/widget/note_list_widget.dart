@@ -97,72 +97,84 @@ class NoteListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<DiaryViewModel>(
       builder: (context, viewModel, child) {
-        if (viewModel.loadNotes.isRunning.value) {
-          return const Center(child: CircularProgressIndicator());
-        } else {
-          if (viewModel.notes.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nessuna nota presente nel diario',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: viewModel.notes.length,
-            separatorBuilder: (context, index) => const Divider(),
-            itemBuilder: (context, index) {
-              final note = viewModel.notes[index];
-              return ListTile(
-                onTap: () => _openNoteEditor(context, viewModel, note.id),
-                title: (note.title.isEmpty)
-                    ? const Text(
-                        "Nota senza titolo",
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black54,
-                          fontSize: 16,
-                        ),
-                      )
-                    : Text(
-                        note.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+        // Aggiungiamo il ValueListenableBuilder in ascolto dello stato del comando!
+        return ValueListenableBuilder<bool>(
+          valueListenable: viewModel.loadNotes.isRunning,
+          builder: (context, isRunning, _) {
+
+            // Mostriamo il caricamento solo se sta girando E se la lista è vuota
+            // (così evitiamo che la UI sfarfalli se facciamo un refresh in background)
+            if (isRunning && viewModel.notes.isEmpty) {
+              return const Center(child: CircularProgressIndicator(color: Colors.teal));
+            }
+
+            // Stato vuoto
+            if (viewModel.notes.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_card, size: 64, color: Colors.teal.shade200),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nessuna nota presente nel diario',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
-                subtitle: Text(
-                  "Ultima modifica: ${DateFormat(dayFormat).format(note.updateDate)} alle ${DateFormat(timeFormat).format(note.updateDate)}\nData di creazione: ${DateFormat(dayFormat).format(note.creationDate)} alle ${DateFormat(timeFormat).format(note.creationDate)}",
-                ),
-                isThreeLine: true,
-                trailing: IconButton(
-                  padding: const EdgeInsets.only(top: 24),
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => _showDeleteConfirmation(
-                    context,
-                    viewModel,
-                    note.title.isEmpty ? "senza titolo" : note.title,
-                    note.creationDate,
-                    note.id,
-                  ),
+                    ),
+                  ],
                 ),
               );
-            },
-          );
-        }
+            }
+
+            // Lista popolata
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: viewModel.notes.length,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                final note = viewModel.notes[index];
+                return ListTile(
+                  onTap: () => _openNoteEditor(context, viewModel, note.id),
+                  title: (note.title.isEmpty)
+                      ? const Text(
+                    "Nota senza titolo",
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black54,
+                      fontSize: 16,
+                    ),
+                  )
+                      : Text(
+                    note.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "Ultima modifica: ${DateFormat(dayFormat).format(note.updateDate)} alle ${DateFormat(timeFormat).format(note.updateDate)}\nData di creazione: ${DateFormat(dayFormat).format(note.creationDate)} alle ${DateFormat(timeFormat).format(note.creationDate)}",
+                  ),
+                  isThreeLine: true,
+                  trailing: IconButton(
+                    padding: const EdgeInsets.only(top: 24),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _showDeleteConfirmation(
+                      context,
+                      viewModel,
+                      note.title.isEmpty ? "senza titolo" : note.title,
+                      note.creationDate,
+                      note.id,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
       },
     );
   }
