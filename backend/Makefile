@@ -31,18 +31,14 @@ coverage:
 	export TABLE_MESSAGES=chats_messages_mvp && \
 	source ./venv/bin/activate && pytest \
 		--junitxml=pytest.xml \
-		--cov-report=term-missing \
-		--cov-report=xml:coverage.xml \
-		--cov=src tests/unit/ | tee pytest-coverage.txt
+		tests/unit/ | tee pytest-coverage.txt
 
 coverage-html:
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=chats_mvp && \
 	export TABLE_MESSAGES=chats_messages_mvp && \
 	source ./venv/bin/activate && pytest -v -s \
-		--cov=src \
 		--cov-branch \
-		--cov-report=html:htmlcov \
 		tests/unit/
 	@echo "Report disponibile in htmlcov/index.html"
 	@open htmlcov/index.html 2>/dev/null || xdg-open htmlcov/index.html 2>/dev/null || true
