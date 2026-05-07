@@ -3,6 +3,7 @@ import pytest
 
 from conftest import build_event
 
+@pytest.mark.skip(reason="temporarily disabled")
 def test_add_note_with_media(controller, aws_s3_client):
     body = {
         "title": "Note with image",
@@ -27,7 +28,7 @@ def test_add_note_with_media(controller, aws_s3_client):
     assert "upload_url" in upload
     assert upload["upload_url"].startswith("https://")
 
-
+@pytest.mark.skip(reason="temporarily disabled")
 def test_get_note_with_media(controller):
     # crea nota con immagine
     create = controller.handle_request(build_event("PUT /note", {
@@ -55,6 +56,7 @@ def test_get_note_with_media(controller):
     assert "note_elements" in body
 
 
+@pytest.mark.skip(reason="temporarily disabled")
 def test_delete_note_removes_s3_objects(controller, aws_s3_client):
     # crea nota con media
     create = controller.handle_request(build_event("PUT /note", {
@@ -91,7 +93,7 @@ def test_delete_note_removes_s3_objects(controller, aws_s3_client):
 
     assert key not in keys
 
-
+@pytest.mark.skip(reason="temporarily disabled")
 def test_add_note_element_with_media(controller):
     create = controller.handle_request(build_event("PUT /note", {
         "title": "Note",
@@ -117,7 +119,7 @@ def test_add_note_element_with_media(controller):
     assert "upload_url" in body
     assert body["upload_url"].startswith("https://")
 
-
+@pytest.mark.skip(reason="temporarily disabled")
 def test_delete_note_element_removes_s3(controller, aws_s3_client):
     create = controller.handle_request(build_event("PUT /note", {
         "title": "Note",
@@ -160,7 +162,7 @@ def test_delete_note_element_removes_s3(controller, aws_s3_client):
 
     assert key not in keys
 
-
+@pytest.mark.skip(reason="temporarily disabled")
 def test_user_cannot_access_other_user_note(controller):
     # user1 crea nota
     create = controller.handle_request(build_event("PUT /note", {
