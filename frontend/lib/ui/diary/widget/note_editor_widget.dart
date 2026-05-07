@@ -142,7 +142,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: Image.file(element.file!),
+                    child: Image.file(element.mediaFile!),
                   ),
                 ),
 
@@ -172,7 +172,7 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
                     onDismiss: () {
                       dispose();
                     },
-                    trackUrl: element.file!.path,
+                    trackUrl: element.mediaFile!.path,
                   ),
                 ),
 
@@ -226,13 +226,11 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     // 1. Acquisizione del file (solo per i media)
     if (type == 'image') {
       final image = await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (image == null) return; // L'utente ha chiuso il picker senza scegliere
+      if (image == null) return;
       pickedFile = File(image.path);
     } else if (type == 'audio') {
       final pickResult = await FilePicker.pickFiles(type: FileType.audio);
-      if (pickResult == null) {
-        return; // L'utente ha chiuso il picker senza scegliere
-      }
+      if (pickResult == null) return;
       pickedFile = File(pickResult.files.single.path!);
     } else if (type == 'text') {
       // Per il testo non serve un file, ma vogliamo che la tastiera si apra subito
@@ -252,6 +250,10 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
     // 3. Aggiornamento visivo della UI
     setState(() {
       _elements.add(_createCard(newElement, requestFocus: requestFocus));
+      /* widget.selectedNote.addElement(
+        newElement,
+        widget.selectedNote.getElementCount(),
+      ); */
       _lastUpdated = widget.selectedNote.updateDate;
     });
   }
@@ -335,13 +337,16 @@ class _NoteEditorWidgetState extends State<NoteEditorWidget> {
               bool isTitleEmpty = widget.selectedNote.title.isEmpty;
               bool isBodyEmpty = widget.selectedNote.noteElements.isEmpty;
 
-              if (isTitleEmpty && isBodyEmpty) {
-              } else {
+              if (!(isTitleEmpty && isBodyEmpty)) {
                 vm.saveNote.run((
                   note: widget.selectedNote,
                   diary: DiarySession.session.loggedDiary!,
                 ));
+
+                vm.addRemoteElements();
               }
+
+              vm.clearCurrentNote();
             }
           },
           child: GestureDetector(

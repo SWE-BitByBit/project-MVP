@@ -1,5 +1,6 @@
 import json
 from ulid import ULID
+import traceback
 
 from commands.add_note_command import AddNoteCmd
 from commands.get_note_command import GetNoteCmd
@@ -65,21 +66,25 @@ class DiaryNoteController:
                 type=element.get('type'),
                 content=element.get('content')
             )
-            for element in body.get('elements', [])
+            for element in body.get('note_elements', [])
         ]
-
-        response = self._service.add_note(
-            AddNoteCmd(
-                user_id=self._get_user_id(event),
-                title=body.get('title'),
-                created_at=body.get('created_at'),
-                last_modified_at=body.get('last_modified_at'),
-                diary_type=diary_type,
-                note_elements=elements
+        try: 
+            response = self._service.add_note(
+                AddNoteCmd(
+                    user_id=self._get_user_id(event),
+                    title=body.get('title'),
+                    created_at=body.get('created_at'),
+                    last_modified_at=body.get('last_modified_at'),
+                    diary_type=diary_type,
+                    note_elements=elements
+                ),
+                body.get("note_id")
             )
-        )
-
-        return self.response(201, response)
+    
+            return self.response(200, response)
+    
+        except Exception:
+            return self.response(500, SERVER_ERROR)
     
 
     def _note_get(self, event):
@@ -189,10 +194,10 @@ class DiaryNoteController:
             )
         )
 
-        if not result:
-            return self.response(500, SERVER_ERROR)
-
-        return self.response(200, {"message": "Note element deleted successfully"})
+        if result:
+            return self.response(200, {"message": "Element deleted sucessfully"})
+        else:
+            return self.response(404, {"message": "Note or element not found"})
 
 
 

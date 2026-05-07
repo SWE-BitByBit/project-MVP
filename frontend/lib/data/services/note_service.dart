@@ -10,7 +10,6 @@ import '../network/api_client.dart';
 class NoteService {
   final ApiClient _apiClient;
 
-  /// Percorso base per le API del diario.
   static const String _basePath = '/notes';
 
   NoteService({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -34,9 +33,10 @@ class NoteService {
       headers: _buildAuthHeaders(),
     );
 
-    if (response is List) {
-      return response.cast<Map<String, dynamic>>();
+    if (response is Map && response['notes'] is List) {
+      return (response['notes'] as List).cast<Map<String, dynamic>>();
     }
+
     return [];
   }
 

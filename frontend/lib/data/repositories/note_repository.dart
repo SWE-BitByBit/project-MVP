@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import '../../domain/models/diary/diary_enums.dart';
 import '../../domain/models/diary/diary_session.dart';
 import '../../domain/models/diary/note.dart';
@@ -47,7 +48,7 @@ class NoteRepository implements CacheableRepository {
     _cachedNotes.clear();
     for (var json in rawNotes) {
       final creationStr = json['created_at']?.toString();
-      final updateStr = json['updated_at']?.toString();
+      final updateStr = json['last_modified_at']?.toString();
       final creationDate =
           DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
 
@@ -78,30 +79,51 @@ class NoteRepository implements CacheableRepository {
       noteId,
     );
 
-    final List<dynamic> rawElements = rawNote['elements'] ?? [];
+    final List<dynamic> rawElements = rawNote['note_elements'] ?? [];
     for (var elemJson in rawElements) {
       final type = elemJson['type']?.toString();
-      final downloadUrl = elemJson['download_url']?.toString();
 
-      if ((type == 'image' || type == 'audio') &&
-          downloadUrl != null &&
-          downloadUrl.isNotEmpty) {
-        final File downloadedFile = await _noteService.downloadFileFromUrl(
-          downloadUrl,
-        );
-        elemJson['content'] = downloadedFile.path;
+      if (type == 'image' || type == 'audio') {
+        final downloadUrl = elemJson['download_url'].toString();
+        if (downloadUrl.isNotEmpty) {
+          final File downloadedFile = await _noteService.downloadFileFromUrl(
+            downloadUrl,
+          );
+
+          elemJson['media_file'] = downloadedFile.path;
+        }
       }
     }
     return NoteDTO.fromJson(rawNote);
   }
 
-  /// Crea o aggiorna una nota nel backend e aggiorna la cache locale.
+  /// Crea una nota nel backend e aggiorna la cache locale.
   Future<Note> saveNote(DiaryType targetDiary, Note note) async {
     final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
     final Map<String, dynamic> rawResponse = await _noteService.saveNote(
       targetDiary,
       jsonNote,
     );
+
+    final List<dynamic> rawElements = rawResponse['note_elements'] ?? [];
+
+    for (int i = 0; i < rawElements.length; i++) {
+      final elemJson = rawElements[i];
+      final type = elemJson['type']?.toString();
+
+      if (type == 'image' || type == 'audio') {
+        final uploadUrl = elemJson['upload_url'].toString();
+        if (uploadUrl.isNotEmpty) {
+          final localElement = note.noteElements[i];
+          if (localElement.mediaFile != null) {
+            await _noteService.uploadFileFromUrl(
+              uploadUrl,
+              localElement.mediaFile!,
+            );
+          }
+        }
+      }
+    }
 
     final Note savedNote = NoteDTO.fromJson(rawResponse);
 
@@ -137,7 +159,9 @@ class NoteRepository implements CacheableRepository {
 
   /// Aggiunta di un elemento alla nota nel backend
   Future<void> addNoteElement(Note note, NoteElement element) async {
-    note.addElement(element, note.getElementCount());
+    if (note.id == '') {
+      return;
+    }
 
     try {
       final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(
@@ -147,11 +171,19 @@ class NoteRepository implements CacheableRepository {
         jsonNoteElement,
       );
 
-      element.noteElementId = response['note_element_id']?.toString();
       final uploadUrl = response['upload_url']?.toString();
-      if (uploadUrl != null && element.file != null) {
-        await _noteService.uploadFileFromUrl(uploadUrl, element.file!);
+      if (uploadUrl != null && element.mediaFile != null) {
+        await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
       }
+
+      final noteToUpdate = _cachedNotes.firstWhere((n) => n.id == note.id);
+      final noteElementToUpdate = noteToUpdate.noteElements.firstWhere(
+        (n) => n.noteElementId == null,
+      );
+      noteElementToUpdate.noteElementId = response['note_element_id']
+          ?.toString();
+
+      note.addElement(element, note.getElementCount());
     } catch (e) {
       // rollback
       note.noteElements.removeWhere((e2) => e2 == element);
@@ -161,12 +193,17 @@ class NoteRepository implements CacheableRepository {
 
   /// Eliminazione di un elemento dalla nota nel backend
   Future<void> deleteNoteElement(Note note, NoteElement element) async {
+    if (element.noteElementId == null) {
+      note.noteElements.remove(element);
+      return;
+    }
+
     note.noteElements.removeWhere(
       (e) => e.noteElementId == element.noteElementId,
     );
 
     try {
-      _noteService.deleteNoteElement(
+      await _noteService.deleteNoteElement(
         element.noteParentId!,
         element.noteElementId!,
       );

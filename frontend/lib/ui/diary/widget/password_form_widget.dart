@@ -54,10 +54,12 @@ class _PasswordFormWidget extends State<PasswordFormWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(), // Chiude la tastiera cliccando fuori
+      onTap: () => FocusScope.of(
+        context,
+      ).unfocus(), // Chiude la tastiera cliccando fuori
       child: Scaffold(
         body: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(30.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
