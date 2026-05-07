@@ -28,6 +28,7 @@ test:
 coverage:
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=test-chats && \
+	export TABLE_MESSAGES=test-messages && \
 	source ./venv/bin/activate && pytest \
 		--junitxml=pytest.xml \
 		--cov-report=term-missing \
@@ -37,6 +38,7 @@ coverage:
 coverage-html:
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=test-chats && \
+	export TABLE_MESSAGES=test-messages && \
 	source ./venv/bin/activate && pytest -v -s \
 		--cov=src \
 		--cov-branch \
@@ -49,6 +51,7 @@ coverage-html:
 sonar: coverage
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=test-chats && \
+	export TABLE_MESSAGES=test-messages && \
 	source ./venv/bin/activate && pysonar \
 		--sonar-host-url=https://sonarcloud.io \
 		--sonar-token=$(SONAR_TOKEN) \

@@ -5,6 +5,7 @@ import subprocess
 def pytest_cmdline_main(config):
     os.environ.setdefault("AWS_DEFAULT_REGION", "eu-south-1")
     os.environ.setdefault("TABLE_CHATS", "test-chats")
+    os.environ.setdefault("TABLE_MESSAGES", "test-messages")
     if os.environ.get("PYTEST_SUB_SESSION"):
         return None
         

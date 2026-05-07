@@ -17,6 +17,7 @@ jobs:
       AWS_DEFAULT_REGION: eu-south-1
       AWS_REGION: eu-south-1
       TABLE_CHATS: test-chats
+      TABLE_MESSAGES: test-messages
     steps:
       - uses: actions/checkout@v4
         with:
