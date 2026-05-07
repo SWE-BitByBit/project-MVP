@@ -178,14 +178,15 @@ class DynamoNoteAdapter(NoteRepositoryPort):
         element_response = self._note_elements_table.get_item(
             Key={"note_id": note_id, "note_element_id": note_element_id}
         )
-        if not element_response.get("Item"):
+        item = element_response.get("Item")
+        if not item:
             raise KeyError(f"Note element {note_element_id} not found")
         
         return NoteElement(   
-            note_id=element_response["note_id"],
-            note_element_id=element_response["note_element_id"],
-            type=element_response["type"],
-            content=element_response["content"],
+            note_id=item["note_id"],
+            note_element_id=item["note_element_id"],
+            type=item["type"],
+            content=item["content"],
         )
 
 
