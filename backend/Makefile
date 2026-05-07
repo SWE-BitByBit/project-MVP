@@ -29,17 +29,29 @@ coverage:
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=chats_mvp && \
 	export TABLE_MESSAGES=chats_messages_mvp && \
-	source ./venv/bin/activate && pytest \
-		--junitxml=pytest.xml \
-		tests/unit/ | tee pytest-coverage.txt
+	source ./venv/bin/activate && \
+	coverage erase && \
+	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/chatbot/ && \
+	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/diary/ && \
+	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/materials/ && \
+	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/safe_places/ && \
+	coverage run --append --source=src -m pytest --junitxml=pytest.xml tests/unit/trusted_contact/ && \
+	coverage xml -o coverage.xml && \
+	coverage report --show-missing | tee pytest-coverage.txt
 
 coverage-html:
 	export AWS_DEFAULT_REGION=eu-south-1 && \
 	export TABLE_CHATS=chats_mvp && \
 	export TABLE_MESSAGES=chats_messages_mvp && \
-	source ./venv/bin/activate && pytest -v -s \
-		--cov-branch \
-		tests/unit/
+	source ./venv/bin/activate && \
+	coverage erase && \
+	coverage run --append --source=src --branch -m pytest tests/unit/chatbot/ && \
+	coverage run --append --source=src --branch -m pytest tests/unit/diary/ && \
+	coverage run --append --source=src --branch -m pytest tests/unit/materials/ && \
+	coverage run --append --source=src --branch -m pytest tests/unit/safe_places/ && \
+	coverage run --append --source=src --branch -m pytest tests/unit/trusted_contact/ && \
+	coverage html -d htmlcov && \
+	coverage report --show-missing
 	@echo "Report disponibile in htmlcov/index.html"
 	@open htmlcov/index.html 2>/dev/null || xdg-open htmlcov/index.html 2>/dev/null || true
 
