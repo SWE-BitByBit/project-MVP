@@ -88,6 +88,7 @@ class NoteRepository implements CacheableRepository {
         if (downloadUrl.isNotEmpty) {
           final File downloadedFile = await _noteService.downloadFileFromUrl(
             downloadUrl,
+            type!,
           );
 
           elemJson['media_file'] = downloadedFile.path;
