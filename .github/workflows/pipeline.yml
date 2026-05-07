@@ -13,6 +13,10 @@ jobs:
   backend-test:
     name: SonarCloud - Backend (Python)
     runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: eu-south-1
+      AWS_REGION: eu-south-1
+      TABLE_CHATS: test-chats
     steps:
       - uses: actions/checkout@v4
         with:

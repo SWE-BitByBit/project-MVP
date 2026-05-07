@@ -26,7 +26,8 @@ test:
 	source ./venv/bin/activate && pytest -v -s tests/unit/
 
 coverage:
-	AWS_DEFAULT_REGION=eu-south-1 \
+	export AWS_DEFAULT_REGION=eu-south-1 && \
+	export TABLE_CHATS=test-chats && \
 	source ./venv/bin/activate && pytest \
 		--junitxml=pytest.xml \
 		--cov-report=term-missing \
@@ -34,7 +35,8 @@ coverage:
 		--cov=src tests/unit/ | tee pytest-coverage.txt
 
 coverage-html:
-	AWS_DEFAULT_REGION=eu-south-1 \
+	export AWS_DEFAULT_REGION=eu-south-1 && \
+	export TABLE_CHATS=test-chats && \
 	source ./venv/bin/activate && pytest -v -s \
 		--cov=src \
 		--cov-branch \
@@ -45,7 +47,8 @@ coverage-html:
 
 # Analisi SonarCloud (nessun server locale necessario)
 sonar: coverage
-	AWS_DEFAULT_REGION=eu-south-1 \
+	export AWS_DEFAULT_REGION=eu-south-1 && \
+	export TABLE_CHATS=test-chats && \
 	source ./venv/bin/activate && pysonar \
 		--sonar-host-url=https://sonarcloud.io \
 		--sonar-token=$(SONAR_TOKEN) \
