@@ -99,8 +99,8 @@ class NoteService {
   Future<File> downloadFileFromUrl(String downloadUrl, String mediaType) async {
     final tempDir = await getTemporaryDirectory();
     final String filePath;
-    if (mediaType == 'image') {
-      filePath = '${tempDir.path}/image_$_imageCounter';
+    if (mediaType == 'audio') {
+      filePath = '${tempDir.path}/audio_$_imageCounter';
       _audioCounter += 1;
     } else if (mediaType == 'image') {
       filePath = '${tempDir.path}/image_$_imageCounter';

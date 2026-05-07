@@ -102,6 +102,8 @@ class DiaryViewModel extends ChangeNotifier {
     for (NoteElement element in _currentNote!.noteElements) {
       if (element.noteElementId == null && _currentNote!.id.isNotEmpty) {
         _noteRepo.addNoteElement(_currentNote!, element);
+      }else{
+        debugPrint("L'id e` vuoto");
       }
     }
   }
@@ -120,7 +122,7 @@ class DiaryViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadNotes(DiaryType diary) async {
-    await _noteRepo.getNotes(diary, forceRefresh: true);
+    await _noteRepo.getNotes(diary);
     notifyListeners();
   }
 
