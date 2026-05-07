@@ -16,7 +16,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late MockDiaryViewModel mockViewModel;
-  late MockSaveNoteCommand mockSaveCommand;
+  late MockUpdateTitleCommand mockUpdateCommand;
+  late MockAddElementCommand mockAddElementCommand;
   late MockDeleteNoteCommand mockDeleteCommand;
   late LocalNote testNote;
 
@@ -39,36 +40,43 @@ void main() {
     ));
 
     registerFallbackValue((noteId: 'fake', diary: DiaryType.real_diary));
+    registerFallbackValue((newTitle: 'fake', diary: DiaryType.real_diary));
+    registerFallbackValue((type: 'text', text: 'fake', file: null, diary: DiaryType.real_diary));
   });
 
   setUp(() async {
-    mockViewModel = MockDiaryViewModel();
-    mockSaveCommand = MockSaveNoteCommand();
-    mockDeleteCommand = MockDeleteNoteCommand();
-
-    when(() => mockViewModel.saveNote).thenReturn(mockSaveCommand);
-    when(() => mockViewModel.deleteNote).thenReturn(mockDeleteCommand);
-
-    when(() => mockViewModel.addElement(
-      type: any(named: 'type'),
-      text: any(named: 'text'),
-      file: any(named: 'file'),
-    )).thenAnswer((invocation) {
-      final text = invocation.namedArguments[#text] as String?;
-      final elem = NoteTextElement(text ?? '');
-      testNote.addElement(elem, testNote.getElementCount());
-      return elem;
-    });
-
-    // Ora initSession non fallirà più grazie al mock del canale
-    await DiarySession.session.initSession(DiaryType.real_diary, "test_token");
-
     testNote = LocalNote(
       id: "test_id",
       title: "Titolo Iniziale",
       creationDate: DateTime(2026, 4, 30, 10, 0),
       lastModified: DateTime(2026, 4, 30, 10, 0),
     );
+
+    mockViewModel = MockDiaryViewModel();
+    mockUpdateCommand = MockUpdateTitleCommand();
+    mockAddElementCommand = MockAddElementCommand();
+    mockDeleteCommand = MockDeleteNoteCommand();
+
+    when(() => mockViewModel.updateTitle).thenReturn(mockUpdateCommand);
+    when(() => mockViewModel.addElement).thenReturn(mockAddElementCommand);
+    when(() => mockViewModel.deleteNote).thenReturn(mockDeleteCommand);
+    when(() => mockViewModel.currentNote).thenReturn(testNote);
+
+    when(() => mockAddElementCommand.run(any())).thenAnswer((invocation) {
+      final args = invocation.positionalArguments[0] as ({String type, String? text, dynamic file, DiaryType diary});
+      final text = args.text;
+      final elem = NoteTextElement(text ?? '');
+      testNote.addElement(elem, testNote.getElementCount());
+    });
+
+    when(() => mockUpdateCommand.run(any())).thenAnswer((invocation) {
+      final args = invocation.positionalArguments[0] as ({String newTitle, DiaryType diary});
+      testNote.title = args.newTitle;
+    });
+
+    // Ora initSession non fallirà più grazie al mock del canale
+    await DiarySession.session.initSession(DiaryType.real_diary, "test_token");
+
   });
 
   tearDown(() async {
@@ -104,6 +112,8 @@ void main() {
     testWidgets('Modifica del TextField titolo aggiorna l\'oggetto LocalNote', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.enterText(find.byType(TextField).first, "Titolo Modificato");
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
       expect(testNote.title, "Titolo Modificato");
     });
 

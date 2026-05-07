@@ -15,5 +15,5 @@ class TestNoteElement extends NoteElement {
   String get type => _type;
 
   @override
-  File? get file => null; // Implementazione fittizia per i test
+  File? get mediaFile => null; // Implementazione fittizia per i test
 }

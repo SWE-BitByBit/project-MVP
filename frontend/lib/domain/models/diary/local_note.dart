@@ -33,7 +33,7 @@ class LocalNote implements Note {
   DateTime get updateDate => _lastModified;
 
   @override
-  List<NoteElement> get noteElements => _noteContents;
+  List<NoteElement> get noteElements => List.unmodifiable(_noteContents);
 
   /// Aggiorna il titolo e, se è cambiato, aggiorna automaticamente la data di modifica.
   @override

@@ -57,8 +57,7 @@ class ChatHistoryWidget extends StatelessWidget {
   ) async {
     final controller = TextEditingController(text: currentTitle);
 
-    final newTitle =
-        await showDialog<String>(
+    await showDialog<String>(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Modifica titolo'),

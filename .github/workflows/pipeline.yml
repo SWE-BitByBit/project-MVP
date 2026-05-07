@@ -78,6 +78,10 @@ jobs:
         working-directory: frontend
         run: flutter test --coverage test/
 
+      - name: Run Integration Tests
+        working-directory: frontend
+        run: flutter test integration_test/main_test.dart
+
       - name: SonarCloud Scan - Frontend
         uses: SonarSource/sonarqube-scan-action@v7
         env:

@@ -56,7 +56,7 @@ void main() {
         // arrange
         when(
           () => mockApiClient.get(any(), headers: any(named: 'headers')),
-        ).thenAnswer((_) async => tNotesList);
+        ).thenAnswer((_) async => {'notes': tNotesList});
 
         // act
         final result = await noteService.fetchNotes(DiaryType.real_diary);

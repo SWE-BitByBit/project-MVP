@@ -21,6 +21,17 @@ import 'package:mvp_app_protegge_e_trasforma/data/repositories/safe_place_reposi
 import 'package:mvp_app_protegge_e_trasforma/domain/models/auth/user.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/widget/safe_place_map_widget.dart';
 
+import 'package:mvp_app_protegge_e_trasforma/data/services/diary_account_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
+
+import 'package:mvp_app_protegge_e_trasforma/data/services/trusted_contact_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/trusted_contact_repository.dart';
+
+import 'package:mvp_app_protegge_e_trasforma/domain/models/dead_man/dead_man_settings.dart';
+
 // --- MOCKS ---
 class MockAuthRepository extends Mock implements AuthRepository {}
 class MockDeadManRepository extends Mock implements DeadManRepository {}
@@ -28,6 +39,11 @@ class MockChatbotService extends Mock implements ChatbotService {}
 class MockMaterialService extends Mock implements MaterialService {}
 class MockSafePlaceService extends Mock implements SafePlaceService {}
 class MockLocationService extends Mock implements LocationService {}
+
+class MockDiaryAccountService extends Mock implements DiaryAccountService {}
+class MockNoteService extends Mock implements NoteService {}
+
+class MockTrustedContactService extends Mock implements TrustedContactService {}
 
 /// Mock HTTP per evitare errori di rete reali (es. mappe) durante i test
 class MyHttpOverrides extends HttpOverrides {
@@ -49,13 +65,24 @@ void main() {
                              details.exception.toString().contains('SocketException') ||
                              details.exception.toString().contains('ClientException');
     if (isImageError) {
-      debugPrint('Nota: Errore risorsa immagine ignorato nel test: ${details.exception}');
+      debugdebugPrint('Nota: Errore risorsa immagine ignorato nel test: ${details.exception}');
       return;
     }
     FlutterError.presentError(details);
   };
 
-  testWidgets('Suite Completa Test di Integrazione E2E: Chatbot, Materiale e Luoghi Sicuri', (tester) async {
+  setUpAll(() {
+    registerFallbackValue(DiaryType.real_diary);
+    registerFallbackValue(const DeadManSettings(
+      isActive: true,
+      firstInactivityTimer: 1,
+      secondInactivityTimer: 1,
+      messageSubject: '',
+      messageBody: '',
+    ));
+  });
+
+  testWidgets('Suite Completa Test di Integrazione E2E', (tester) async {
     // --- SETUP AMBIENTE ---
     try {
       await dotenv.load(fileName: ".env");
@@ -68,6 +95,10 @@ void main() {
     final mockMat = MockMaterialService();
     final mockSafe = MockSafePlaceService();
     final mockLoc = MockLocationService();
+    
+    final mockDiaryAccountService = MockDiaryAccountService();
+    final mockNoteService = MockNoteService();
+    final mockTrustedContactService = MockTrustedContactService();
 
     // Mock Auth & DeadMan (Globali)
     when(() => mockAuth.isLoggedIn()).thenReturn(true);
@@ -75,9 +106,38 @@ void main() {
       sub: 'test', email: 'test@test.com', name: 'Test', surname: 'User', idToken: 'id', accessToken: 'token'
     ));
     when(() => mockAuth.restoreSession()).thenAnswer((_) async => true);
+    
     when(() => mockDeadMan.createSettings()).thenAnswer((_) async {});
     when(() => mockDeadMan.sendHeartbeat()).thenAnswer((_) async {});
-    when(() => mockDeadMan.currentSettings).thenReturn(null);
+    when(() => mockDeadMan.saveSettings(any())).thenAnswer((_) async {});
+    when(() => mockDeadMan.getSettings()).thenAnswer((_) async => const DeadManSettings(
+      isActive: false,
+      firstInactivityTimer: 1,
+      secondInactivityTimer: 1,
+      messageSubject: '',
+      messageBody: '',
+    ));
+    when(() => mockDeadMan.getSettings(forceRefresh: true)).thenAnswer((_) async => const DeadManSettings(
+      isActive: false,
+      firstInactivityTimer: 1,
+      secondInactivityTimer: 1,
+      messageSubject: '',
+      messageBody: '',
+    ));
+    when(() => mockDeadMan.getSettings(forceRefresh: false)).thenAnswer((_) async => const DeadManSettings(
+      isActive: false,
+      firstInactivityTimer: 1,
+      secondInactivityTimer: 1,
+      messageSubject: '',
+      messageBody: '',
+    ));
+    when(() => mockDeadMan.currentSettings).thenReturn(const DeadManSettings(
+      isActive: false,
+      firstInactivityTimer: 1,
+      secondInactivityTimer: 1,
+      messageSubject: '',
+      messageBody: '',
+    ));
 
     // Mock Chatbot
     when(() => mockChat.fetchChatPreviews()).thenAnswer((_) async => {'chats': []});
@@ -102,6 +162,39 @@ void main() {
     ));
     when(() => mockSafe.fetchSafePlaces()).thenAnswer((_) async => {'data': []});
 
+    // Mock Diario
+    when(() => mockDiaryAccountService.checkHasRealPassword()).thenAnswer((_) async => true);
+    when(() => mockDiaryAccountService.validateDiaryPassword(any())).thenAnswer((_) async => {
+      'access_token': 'mock-session-token',
+      'diary_type': 'real_diary'
+    });
+    when(() => mockNoteService.fetchNotes(any())).thenAnswer((_) async => [
+      {
+        'id': 'note1',
+        'title': 'La mia prima nota',
+        'content': 'Oggi è una bella giornata.',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        'diary_type': 'real_diary'
+      }
+    ]);
+
+    // Mock Contatti Fidati
+    when(() => mockTrustedContactService.getContacts()).thenAnswer((_) async => [
+      {
+        'id': 'contact1',
+        'name': 'Mario Rossi',
+        'email': 'mario@example.com',
+        'phoneNumber': '1234567890'
+      }
+    ]);
+    when(() => mockTrustedContactService.addContact(any())).thenAnswer((_) async => {
+        'id': 'contact2',
+        'name': 'Luigi Verdi',
+        'email': 'luigi@example.com',
+        'phoneNumber': '0987654321'
+    });
+
     // Iniezione Mock
     getIt.allowReassignment = true;
     getIt.registerLazySingleton<AuthRepository>(() => mockAuth);
@@ -113,62 +206,136 @@ void main() {
     getIt.registerSingleton<LocationService>(mockLoc);
     getIt.registerLazySingleton<SafePlaceService>(() => mockSafe);
     getIt.registerLazySingleton<SafePlaceRepository>(() => SafePlaceRepository(mockSafe));
+    
+    getIt.registerLazySingleton<DiaryAccountService>(() => mockDiaryAccountService);
+    getIt.registerLazySingleton<DiaryAccountRepository>(() => DiaryAccountRepository(mockDiaryAccountService));
+    getIt.registerLazySingleton<NoteService>(() => mockNoteService);
+    getIt.registerLazySingleton<NoteRepository>(() => NoteRepository(mockNoteService));
+
+    getIt.registerLazySingleton<TrustedContactService>(() => mockTrustedContactService);
+    getIt.registerLazySingleton<TrustedContactRepository>(() => TrustedContactRepository(mockTrustedContactService, locationService: mockLoc));
 
     runApp(const app.MainApp());
     await tester.pumpAndSettle();
 
     // --- 1. FLOW CHATBOT ---
-    print('Avvio test Chatbot...');
-    print('DEBUG: Tap Chatbot Tab');
+    debugPrint('Avvio test Chatbot...');
+    debugPrint('DEBUG: Tap Chatbot Tab');
     await tester.tap(find.byIcon(Icons.chat_bubble_outline).first);
     await tester.pumpAndSettle();
-    print('DEBUG: Verifica Chatbot Schermo');
+    debugPrint('DEBUG: Verifica Chatbot Schermo');
     expect(find.text('Inizia una conversazione sicura.'), findsOneWidget);
 
-    print('DEBUG: Enter text Ciao');
+    debugPrint('DEBUG: Enter text Ciao');
     await tester.enterText(find.byType(TextField), 'Ciao');
     await tester.pumpAndSettle();
-    print('DEBUG: Tap Send');
+    debugPrint('DEBUG: Tap Send');
     await tester.tap(find.byIcon(Icons.send_rounded));
     for (int i = 0; i < 5; i++) { await tester.pump(const Duration(milliseconds: 500)); }
     await tester.pumpAndSettle();
-    print('DEBUG: Verifica Risposta Bot');
+    debugPrint('DEBUG: Verifica Risposta Bot');
     expect(find.text('Risposta bot'), findsOneWidget);
 
-    print('DEBUG: Torna a Home Tab');
-    // Torniamo alla Home Tab (Tab 1) per vedere le card
+    debugPrint('DEBUG: Torna a Home Tab');
     await tester.tap(find.byIcon(Icons.home_outlined).first);
     await tester.pumpAndSettle();
 
     // --- 2. FLOW MATERIALE ---
-    print('Avvio test Materiale...');
-    print('DEBUG: Tap Informazioni');
+    debugPrint('Avvio test Materiale...');
     await tester.tap(find.text('Informazioni').last);
     await tester.pumpAndSettle();
-    print('DEBUG: Verifica Materiale Informativo');
     expect(find.text('Materiale Informativo'), findsWidgets);
     expect(find.text('Guida'), findsOneWidget);
-    
-    print('DEBUG: PageBack Materiale');
-    // Torniamo indietro alla Home Dashboard
     await tester.pageBack();
     await tester.pumpAndSettle();
 
     // --- 3. FLOW LUOGHI SICURI ---
-    print('Avvio test Luoghi Sicuri...');
-    print('DEBUG: Tap Luoghi Sicuri');
+    debugPrint('Avvio test Luoghi Sicuri...');
     await tester.tap(find.text('Luoghi Sicuri').last);
     await tester.pumpAndSettle();
-    print('DEBUG: Verifica Luoghi Sicuri');
     expect(find.text('Luoghi Sicuri'), findsWidgets);
     expect(find.byType(SafePlaceMapWidget), findsOneWidget);
-    
-    print('DEBUG: PageBack Luoghi Sicuri');
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    print('Suite completata con successo!');
+    // --- 4. FLOW DIARIO ---
+    debugPrint('Avvio test Diario...');
+    await tester.tap(find.byIcon(Icons.edit_note_outlined).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Accedi al diario'), findsWidgets);
+    
+    await tester.enterText(find.byType(TextField), 'Password123!');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Accedi'));
+    await tester.pumpAndSettle();
+    
+    expect(find.text('La mia prima nota'), findsWidgets);
+    
+    // Torniamo alla Home Tab
+    await tester.tap(find.byIcon(Icons.home_outlined).first);
+    await tester.pumpAndSettle();
+
+    // --- 5. FLOW CONTATTI FIDATI ---
+    debugPrint('Avvio test Contatti Fidati...');
+    await tester.tap(find.text('Contatti Fidati').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Contatti Fidati'), findsWidgets);
+    expect(find.text('Mario Rossi'), findsOneWidget);
+    
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nome e Cognome'), 'Luigi Verdi');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Numero di Cellulare'), '0987654321');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Indirizzo Email'), 'luigi@example.com');
+    await tester.pumpAndSettle();
+    
+    await tester.tap(find.text('Salva contatto'));
+    await tester.pumpAndSettle();
+    verify(() => mockTrustedContactService.addContact(any())).called(1);
+    
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // --- 6. FLOW DEAD MAN SWITCH ---
+    debugPrint('Avvio test Dead Man Switch...');
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+    
+    expect(find.text('Stato Allarme'), findsOneWidget);
+    
+    // Attiva lo switch
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    
+    await tester.enterText(find.widgetWithText(TextFormField, 'Oggetto Messaggio'), 'Aiuto');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Corpo del Messaggio'), 'Sono in pericolo');
+    await tester.pumpAndSettle();
+    
+    await tester.tap(find.text('Salva'));
+    await tester.pumpAndSettle();
+    
+    verify(() => mockDeadMan.saveSettings(any())).called(1);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // --- 7. FLOW AUTH (Logout -> Login) ---
+    debugPrint('Avvio test Autenticazione (Logout -> Login placeholder)...');
+    when(() => mockAuth.isLoggedIn()).thenReturn(false);
+    when(() => mockAuth.getCurrentUser()).thenReturn(null);
+    runApp(const app.MainApp());
+    await tester.pumpAndSettle();
+    
+    await tester.tap(find.byIcon(Icons.account_circle));
+    await tester.pumpAndSettle();
+    
+    expect(find.text('Login'), findsWidgets);
+    expect(find.text('L\'accesso è consentito solo tramite account Google ufficiale.'), findsOneWidget);
+    
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    
+    debugPrint('Test Autenticazione completato.');
+    debugPrint('Suite completata con successo!');
   });
 }
-
-

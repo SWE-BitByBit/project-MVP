@@ -15,33 +15,9 @@ import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
 
 void main() {
   late MockDiaryViewModel mockVm;
-  late MockCommand<({Note note, DiaryType diary}), void> mockSaveNoteCommand;
-
-  setUpAll(() {
-    registerFallbackValue(DiaryType.real_diary);
-    registerFallbackValue((
-    note: LocalNote(
-      id: 'fake',
-      title: '',
-      creationDate: DateTime.now(),
-      lastModified: DateTime.now(),
-    ),
-    diary: DiaryType.real_diary
-    ));
-  });
 
   setUp(() {
     mockVm = MockDiaryViewModel();
-    mockSaveNoteCommand = MockCommand<({Note note, DiaryType diary}), void>();
-
-    // Stubbing obbligatorio per i membri interni dei comandi
-    when(() => mockSaveNoteCommand.isRunning).thenReturn(ValueNotifier(false));
-    when(() => mockSaveNoteCommand.canRun).thenReturn(ValueNotifier(true));
-
-    // Assicuriamoci che il comando asincrono completi immediatamente
-    when(() => mockSaveNoteCommand.runAsync(any())).thenAnswer((_) async => {});
-
-    when(() => mockVm.saveNote).thenReturn(mockSaveNoteCommand);
     when(() => mockVm.asyncError).thenReturn(ValueNotifier(null));
     when(() => mockVm.notes).thenReturn([]);
 

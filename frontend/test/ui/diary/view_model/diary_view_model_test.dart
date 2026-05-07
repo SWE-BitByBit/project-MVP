@@ -38,11 +38,7 @@ void main() {
     mockAccRepo = MockDiaryAccountRepository();
 
     when(() => mockNoteRepo.cachedNotes).thenReturn([]);
-    when(() => mockNoteRepo.addNoteElement(any(), any())).thenAnswer((invocation) async {
-      final Note note = invocation.positionalArguments[0] as Note;
-      final NoteElement element = invocation.positionalArguments[1] as NoteElement;
-      note.addElement(element, note.getElementCount());
-    });
+    when(() => mockNoteRepo.addNoteElement(any())).thenAnswer((_) async {});
 
     viewModel = DiaryViewModel(mockNoteRepo, mockAccRepo);
   });
@@ -50,40 +46,44 @@ void main() {
   group('DiaryViewModel - Gestione Locale Note', () {
     test(
         'createNewNote dovrebbe impostare una nuova LocalNote come currentNote', () {
-      viewModel.createNewNote(DiaryType.real_diary);
+      viewModel.createNewNote();
 
       expect(viewModel.currentNote, isA<LocalNote>());
-      expect(viewModel.currentNote!.id, startsWith('temp-'));
+      expect(viewModel.currentNote!.id, startsWith('virtual_'));
     });
 
     test(
-        'addTextElement dovrebbe aggiungere un elemento alla nota corrente', () {
-      viewModel.createNewNote(DiaryType.real_diary);
+        'addTextElement dovrebbe aggiungere un elemento alla nota corrente e chiamare createNote o addNoteElement', () async {
+      viewModel.createNewNote();
       final initialCount = viewModel.currentNote!.getElementCount();
+      
+      when(() => mockNoteRepo.createNote(any(), any())).thenAnswer((_) async => viewModel.currentNote!);
 
-      viewModel.addElement(type: 'text', text: "Testo di prova");
+      await viewModel.addElement.runAsync((type: 'text', text: "Testo di prova", file: null, diary: DiaryType.real_diary));
 
       expect(viewModel.currentNote!.getElementCount(), initialCount + 1);
     });
 
     test(
-        'addMediaElement dovrebbe aggiungere NoteImageElement per tipo image', () {
-      viewModel.createNewNote(DiaryType.real_diary);
+        'addMediaElement dovrebbe aggiungere NoteImageElement per tipo image', () async {
+      viewModel.createNewNote();
       final file = File('path/to/image.png');
+      
+      when(() => mockNoteRepo.createNote(any(), any())).thenAnswer((_) async => viewModel.currentNote!);
 
-      viewModel.addElement(type: 'image', file: file);
+      await viewModel.addElement.runAsync((type: 'image', text: null, file: file, diary: DiaryType.real_diary));
 
       expect(viewModel.currentNote!.getElementCount(), 1);
     });
     group('DiaryViewModel - Comandi', () {
       test('loadNotes dovrebbe chiamare getNotes sul repository', () async {
-        when(() => mockNoteRepo.getNotes(any(), forceRefresh: true))
+        when(() => mockNoteRepo.getNotes(any(), forceRefresh: false))
             .thenAnswer((_) async => []);
 
         await viewModel.loadNotes.runAsync(DiaryType.real_diary);
 
         verify(() =>
-            mockNoteRepo.getNotes(DiaryType.real_diary, forceRefresh: true))
+            mockNoteRepo.getNotes(DiaryType.real_diary, forceRefresh: false))
             .called(1);
       });
 
@@ -100,19 +100,13 @@ void main() {
         expect(viewModel.currentNote, mockProxy);
       });
 
-      test('saveNote dovrebbe chiamare saveNote sul repository', () async {
-        final note = LocalNote(id: '1',
-            title: 'T',
-            creationDate: DateTime.now(),
-            lastModified: DateTime.now());
-        when(() => mockNoteRepo.saveNote(any(), any())).thenAnswer((
-            _) async {return note;});
+      test('updateTitle dovrebbe chiamare updateNoteTitle o createNote sul repository', () async {
+        viewModel.createNewNote();
+        when(() => mockNoteRepo.createNote(any(), any())).thenAnswer((_) async => viewModel.currentNote!);
 
-        await viewModel.saveNote.runAsync(
-            (note: note, diary: DiaryType.real_diary));
+        await viewModel.updateTitle.runAsync((newTitle: 'T', diary: DiaryType.real_diary));
 
-        verify(() => mockNoteRepo.saveNote(DiaryType.real_diary, note)).called(
-            1);
+        verify(() => mockNoteRepo.createNote(DiaryType.real_diary, any())).called(1);
       });
 
       test(
@@ -128,7 +122,7 @@ void main() {
         // Attendiamo il catchError asincrono
         await Future.delayed(Duration.zero);
 
-        expect(viewModel.asyncError.value, "Impossibile eliminare la nota.");
+        expect(viewModel.asyncError.value, "Impossibile eliminare la nota. Controlla la connessione.");
       });
 
       test(

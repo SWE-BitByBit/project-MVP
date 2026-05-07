@@ -20,7 +20,7 @@ abstract class NoteElementDTO {
         }
         return NoteImageElement(
           content,
-          file: File(json['media_file']),
+          file: File(content),
           noteParentId: noteId,
           noteElementId: elementId,
         );
@@ -31,7 +31,7 @@ abstract class NoteElementDTO {
         }
         return NoteAudioElement(
           content,
-          file: File(json['media_file']),
+          file: File(content),
           noteParentId: noteId,
           noteElementId: elementId,
         );

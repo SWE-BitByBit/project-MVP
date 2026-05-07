@@ -54,6 +54,7 @@ void main() {
         'diaryToken': 'mock_token_123',
       });
 
+      await DiarySession.session.restoreSession();
       await initViewModel();
 
       expect(viewModel.isAuthenticated, isTrue);

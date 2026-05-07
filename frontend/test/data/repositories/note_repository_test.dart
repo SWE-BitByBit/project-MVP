@@ -128,33 +128,31 @@ void main() {
       });
     });
 
-    group('saveNote', () {
-      test('dovrebbe salvare la nota nel backend e aggiornare la cache esistente', () async {
-        final existingNote = LocalNote(
-            id: 'note_1',
-            title: 'Titolo Vecchio',
+    group('createNote', () {
+      test('dovrebbe creare la nota nel backend e aggiungerla alla cache esistente', () async {
+        final newNote = LocalNote(
+            id: '',
+            title: 'Titolo Nuovo',
             creationDate: DateTime.parse('2023-01-01T10:00:00.000Z'),
             lastModified: DateTime.parse('2023-01-01T10:00:00.000Z')
         );
 
         when(() => mockService.fetchNotes(DiaryType.real_diary))
-            .thenAnswer((_) async => [
-          {'note_id': 'note_1', 'title': 'Titolo Vecchio'}
-        ]);
+            .thenAnswer((_) async => []);
         await repository.getNotes(DiaryType.real_diary);
 
         final responseJson = {
           'note_id': 'note_1',
           'title': 'Titolo Nuovo',
           'created_at': '2023-01-01T10:00:00.000Z',
-          'updated_at': DateTime.now().toIso8601String(),
-          'elements': []
+          'last_modified_at': DateTime.now().toIso8601String(),
+          'note_elements': []
         };
 
         when(() => mockService.saveNote(DiaryType.real_diary, any()))
             .thenAnswer((_) async => responseJson);
 
-        final result = await repository.saveNote(DiaryType.real_diary, existingNote);
+        final result = await repository.createNote(DiaryType.real_diary, newNote);
 
         expect(result.title, 'Titolo Nuovo');
         expect(repository.cachedNotes.first.title, 'Titolo Nuovo');

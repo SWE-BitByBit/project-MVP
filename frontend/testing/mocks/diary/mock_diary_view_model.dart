@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:mocktail/mocktail.dart';
 import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
@@ -13,3 +14,9 @@ class MockSaveNoteCommand extends Mock
 // Mock per il comando di eliminazione: Command<Param, Result>
 class MockDeleteNoteCommand extends Mock
     implements Command<({String noteId, DiaryType diary}), void> {}
+
+class MockUpdateTitleCommand extends Mock
+    implements Command<({String newTitle, DiaryType diary}), void> {}
+
+class MockAddElementCommand extends Mock
+    implements Command<({String type, String? text, File? file, DiaryType diary}), void> {}

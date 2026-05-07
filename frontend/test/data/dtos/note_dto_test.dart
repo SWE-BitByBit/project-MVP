@@ -84,7 +84,7 @@ void main() {
           // Arrange
           final json = {
             'created_at': 'data-non-valida',
-            'updated_at': 'data-non-valida',
+            'last_modified_at': 'data-non-valida',
           };
 
           // Act
@@ -127,7 +127,7 @@ void main() {
         expect(result['created_at'], '2023-11-20T09:00:00.000Z');
         expect(result['last_modified_at'], '2023-11-20T10:00:00.000Z');
 
-        final elementsJson = result['elements'] as List<Map<String, dynamic>>;
+        final elementsJson = result['note_elements'] as List<Map<String, dynamic>>;
         expect(elementsJson.length, 2);
 
         expect(elementsJson[0]['type'], 'text');
@@ -151,7 +151,7 @@ void main() {
         final result = NoteDTO.toJson(note);
 
         // Assert
-        expect(result['elements'], isEmpty);
+        expect(result['note_elements'], isEmpty);
       });
     });
   });
