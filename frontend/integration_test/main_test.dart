@@ -6,6 +6,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/main.dart' as app;
 import 'package:mvp_app_protegge_e_trasforma/utils/locator.dart';
@@ -45,6 +46,44 @@ class MockNoteService extends Mock implements NoteService {}
 
 class MockTrustedContactService extends Mock implements TrustedContactService {}
 
+class MockJustAudioPlatform extends JustAudioPlatform {
+  @override
+  Future<AudioPlayerPlatform> init(InitRequest request) async {
+    return MockAudioPlayerPlatform(request.id);
+  }
+  @override
+  Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) async {
+    return DisposePlayerResponse();
+  }
+  @override
+  Future<DisposeAllPlayersResponse> disposeAllPlayers(DisposeAllPlayersRequest request) async {
+    return DisposeAllPlayersResponse();
+  }
+}
+
+class MockAudioPlayerPlatform extends AudioPlayerPlatform {
+  MockAudioPlayerPlatform(super.id);
+  @override
+  Stream<PlaybackEventMessage> get playbackEventMessageStream => const Stream.empty();
+  @override
+  Future<LoadResponse> load(LoadRequest request) async => LoadResponse(duration: const Duration(seconds: 1));
+  @override
+  Future<PlayResponse> play(PlayRequest request) async => PlayResponse();
+  @override
+  Future<PauseResponse> pause(PauseRequest request) async => PauseResponse();
+  @override
+  Future<SeekResponse> seek(SeekRequest request) async => SeekResponse();
+  @override
+  Future<SetVolumeResponse> setVolume(SetVolumeRequest request) async => SetVolumeResponse();
+  @override
+  Future<SetSpeedResponse> setSpeed(SetSpeedRequest request) async => SetSpeedResponse();
+  @override
+  Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async => SetLoopModeResponse();
+  @override
+  Future<SetShuffleModeResponse> setShuffleMode(SetShuffleModeRequest request) async => SetShuffleModeResponse();
+  @override
+  Future<SetShuffleOrderResponse> setShuffleOrder(SetShuffleOrderRequest request) async => SetShuffleOrderResponse();
+}
 /// Mock HTTP per evitare errori di rete reali (es. mappe) durante i test
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -72,6 +111,7 @@ void main() {
   };
 
   setUpAll(() {
+    JustAudioPlatform.instance = MockJustAudioPlatform();
     registerFallbackValue(DiaryType.real_diary);
     registerFallbackValue(const DeadManSettings(
       isActive: true,
