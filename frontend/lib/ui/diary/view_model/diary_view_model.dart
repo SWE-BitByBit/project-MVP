@@ -152,8 +152,14 @@ class DiaryViewModel extends ChangeNotifier {
     try {
       if (activeNote.id.startsWith('virtual_')) {
         final realNote = await _noteRepo.createNote(args.diary, activeNote);
-        newElement.noteParentId = realNote.id;
-        realNote.addElement(newElement, realNote.getElementCount());
+
+        for (var el in activeNote.noteElements) {
+          el.noteParentId = realNote.id;
+          if (!realNote.noteElements.contains(el)) {
+            realNote.addElement(el, realNote.getElementCount());
+          }
+        }
+
         activeNote = realNote;
         _currentNote = realNote;
       }

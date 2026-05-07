@@ -103,9 +103,7 @@ class NoteRepository implements CacheableRepository {
   Future<Note> createNote(DiaryType targetDiary, Note virtualNote) async {
     final Map<String, dynamic> jsonNote = NoteDTO.toJson(virtualNote);
 
-    if (jsonNote['title'] == null || jsonNote['title'].toString().trim().isEmpty) {
-      jsonNote['title'] = "Nota senza titolo";
-    }
+    jsonNote['note_elements'] = [];
 
     final Map<String, dynamic> rawResponse = await _noteService.saveNote(
       targetDiary,
@@ -124,10 +122,6 @@ class NoteRepository implements CacheableRepository {
   /// AGGIORNAMENTO TITOLO: Invia un aggiornamento al server per il titolo della nota.
   Future<void> updateNoteTitle(DiaryType targetDiary, Note note) async {
     final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
-
-    if (jsonNote['title'] == null || jsonNote['title'].toString().trim().isEmpty) {
-      jsonNote['title'] = "Nota senza titolo";
-    }
 
     await _noteService.saveNote(targetDiary, jsonNote);
 

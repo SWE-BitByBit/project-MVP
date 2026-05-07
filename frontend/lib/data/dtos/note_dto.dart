@@ -38,7 +38,7 @@ abstract class NoteDTO {
 
     return {
       'note_id': note.id,
-      'title': note.title,
+      'title': (note.title.trim().isEmpty) ? 'Nuova Nota' : note.title,
       'created_at': note.creationDate.toIso8601String(),
       'last_modified_at': note.updateDate.toIso8601String(),
       'note_elements': elementsJson,
