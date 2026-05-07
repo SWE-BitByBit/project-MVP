@@ -66,7 +66,7 @@ class DiaryNoteController:
                 type=element.get('type'),
                 content=element.get('content')
             )
-            for element in body.get('elements', [])
+            for element in body.get('note_elements', [])
         ]
         try: 
             response = self._service.add_note(
@@ -83,9 +83,7 @@ class DiaryNoteController:
     
             return self.response(200, response)
     
-        except Exception as e:
-            print(f"[ERROR] Eccezione in _note_add: {e}")
-            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        except Exception:
             return self.response(500, SERVER_ERROR)
     
 
