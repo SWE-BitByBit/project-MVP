@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:integration_test/integration_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:geolocator/geolocator.dart';
@@ -38,6 +39,7 @@ class MyHttpOverrides extends HttpOverrides {
 }
 
 void main() {
+  app.isIntegrationTest = true;
   HttpOverrides.global = MyHttpOverrides();
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -168,3 +170,5 @@ void main() {
     print('Suite completata con successo!');
   });
 }
+
+

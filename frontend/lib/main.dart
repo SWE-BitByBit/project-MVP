@@ -21,6 +21,8 @@ import 'ui/material/widget/material_screen.dart';
 import 'ui/safeplace/widget/safe_place_map_screen.dart';
 import 'ui/core/widgets/auth_placeholder_screen.dart';
 
+bool isIntegrationTest = false;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -94,3 +96,4 @@ class MainApp extends StatelessWidget {
     );
   }
 }
+

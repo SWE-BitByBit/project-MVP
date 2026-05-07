@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../utils/safe_place_category_ui.dart';
 import '../view_model/safe_place_view_model.dart';
+import '../../../main.dart' as app;
 
 class SafePlaceMapWidget extends StatelessWidget {
   final MapController mapController;
@@ -118,7 +119,7 @@ class SafePlaceMapWidget extends StatelessWidget {
             },
           ),
           children: [
-            if (!Platform.environment.containsKey('FLUTTER_TEST'))
+            if (!Platform.environment.containsKey('FLUTTER_TEST') && !app.isIntegrationTest)
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.miriade.bitbybit',
@@ -130,3 +131,4 @@ class SafePlaceMapWidget extends StatelessWidget {
     );
   }
 }
+

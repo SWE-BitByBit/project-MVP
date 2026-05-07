@@ -16,6 +16,7 @@ class MockSafePlaceService extends Mock implements SafePlaceService {}
 class MockLocationService extends Mock implements LocationService {}
 
 void main() {
+  app.isIntegrationTest = true;
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   late MockSafePlaceService mockSafePlaceService;
@@ -116,3 +117,4 @@ void main() {
     verify(() => mockSafePlaceService.fetchSafePlaces()).called(greaterThanOrEqualTo(1));
   });
 }
+
