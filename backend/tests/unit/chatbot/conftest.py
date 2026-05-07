@@ -65,7 +65,7 @@ def dynamodb(aws_mock):
 # -------------------------
 
 @pytest.fixture(scope="function")
-def tables(dynamodb):
+def tables(aws_mock, dynamodb):
     chats_table = dynamodb.create_table(
         TableName=CHATS_TABLE_NAME,
         KeySchema=[
