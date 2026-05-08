@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note_element.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
 
 class MockDiaryViewModel extends Mock implements DiaryViewModel {}
@@ -20,3 +21,6 @@ class MockUpdateTitleCommand extends Mock
 
 class MockAddElementCommand extends Mock
     implements Command<({String type, String? text, File? file, DiaryType diary}), void> {}
+
+class MockDeleteElementCommand extends Mock implements Command<NoteElement, void> {}
+class MockEditElementTextCommand extends Mock implements Command<({NoteElement element, String newText, DiaryType diary}), void> {}

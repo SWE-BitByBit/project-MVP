@@ -8,3 +8,4 @@ class NoteTextElement extends NoteElement {
   String get type => 'text';
 
 }
+
