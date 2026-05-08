@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/main.dart' as app;
 import 'package:mvp_app_protegge_e_trasforma/utils/locator.dart';
@@ -111,6 +112,7 @@ void main() {
   };
 
   setUpAll(() {
+    FlutterSecureStorage.setMockInitialValues({});
     JustAudioPlatform.instance = MockJustAudioPlatform();
     registerFallbackValue(DiaryType.real_diary);
     registerFallbackValue(const DeadManSettings(
