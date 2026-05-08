@@ -208,13 +208,13 @@ void main() {
       'access_token': 'mock-session-token',
       'diary_type': 'real_diary'
     });
-    when(() => mockNoteService.fetchNotes(any())).thenAnswer((_) async => [
+    when(() => mockNoteService.fetchNotes(any())).thenAnswer((_) async => <Map<String, dynamic>>[
       {
-        'id': 'note1',
+        'note_id': 'note1',
         'title': 'La mia prima nota',
         'content': 'Oggi è una bella giornata.',
         'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
+        'last_modified_at': DateTime.now().toIso8601String(),
         'diary_type': 'real_diary'
       }
     ]);
