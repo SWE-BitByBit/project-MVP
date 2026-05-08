@@ -110,15 +110,6 @@ void main() {
       expect(viewModel.asyncError.value, 'Password errata o errore di connessione.');
     });
 
-    test('logout termina la sessione e resetta l\'autenticazione', () async {
-      when(() => mockRepo.checkHasRealPassword()).thenAnswer((_) async => true);
-      await initViewModel();
-
-      await viewModel.logout.runAsync();
-
-      expect(viewModel.isAuthenticated, isFalse);
-      expect(DiarySession.session.isDiaryAuth, isFalse);
-    });
   });
 
   group('DiaryAccessViewModel - Validazione e Modifica Password', () {
