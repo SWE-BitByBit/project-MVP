@@ -1,12 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/diary_account_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/repositories/note_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
+import 'package:mvp_app_protegge_e_trasforma/utils/locator.dart';
 
 /// ViewModel che gestisce l'accesso alla funzionalità dei diari e le impostazioni di sicurezza.
 class DiaryAccessViewModel extends ChangeNotifier {
   final DiaryAccountRepository _accRepo;
+
 
   bool _isAuthenticated = false;
   bool get isAuthenticated => _isAuthenticated;
@@ -78,6 +81,7 @@ class DiaryAccessViewModel extends ChangeNotifier {
 
   Future<void> _logout() async {
     await DiarySession.session.endSession();
+    getIt<NoteRepository>().clearCache();
     _isAuthenticated = false;
     notifyListeners();
   }

@@ -84,7 +84,7 @@ class HttpApiClient implements ApiClient {
       headers: mergedHeaders,
       body: body != null ? jsonEncode(body) : null,
     );
-    debugPrint('riposta: $response');
+    debugPrint('riposta: ${_handleResponse(response)}');
     return _handleResponse(response);
   }
 
@@ -97,12 +97,14 @@ class HttpApiClient implements ApiClient {
   }) async {
     final uri = Uri.parse('$baseUrl$path');
     debugPrint('richiesta PUT a $uri');
+    debugPrint('body POST a $body');
     final mergedHeaders = await _prepareHeaders(headers, requiresAuth);
     final response = await _httpClient.put(
       uri,
       headers: mergedHeaders,
       body: body != null ? jsonEncode(body) : null,
     );
+    debugPrint('riposta: ${_handleResponse(response)}');
     return _handleResponse(response);
   }
 
