@@ -307,6 +307,8 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Password123!');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Accedi'));
+    
+    for (int i = 0; i < 5; i++) { await tester.pump(const Duration(milliseconds: 500)); }
     await tester.pumpAndSettle();
     
     expect(find.text('La mia prima nota'), findsWidgets);
