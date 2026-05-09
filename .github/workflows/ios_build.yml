@@ -41,10 +41,13 @@ jobs:
         working-directory: frontend
         run: flutter build ios --no-codesign --release
 
-      - name: Prepare Artifact
+      - name: Create IPA (Unsigned)
         run: |
+          mkdir -p Payload
+          cp -R frontend/build/ios/iphoneos/Runner.app Payload/
+          zip -r app_unsigned.ipa Payload
           mkdir -p build_output
-          cp -R frontend/build/ios/iphoneos/Runner.app build_output/
+          mv app_unsigned.ipa build_output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
