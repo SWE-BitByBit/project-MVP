@@ -1,0 +1,49 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - 'task/creazione-ipa'
+
+jobs:
+  build-ios:
+    name: Build iOS Runner.app
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Create .env from stub
+        working-directory: frontend
+        run: cp .env.stub .env
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Install CocoaPods
+        working-directory: frontend/ios
+        run: |
+          if [ -d "Pods" ]; then rm -rf Pods; fi
+          pod install
+
+      - name: Build iOS
+        working-directory: frontend
+        run: flutter build ios --no-codesign --release
+
+      - name: Prepare Artifact
+        run: |
+          mkdir -p build_output
+          cp -R frontend/build/ios/iphoneos/Runner.app build_output/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Runner-App
+          path: build_output/
