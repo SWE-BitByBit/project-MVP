@@ -1,56 +1,34 @@
-# Premessa: Questo file è gestito automaticamente da Flutter.
-# Modifiche manuali sono ammesse ma con cautela.
-
+# Podfile standard per Flutter (Ottimizzato per GitHub Actions)
 platform :ios, '13.0'
 
-# CocoaPods analytics sends network stats synchronously affecting build performance.
-ENV['COCOAPODS_DISABLE_STATS'] = '1'
-
-project 'Runner', {
-  'Debug' => :debug,
-  'Release' => :release,
-  'Profile' => :profile,
-}
-
-def flutter_install_ios_engine_pod(ios_application_path = nil)
-  # Questa funzione viene ora gestita internamente da Flutter durante il build.
-end
-
-# Carica le impostazioni di Flutter
+# Carica il percorso di Flutter (usando la variabile d'ambiente o Generated.xcconfig)
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    # In CI, se non esiste, proviamo a usare la variabile d'ambiente
-    return ENV['FLUTTER_ROOT'] if ENV['FLUTTER_ROOT']
-    raise "#{generated_xcode_build_settings_path} must exist."
+  if File.exist?(generated_xcode_build_settings_path)
+    File.foreach(generated_xcode_build_settings_path) do |line|
+      matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
+      return matches[1].strip if matches
+    end
   end
-
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
-    return matches[1].strip if matches
-  end
-  ENV['FLUTTER_ROOT'] # Fallback finale
+  ENV['FLUTTER_ROOT']
 end
 
-# Importa il podhelper di Flutter
+# Importa le macro di Flutter
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
+# Configurazione Target
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
   flutter_install_all_ios_pods File.expand_path(File.join('..', '..'), __FILE__)
-  
-  target 'RunnerTests' do
-    inherit! :search_paths
-  end
 end
 
+# Fix per i target delle dipendenze
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # Forza iOS 13.0 per tutte le dipendenze
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
     end
   end
