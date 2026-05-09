@@ -21,7 +21,7 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  flutter_install_all_ios_pods File.expand_path(File.join('..', '..'), __FILE__)
+  flutter_install_all_ios_pods File.expand_path(File.join('..'), __FILE__)
 end
 
 # Fix per i target delle dipendenze
