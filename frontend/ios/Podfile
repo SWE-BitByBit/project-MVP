@@ -1,3 +1,6 @@
+# Premessa: Questo file è gestito automaticamente da Flutter.
+# Modifiche manuali sono ammesse ma con cautela.
+
 platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting build performance.
@@ -9,19 +12,27 @@ project 'Runner', {
   'Profile' => :profile,
 }
 
+def flutter_install_ios_engine_pod(ios_application_path = nil)
+  # Questa funzione viene ora gestita internamente da Flutter durante il build.
+end
+
+# Carica le impostazioni di Flutter
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
   unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get has been executed."
+    # In CI, se non esiste, proviamo a usare la variabile d'ambiente
+    return ENV['FLUTTER_ROOT'] if ENV['FLUTTER_ROOT']
+    raise "#{generated_xcode_build_settings_path} must exist."
   end
 
   File.foreach(generated_xcode_build_settings_path) do |line|
     matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
     return matches[1].strip if matches
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  ENV['FLUTTER_ROOT'] # Fallback finale
 end
 
+# Importa il podhelper di Flutter
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 target 'Runner' do
@@ -29,6 +40,7 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.expand_path(File.join('..', '..'), __FILE__)
+  
   target 'RunnerTests' do
     inherit! :search_paths
   end
@@ -38,6 +50,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
+      # Forza iOS 13.0 per tutte le dipendenze
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
     end
   end
