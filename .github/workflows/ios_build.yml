@@ -8,7 +8,7 @@ on:
 jobs:
   build-ios:
     name: Build iOS Runner.app
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,9 +19,13 @@ jobs:
           flutter-version: "3.x"
           channel: "stable"
 
-      - name: Create .env from stub
+      - name: Create .env from Secrets
         working-directory: frontend
-        run: cp .env.stub .env
+        run: |
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          echo "COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}" >> .env
+          echo "COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}" >> .env
+          echo "COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}" >> .env
 
       - name: Install dependencies
         working-directory: frontend
