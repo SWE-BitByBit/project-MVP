@@ -91,7 +91,7 @@ class NoteRepository implements CacheableRepository {
             type!,
           );
 
-          elemJson['media_file'] = downloadedFile.path;
+          elemJson['content'] = downloadedFile.path;
         }
       }
     }
