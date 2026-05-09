@@ -2,7 +2,7 @@ from adapters.dynamo_chat_adapter import DynamoChatAdapter
 from adapters.bedrock_llm_adapter import BedrockLLMAdapter
 from services.chatbot_crud_service import ChatbotCRUDService
 from services.chatbot_llm_service import ChatbotLLMService
-from controller import ChatbotController
+from chatbot_controller import ChatbotController
 
 _controller = None
 

@@ -1,14 +1,16 @@
 import 'chat_message.dart';
 
-/// Rappresenta la risposta del Chatbot a seguito dell'invio di un messaggio.
+/// Rappresenta la risposta del server dopo l'invio di un messaggio.
 class MessageResponse {
-  final ChatMessage _response;
-  final String? _updatedTitle;
+  /// Il messaggio generato dall'intelligenza artificiale.
+  final ChatMessage response;
 
-  MessageResponse({required ChatMessage response, String? updatedTitle})
-      : _response = response,
-        _updatedTitle = updatedTitle;
+  /// Il titolo della chat aggiornato (se il server lo ha modificato,
+  /// solitamente accade al primo messaggio inviato).
+  final String? updatedTitle;
 
-  ChatMessage getResponse() => _response;
-  String? getUpdatedTitle() => _updatedTitle;
+  MessageResponse({
+    required this.response,
+    this.updatedTitle,
+  });
 }

@@ -4,31 +4,32 @@ import '../view_model/trusted_contact_view_model.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Raggruppa le azioni specifiche per la gestione dei contatti fidati.
-///
-/// Contiene il pulsante per aggiungere un nuovo contatto, che apre
-/// [TrustedContactFormWidget] in un bottom sheet. Comunica le intenzioni
-/// dell'utente direttamente al [TrustedContactViewModel].
 class TrustedContactActionsWidget extends StatelessWidget {
   const TrustedContactActionsWidget({super.key});
 
-  /// Apre il [TrustedContactFormWidget] in un pannello modale a scorrimento dal basso.
-  ///
-  /// Il pannello è ancorato al [context] corrente e viene chiuso automaticamente
-  /// al termine dell'operazione di creazione tramite la callback [Navigator.pop].
+  /// Apre il [TrustedContactFormWidget] in un pannello modale.
   void _openAddContactForm(BuildContext context) {
+    final viewModel = context.read<TrustedContactViewModel>();
+    final theme = Theme.of(context);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        // Propaga il ChangeNotifierProvider nel contesto del bottom sheet
         return ChangeNotifierProvider.value(
-          value: context.read<TrustedContactViewModel>(),
-          child: TrustedContactFormWidget(
-            onDismiss: () => Navigator.pop(sheetContext),
+          value: viewModel,
+          child: Padding(
+            // Previene che la tastiera copra i campi di testo
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+            ),
+            child: TrustedContactFormWidget(
+              onDismiss: () => Navigator.pop(sheetContext),
+            ),
           ),
         );
       },
@@ -37,11 +38,14 @@ class TrustedContactActionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return FloatingActionButton(
       onPressed: () => _openAddContactForm(context),
-      backgroundColor: Colors.teal,
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: theme.colorScheme.onPrimary,
       tooltip: 'Aggiungi contatto fidato',
-      child: const Icon(Icons.add, color: Colors.white, size: 28),
+      child: const Icon(Icons.add, size: 28),
     );
   }
 }

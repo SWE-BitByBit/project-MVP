@@ -16,12 +16,16 @@ class FilterChipWidget extends StatelessWidget {
   /// Costruisce visivamente il singolo elemento chip configurandolo con i colori di tema e associando il comando [onSelected].
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onSelected(),
-      selectedColor: Colors.teal.shade100,
-      checkmarkColor: Colors.teal.shade900,
+      // Sfondo quando selezionato
+      selectedColor: colorScheme.primaryContainer,
+      // Colore della spunta
+      checkmarkColor: colorScheme.onPrimaryContainer,
     );
   }
 }

@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/trusted_contact_view_model.dart';
-import '../../../domain/trusted_contact.dart';
+import '../../../domain/models/trusted_contact/trusted_contact.dart';
 
 /// Gestisce i campi di input per l'inserimento o la modifica di un contatto fidato.
-///
-/// In quanto Consumer di [TrustedContactViewModel], si aggiorna in base allo
-/// stato del ViewModel. Può essere inizializzato con un [initialContact]
-/// per operare in modalità modifica.
 class TrustedContactFormWidget extends StatefulWidget {
-  /// Callback invocata quando il form viene chiuso (annullato o salvato).
+  /// Callback invocata quando il form viene salvato con successo o annullato.
   final VoidCallback onDismiss;
 
-  /// Contatto opzionale da modificare. Se null, il form opera in modalità creazione.
   final TrustedContact? initialContact;
 
   const TrustedContactFormWidget({
@@ -35,15 +30,13 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
   @override
   void initState() {
     super.initState();
-    // Inizializza i controller con i dati del contatto esistente o vuoti
-    _nameController = TextEditingController(
-      text: widget.initialContact?.getName(),
-    );
+    // Inizializza i controller con i dati pubblici del contatto esistente
+    _nameController = TextEditingController(text: widget.initialContact?.name);
     _emailController = TextEditingController(
-      text: widget.initialContact?.getEmail(),
+      text: widget.initialContact?.email,
     );
     _phoneController = TextEditingController(
-      text: widget.initialContact?.getPhone(),
+      text: widget.initialContact?.phoneNumber,
     );
   }
 
@@ -57,116 +50,201 @@ class _TrustedContactFormWidgetState extends State<TrustedContactFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<TrustedContactViewModel>();
+    final viewModel = context.read<TrustedContactViewModel>();
     final isEditing = widget.initialContact != null;
+    final theme = Theme.of(context);
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  isEditing ? Icons.edit_note : Icons.person_add_alt_1,
-                  color: Colors.teal.shade400,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  isEditing ? 'Modifica Contatto' : 'Nuovo Contatto Fidato',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.all(24.0),
+      child: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isEditing ? Icons.edit_note : Icons.person_add_alt_1,
+                    color: theme.colorScheme.primary,
+                    size: 28,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Nome e Cognome',
-                prefixIcon: const Icon(Icons.person),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isEditing ? 'Modifica Contatto' : 'Nuovo Contatto Fidato',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Inserisci il nome'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Numero di Cellulare',
-                prefixIcon: const Icon(Icons.phone),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Inserisci il numero di telefono'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: 'Indirizzo Email',
-                prefixIcon: const Icon(Icons.email),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Inserisci l\'email'
-                  : null,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed:
-                  viewModel.createContact.running ||
-                      viewModel.updateContact.running
-                  ? null
-                  : () {
-                      if (_formKey.currentState!.validate()) {
-                        final contact = TrustedContact(
-                          id: widget.initialContact?.getId() ?? '',
-                          name: _nameController.text.trim(),
-                          email: _emailController.text.trim(),
-                          phoneNumber: _phoneController.text.trim(),
-                        );
 
-                        if (isEditing) {
-                          viewModel.updateContact.execute(contact);
-                        } else {
-                          viewModel.createContact.execute(contact);
-                        }
-                        widget.onDismiss();
-                      }
-                    },
-              child: Text(
-                isEditing ? 'Aggiorna contatto' : 'Salva contatto',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              const SizedBox(height: 20),
+
+              Consumer<TrustedContactViewModel>(
+                builder: (context, viewModel, child) {
+                  final error = viewModel.errors["name"];
+
+                  return TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome e Cognome',
+                      prefixIcon: const Icon(Icons.person),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorText: (error == null || error.isEmpty)
+                          ? null
+                          : error,
+                    ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                        ? 'Inserisci il nome'
+                        : null,
+                  );
+                },
               ),
-            ),
-          ],
+
+              const SizedBox(height: 16),
+
+              Consumer<TrustedContactViewModel>(
+                builder: (context, viewModel, child) {
+                  final error = viewModel.errors["phone"];
+
+                  return TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Numero di Cellulare',
+                      prefixIcon: const Icon(Icons.phone),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorText: (error == null || error.isEmpty)
+                          ? null
+                          : error,
+                    ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                        ? 'Inserisci il numero di telefono'
+                        : null,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              Consumer<TrustedContactViewModel>(
+                builder: (context, viewModel, child) {
+                  final error = viewModel.errors["email"];
+
+                  return TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Indirizzo Email',
+                      prefixIcon: const Icon(Icons.email),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorText: (error == null || error.isEmpty)
+                          ? null
+                          : error,
+                    ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                        ? 'Inserisci l\'email'
+                        : null,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              ValueListenableBuilder<bool>(
+                valueListenable: isEditing
+                    ? viewModel.updateContact.isRunning
+                    : viewModel.createContact.isRunning,
+                builder: (context, isRunning, child) {
+                  return ElevatedButton(
+                    // Se sta caricando, disabilitiamo il bottone
+                    onPressed: isRunning
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              // Chiudiamo la tastiera
+                              FocusScope.of(context).unfocus();
+
+                              final contact = TrustedContact(
+                                id:
+                                    widget.initialContact?.id ??
+                                    '', // ID pubblico
+                                name: _nameController.text.trim(),
+                                email: _emailController.text.trim(),
+                                phoneNumber: _phoneController.text.trim(),
+                              );
+
+                              if (isEditing) {
+                                try {
+                                  await viewModel.updateContact.runAsync(
+                                    contact,
+                                  );
+                                } catch (e) {
+                                  viewModel.handleInputError(e);
+                                }
+
+                                if (viewModel.updateContact.errors.value ==
+                                        null &&
+                                    context.mounted) {
+                                  widget.onDismiss();
+                                }
+                              } else {
+                                try {
+                                  await viewModel.createContact.runAsync(
+                                    contact,
+                                  );
+                                } catch (e) {
+                                  viewModel.handleInputError(e);
+                                }
+
+                                if (viewModel.createContact.errors.value ==
+                                        null &&
+                                    context.mounted) {
+                                  widget.onDismiss();
+                                }
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isRunning
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          )
+                        : Text(
+                            isEditing ? 'Aggiorna contatto' : 'Salva contatto',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

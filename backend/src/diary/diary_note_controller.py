@@ -1,5 +1,6 @@
 import json
 from ulid import ULID
+import traceback
 
 from commands.add_note_command import AddNoteCmd
 from commands.get_note_command import GetNoteCmd
@@ -36,11 +37,11 @@ class DiaryNoteController:
     def handle_request(self, event, context):
         route = event.get("routeKey")
 
-        if route == "PUT /note":
+        if route == "PUT /notes":
             return self._note_add(event)
-        elif route == "GET /notes":
+        elif route == "GET /notes/{diary_type}":
             return self._note_list(event)
-        elif route == "GET /notes/{note_id}":
+        elif route == "GET /notes/{diary_type}/{note_id}":
             return self._note_get(event)
         elif route == "DELETE /notes/{diary_type}/{note_id}":
             return self._note_delete(event)
@@ -65,33 +66,37 @@ class DiaryNoteController:
                 type=element.get('type'),
                 content=element.get('content')
             )
-            for element in body.get('elements', [])
+            for element in body.get('note_elements', [])
         ]
-
-        response = self._service.add_note(
-            AddNoteCmd(
-                user_id=self._get_user_id(event),
-                title=body.get('title'),
-                created_at=body.get('created_at'),
-                last_modified_at=body.get('last_modified_at'),
-                diary_type=diary_type,
-                note_elements=elements
+        try: 
+            response = self._service.add_note(
+                AddNoteCmd(
+                    user_id=self._get_user_id(event),
+                    title=body.get('title'),
+                    created_at=body.get('created_at'),
+                    last_modified_at=body.get('last_modified_at'),
+                    diary_type=diary_type,
+                    note_elements=elements
+                ),
+                body.get("note_id")
             )
-        )
-
-        return self.response(201, response)
+    
+            return self.response(200, response)
+    
+        except Exception:
+            return self.response(500, SERVER_ERROR)
     
 
     def _note_get(self, event):
-        body = json.loads(event.get("body") or "{}")
+        path_params = event.get("pathParameters") or {}
 
         try:
-            diary_type = DiaryType(body.get("diary_type"))
+            diary_type = DiaryType(path_params.get("diary_type"))
             
             note = self._service.get_note(
                 GetNoteCmd(
                     user_id=self._get_user_id(event),
-                    note_id=body.get('note_id'),
+                    note_id=path_params.get('note_id'),
                     diary_type=diary_type
                 )
             )
@@ -109,10 +114,10 @@ class DiaryNoteController:
 
 
     def _note_list(self, event):
-        body = json.loads(event.get("body") or "{}")
-
+        path_params = event.get("pathParameters") or {}
+        
         try:
-            diary_type = DiaryType(body.get("diary_type"))
+            diary_type = DiaryType(path_params.get("diary_type"))
         except ValueError:
             return self.response(400, INVALID_DIARY_TYPE)
 
@@ -189,10 +194,10 @@ class DiaryNoteController:
             )
         )
 
-        if not result:
-            return self.response(500, SERVER_ERROR)
-
-        return self.response(200, {"message": "Note element deleted successfully"})
+        if result:
+            return self.response(200, {"message": "Element deleted sucessfully"})
+        else:
+            return self.response(404, {"message": "Note or element not found"})
 
 
 

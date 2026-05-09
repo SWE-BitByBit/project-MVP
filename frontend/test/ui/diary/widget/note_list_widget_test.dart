@@ -1,214 +1,161 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_viewmodel.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_list_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/view_model/diary_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_session.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/local_note.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/diary/widget/note_editor_widget.dart';
 
-import '../../../../testing/mocks/mock_diary_account_repository.dart';
-import '../../../../testing/mocks/mock_note_repository.dart';
+import '../../../../testing/mocks/diary/mock_diary_view_model.dart';
+import '../../../../testing/mocks/diary/mock_diary_access_view_model.dart';
 
 void main() {
-  group("NoteListWidget Widget Test", () {
-    late MockNoteRepository mockRepo;
-    late MockDiaryAccountRepository mockAccRepo;
-    late DiaryViewmodel viewmodel;
+  late MockDiaryViewModel mockVm;
+  late MockCommand<DiaryType, void> mockLoadNotesCommand;
+  late MockCommand<String, void> mockOpenNoteCommand;
+  late MockCommand<({String noteId, DiaryType diary}), void> mockDeleteNoteCommand;
 
-    setUp(() {
-      mockRepo = MockNoteRepository();
-      mockAccRepo = MockDiaryAccountRepository();
-      viewmodel = DiaryViewmodel(mockRepo, mockAccRepo);
-    });
-    Future<void> pumpListWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<DiaryViewmodel>.value(
-              value: viewmodel,
-              child: const NoteListWidget(),
-            ),
-          ),
+  setUpAll(() {
+    registerFallbackValue(DiaryType.real_diary);
+    registerFallbackValue((noteId: '1', diary: DiaryType.real_diary));
+  });
+
+  setUp(() {
+    mockVm = MockDiaryViewModel();
+    mockLoadNotesCommand = MockCommand<DiaryType, void>();
+    mockOpenNoteCommand = MockCommand<String, void>();
+    mockDeleteNoteCommand = MockCommand<({String noteId, DiaryType diary}), void>();
+
+    // Stubbing Commands
+    when(() => mockVm.loadNotes).thenReturn(mockLoadNotesCommand);
+    when(() => mockVm.openNote).thenReturn(mockOpenNoteCommand);
+    when(() => mockVm.deleteNote).thenReturn(mockDeleteNoteCommand);
+
+    // Default status for Commands
+    when(() => mockLoadNotesCommand.isRunning).thenReturn(ValueNotifier(false));
+    when(() => mockOpenNoteCommand.runAsync(any())).thenAnswer((_) async {});
+    when(() => mockDeleteNoteCommand.run(any())).thenReturn(null);
+
+    // Reset Session Singleton
+    DiarySession.session.isDiaryAuth = true;
+    DiarySession.session.loggedDiary = DiaryType.real_diary;
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<DiaryViewModel>.value(
+          value: mockVm,
+          child: const NoteListWidget(),
         ),
-      );
-    }
-
-    testWidgets(
-      "Stato vuoto: deve mostrare il messaggio 'Nessuna nota presente nel diario'",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        await pumpListWidget(tester);
-        viewmodel.loadPreviews(DiaryType.realDiary);
-        expect(viewmodel.getNoteListSize(), 0);
-
-        expect(find.text('Nessuna nota presente nel diario'), findsOne);
-        session.endSession();
-      },
+      ),
     );
+  }
 
-    testWidgets(
-      "Il widget mostra correttamente dei ListTile quando la lista delle note non è vuota",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
+  group('NoteListWidget - Display', () {
+    testWidgets('mostra CircularProgressIndicator quando loadNotes è in esecuzione', (tester) async {
+      when(() => mockLoadNotesCommand.isRunning).thenReturn(ValueNotifier(true));
+      when(() => mockVm.notes).thenReturn([]);
 
-        Note sampleNote = LocalNote(
-          "id",
-          "nota a caso",
-          DateTime.parse("2026-04-14 18:00:30"),
-          DateTime.parse("2026-04-14 18:00:30"),
-        );
-        mockRepo.mockCreatedNote = sampleNote;
-        mockRepo.mockedPreviewsToReturn = [sampleNote];
-        await pumpListWidget(tester);
-        viewmodel.loadPreviews(DiaryType.realDiary);
-        await tester.pumpAndSettle();
-        expect(find.byType(ListTile), findsExactly(1));
-        expect(find.text("nota a caso"), findsOne);
-        session.endSession();
-      },
-    );
+      await tester.pumpWidget(createWidgetUnderTest());
 
-    testWidgets("Stato loading: deve mostrare il CircularProgressIndicator", (
-      WidgetTester tester,
-    ) async {
-      await pumpListWidget(tester);
-      mockRepo.simulatedDelay = const Duration(seconds: 1);
-      viewmodel.loadPreviews(DiaryType.realDiary);
-      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      mockRepo.simulatedDelay = Duration.zero;
     });
-    testWidgets(
-      "Click sul pulsante per l'eliminazione deve mostrare il dialogo di conferma eliminazione.",
-      (WidgetTester tester) async {
-        Note deletableNote = LocalNote(
-          "deletable",
-          "very deletable note",
-          DateTime.now(),
-          DateTime.now(),
-        );
-        mockRepo.mockedPreviewsToReturn = [deletableNote];
 
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpListWidget(tester);
-        await tester.pumpAndSettle();
+    testWidgets('mostra stato vuoto quando non ci sono note', (tester) async {
+      when(() => mockVm.notes).thenReturn([]);
 
-        /// Simula click sul bottone
-        await tester.tap(find.byIcon(Icons.delete_outline));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest());
 
-        /// Verifica presenza dialogo
-        expect(find.text('Elimina nota'), findsOneWidget);
-        expect(find.text('Annulla'), findsOneWidget);
-        expect(find.text('Elimina'), findsOneWidget);
-      },
-    );
-    testWidgets(
-      "Nel dialogo di conferma eliminazione, cliccare sul pulsante annulla chiude il dialogo senza eliminare la nota.",
-      (WidgetTester tester) async {
-        Note deletableNote = LocalNote(
-          "deletable",
-          "very deletable note",
-          DateTime.now(),
-          DateTime.now(),
-        );
-        mockRepo.mockedPreviewsToReturn = [deletableNote];
+      expect(find.text('Nessuna nota presente nel diario'), findsOneWidget);
+      expect(find.byIcon(Icons.add_card), findsOneWidget);
+    });
 
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpListWidget(tester);
-        await tester.pumpAndSettle();
-
-        /// Simula click sul bottone
-        await tester.tap(find.byIcon(Icons.delete_outline));
-        await tester.pumpAndSettle();
-
-        /// Annullamento
-        await tester.tap(find.text('Annulla'));
-        await tester.pumpAndSettle();
-
-        /// Verifica
-        expect(find.text('Elimina nota'), findsNothing);
-        expect(viewmodel.getNoteListSize(), 1);
-      },
-    );
-    testWidgets(
-      "Nel dialogo di conferma eliminazione, cliccare sul pulsante elimina chiude il dialogo ed elimina la nota.",
-      (WidgetTester tester) async {
-        /// Necessario che la DiarySession sia attiva
-        final session = DiarySession.session;
-        session.initSession(DiaryType.realDiary);
-        Note deletableNote = LocalNote(
-          "deletable",
-          "very deletable note",
-          DateTime.now(),
-          DateTime.now(),
-        );
-        mockRepo.mockedPreviewsToReturn = [deletableNote];
-
-        await viewmodel.loadPreviews(DiaryType.realDiary);
-        await pumpListWidget(tester);
-        await tester.pumpAndSettle();
-
-        /// Simula click sul bottone
-        await tester.tap(find.byIcon(Icons.delete_outline));
-        await tester.pumpAndSettle();
-
-        /// Conferma
-        await tester.tap(find.text('Elimina'));
-        await tester.pumpAndSettle();
-
-        /// Verifica
-        expect(find.text('Elimina nota'), findsNothing);
-        expect(viewmodel.getNoteListSize(), 0);
-        session.endSession();
-      },
-    );
-    testWidgets("Click su una nota apre l'editor delle note", (
-      WidgetTester tester,
-    ) async {
-      /// Necessario che la DiarySession sia attiva
-      final session = DiarySession.session;
-      session.initSession(DiaryType.realDiary);
-
-      Note sampleNote = LocalNote(
-        "id",
-        "nota a caso",
-        DateTime.parse("2026-04-14 18:00:30"),
-        DateTime.parse("2026-04-14 18:00:30"),
+    testWidgets('visualizza correttamente una lista di note', (tester) async {
+      final note1 = LocalNote(
+        id: '1',
+        title: 'Nota Test 1',
+        creationDate: DateTime(2023, 10, 1, 10, 30),
+        lastModified: DateTime(2023, 10, 1, 11, 00),
       );
-      mockRepo.mockCreatedNote = sampleNote;
-      mockRepo.mockedPreviewsToReturn = [sampleNote];
+      final note2 = LocalNote(
+        id: '2',
+        title: '', // Senza titolo
+        creationDate: DateTime(2023, 10, 2, 12, 00),
+        lastModified: DateTime(2023, 10, 2, 12, 00),
+      );
 
-      await viewmodel.loadPreviews(DiaryType.realDiary);
-      await pumpListWidget(tester);
+      when(() => mockVm.notes).thenReturn([note1, note2]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('Nota Test 1'), findsOneWidget);
+      expect(find.text('Nota senza titolo'), findsOneWidget);
+      expect(find.textContaining('Data di creazione: 1/10/2023'), findsOneWidget);
+    });
+  });
+
+  group('NoteListWidget - Interactions', () {
+    testWidgets('cliccando su una nota chiama openNote e apre l\'editor', (tester) async {
+      final note = LocalNote(
+        id: 'note_123',
+        title: 'Apritimi',
+        creationDate: DateTime.now(),
+        lastModified: DateTime.now(),
+      );
+      when(() => mockVm.notes).thenReturn([note]);
+      when(() => mockVm.currentNote).thenReturn(note);
+      when(() => mockLoadNotesCommand.run(any())).thenReturn(null);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.text('Apritimi'));
+
+      // Gestione asincronia runAsync e apertura BottomSheet
+      await tester.pump();
       await tester.pumpAndSettle();
 
-      /// Simula click su nota
-      await tester.tap(find.text('nota a caso'));
-      await tester.pumpAndSettle();
-
-      /// Verifica
-      expect(find.byType(NoteEditorWidget), findsOne);
-
-      session.endSession();
+      verify(() => mockOpenNoteCommand.runAsync('note_123')).called(1);
+      expect(find.byType(NoteEditorWidget), findsOneWidget);
     });
 
-    testWidgets("Dismiss rimuove correttamente il widget", (
-      WidgetTester tester,
-    ) async {
-      final session = DiarySession.session;
-      session.initSession(DiaryType.realDiary);
-      await viewmodel.loadPreviews(DiaryType.realDiary);
-      await pumpListWidget(tester);
+    testWidgets('cliccando sull\'icona delete mostra il dialogo di conferma', (tester) async {
+      final note = LocalNote(
+        id: 'id_del',
+        title: 'Nota da eliminare',
+        creationDate: DateTime(2023, 5, 5, 10, 00),
+        lastModified: DateTime.now(),
+      );
+      when(() => mockVm.notes).thenReturn([note]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.textContaining('Eliminare definitivamente la nota Nota da eliminare'), findsOneWidget);
+    });
+
+    testWidgets('confermando l\'eliminazione chiama deleteNote sul ViewModel', (tester) async {
+      final note = LocalNote(
+        id: 'id_del',
+        title: 'Eliminami',
+        creationDate: DateTime.now(),
+        lastModified: DateTime.now(),
+      );
+      when(() => mockVm.notes).thenReturn([note]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Elimina'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockDeleteNoteCommand.run(any())).called(1);
+      expect(find.byType(AlertDialog), findsNothing);
     });
   });
 }

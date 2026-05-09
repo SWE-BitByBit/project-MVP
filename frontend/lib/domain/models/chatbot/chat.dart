@@ -1,13 +1,19 @@
 import 'chat_message.dart';
 
-/// Interfaccia che definisce le operazioni standard per una sessione di Chat.
+/// Interfaccia che definisce il contratto per una sessione di Chat.
 abstract class Chat {
-  String getId();
-  String getTitle();
-  DateTime getCreationDate();
-  DateTime getUpdateDate();
-  List<ChatMessage> getMessages();
+  String get id;
+  String get title;
+  DateTime get creationDate;
+  DateTime get updateDate;
 
+  /// Restituisce la lista dei messaggi.
+  List<ChatMessage> get messages;
+
+  /// Aggiunge un messaggio alla chat e aggiorna l'updateDate.
   void addMessage(ChatMessage message);
-  void setTitle(String title);
+  void removeMessage(String messageId);
+
+  /// Setter per aggiornare il titolo della chat.
+  set title(String newTitle);
 }

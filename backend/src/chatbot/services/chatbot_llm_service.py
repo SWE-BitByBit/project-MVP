@@ -19,6 +19,8 @@ class ChatbotLLMService:
         corpus = []
         messages = []
         for m in chat.messages:
+            if m.sender == "ai":
+                continue
             tokens = self._tokenize(m.text)
             corpus.append(tokens)
             messages.append(m.text)

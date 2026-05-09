@@ -1,33 +1,43 @@
 import '../../domain/models/safeplace/safe_place.dart';
-import '../services/safe_place_service.dart';
 import '../dtos/safe_place_dto.dart';
+import '../services/safe_place_service.dart';
+import 'cacheable_repository.dart';
 
-/// Repository per la gestione dei dati relativi ai luoghi sicuri.
-///
-/// Rappresenta la fonte di verità e orchestra l'accesso al [SafePlaceService].
-class SafePlaceRepository {
-  /// Il servizio utilizzato per le chiamate di rete.
-  final SafePlaceService _service;
+/// Definiamo un Record per raggruppare lo stato visivo della mappa.
+/// Questo evita di sporcare il Data Layer con classi UI di Google Maps.
+typedef MapSessionState = ({double latitude, double longitude, double zoom});
 
-  /// Crea un'istanza di [SafePlaceRepository] iniettando il [SafePlaceService].
-  const SafePlaceRepository(this._service);
+/// Intermediario tra il ViewModel e il livello dati (Service) per i luoghi sicuri.
+class SafePlaceRepository implements CacheableRepository {
+  final SafePlaceService _safePlaceService;
 
-  /// Recupera la lista dei luoghi sicuri.
-  ///
-  /// Chiama il servizio remoto e utilizza [SafePlaceDTO] per convertire
-  /// la risposta in una lista di oggetti di dominio [SafePlace].
-  Future<List<SafePlace>> getPlaces() async {
-    try {
-      final List<Map<String, dynamic>> rawList = await _service
+  /// Cache locale dei luoghi sicuri.
+  final List<SafePlace> _cachedPlaces = [];
+  List<SafePlace> get cachedPlaces => List.unmodifiable(_cachedPlaces);
+
+  MapSessionState? cachedMapState;
+  SafePlaceRepository(this._safePlaceService);
+
+  Future<List<SafePlace>> getPlaces({bool forceRefresh = false}) async {
+    if (_cachedPlaces.isEmpty || forceRefresh) {
+      final Map<String, dynamic> rawData = await _safePlaceService
           .fetchSafePlaces();
+      final List<dynamic> rawList = rawData['data'] ?? [];
 
-      return rawList.map((jsonItem) {
-        return SafePlaceDTO.fromJson(jsonItem);
-      }).toList();
-    } catch (e) {
-      throw Exception(
-        "Errore nel repository durante l'elaborazione dei luoghi sicuri: $e",
-      );
+      final fetchedPlaces = rawList
+          .map((json) => SafePlaceDTO.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      _cachedPlaces.clear();
+      _cachedPlaces.addAll(fetchedPlaces);
     }
+
+    return cachedPlaces;
+  }
+
+  @override
+  void clearCache() {
+    _cachedPlaces.clear();
+    cachedMapState = null;
   }
 }

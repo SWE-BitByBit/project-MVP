@@ -1,70 +1,82 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/safe_place_service.dart';
 
+import '../../../testing/mocks/network/mock_api_client.dart';
+
 void main() {
-  /// Test unitari per [SafePlaceService].
-  /// 
-  /// Verifica la corretta comunicazione HTTP con il backend
-  /// e la gestione di risposte valide e non valide.
-  group('SafePlaceService Test', () {
-    const testBaseUrl = 'http://test-api.com';
+  late SafePlaceService safePlaceService;
+  late MockApiClient mockApiClient;
 
-    /// Verifica il recupero di una lista di luoghi 
-    /// quando la risposta HTTP ha codice di stato 200.
-    test('Deve restituire una lista di luoghi quando la chiamata ha successo (200 OK)', () async {
-      final mockClient = MockClient((request) async {
-        expect(request.url.toString(), '$testBaseUrl/safe-places');
+  setUp(() {
+    mockApiClient = MockApiClient();
+    safePlaceService = SafePlaceService(apiClient: mockApiClient);
+  });
 
-        final fakeJsonResponse = json.encode([
-          {
-            "marker_id": "1",
-            "name": "Centro Sicuro",
-            "address": "Via Sicura 1",
-            "latitude": 45.4064,
-            "longitude": 11.8768,
-            "category": "Antiviolenza"
-          }
-        ]);
+  final List<dynamic> tSafePlacesList = [
+    {
+      "marker_id": "1",
+      "name": "Ospedale Maggiore",
+      "address": "Via Roma 1",
+      "latitude": "45.0",
+      "longitude": "9.0",
+      "category": "ospedale"
+    },
+    {
+      "marker_id": "2",
+      "name": "Questura",
+      "address": "Piazza Repubblica 2",
+      "latitude": "45.1",
+      "longitude": "9.1",
+      "category": "polizia"
+    }
+  ];
 
-        return http.Response(fakeJsonResponse, 200, headers: {
-          'content-type': 'application/json; charset=utf-8',
-        });
-      });
+  group('fetchSafePlaces', () {
+    test('should return map with data containing the list when ApiClient returns a List', () async {
+      // arrange
+      when(() => mockApiClient.get(any())).thenAnswer((_) async => tSafePlacesList);
 
-      final service = SafePlaceService(
-        baseUrl: testBaseUrl,
-        client: mockClient,
-      );
+      // act
+      final result = await safePlaceService.fetchSafePlaces();
 
-      final result = await service.fetchSafePlaces();
-
-      expect(result, isA<List>());
-      expect(result.length, 1);
-      expect(result[0]['marker_id'], '1');
-      expect(result[0]['name'], 'Centro Sicuro');
-      expect(result[0]['category'], 'Antiviolenza');
+      // assert
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['data'], equals(tSafePlacesList));
+      verify(() => mockApiClient.get('/safe-places')).called(1);
     });
 
-    /// Verifica che in caso di errore HTTP (es. 404 o 500)
-    /// venga lanciata un'eccezione dal servizio.
-    test('Deve lanciare un\'eccezione quando il server restituisce errore (es. 404 o 500)', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Not Found', 404);
-      });
+    test('should return map with empty data list when ApiClient returns a Map instead of List', () async {
+      // arrange
+      when(() => mockApiClient.get(any())).thenAnswer((_) async => {"error": "not a list"});
 
-      final service = SafePlaceService(
-        baseUrl: testBaseUrl,
-        client: mockClient,
-      );
+      // act
+      final result = await safePlaceService.fetchSafePlaces();
 
-      expect(
-        () async => await service.fetchSafePlaces(),
-        throwsException,
-      );
+      // assert
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['data'], isEmpty);
+      verify(() => mockApiClient.get('/safe-places')).called(1);
+    });
+
+    test('should return map with empty data list when ApiClient returns null', () async {
+      // arrange
+      when(() => mockApiClient.get(any())).thenAnswer((_) async => null);
+
+      // act
+      final result = await safePlaceService.fetchSafePlaces();
+
+      // assert
+      expect(result['data'], isEmpty);
+      verify(() => mockApiClient.get('/safe-places')).called(1);
+    });
+
+    test('should rethrow exception if ApiClient throws', () async {
+      // arrange
+      when(() => mockApiClient.get(any())).thenThrow(Exception('Network error'));
+
+      // act & assert
+      expect(() => safePlaceService.fetchSafePlaces(), throwsException);
     });
   });
 }

@@ -56,12 +56,9 @@ def lambda_handler(event, context):
         }
 
     repo = DynamoNoteAdapter()
-    storage = S3NoteAdapter(
-        boto3.client("s3"),
-        region_name=os.environ["REGION"]
-    )
+    storage = S3NoteAdapter()
 
     service = NoteService(repo, storage)
     controller = DiaryNoteController(service)
 
-    return controller.handle_response(event, context)
+    return controller.handle_request(event, context)

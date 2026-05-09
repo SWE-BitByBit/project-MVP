@@ -1,24 +1,65 @@
-/// Servizio responsabile della comunicazione HTTP/REST con il backend
-/// per l'accesso al diario.
+import '../network/api_client.dart';
+import '../../domain/models/diary/diary_enums.dart';
+
+/// Servizio responsabile della sicurezza e dell'accesso al diario.
 class DiaryAccountService {
-  Future<int> validateDiaryPassword(String pwd) async {
-    ///PLACEHOLDER
-    //TODO: implementare chiamata reale
-    if (pwd == "testpassword") {
-      return 1;
-    } else if (pwd == "fakepassword") {
-      return 2;
-    }
-    return 0;
+  final ApiClient _apiClient;
+
+  /// Percorso base per le API del diario.
+  static const String _basePath = '/diary/auth';
+
+  DiaryAccountService({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  /// Valida la password del diario e ottiene il token di sessione.
+  Future<Map<String, dynamic>> validateDiaryPassword(String password) async {
+    final body = {'password': password};
+
+    final response = await _apiClient.post(
+      '$_basePath/login',
+      body: body,
+      requiresAuth: true,
+    );
+
+    return response as Map<String, dynamic>;
   }
 
-  ///PLACEHOLDER
-  ///TODO: implementare logica registrazione password reale.
-  ///Dovrebbe usare validateDiaryPassword per verificare che non sia uguale alla pwd del diario criptato o alla password esistente
-  Future<int> registerFakeDiaryPassword(String pwd) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    int check = await validateDiaryPassword(pwd);
-    if (check == 0) {}
-    return check;
+  /// Imposta o aggiorna la password (Reale o Fittizia).
+  Future<Map<String, dynamic>?> setPassword(
+    String? oldPassword,
+    String newPassword,
+    DiaryType diaryType,
+  ) async {
+    final body = <String, dynamic>{
+      'password': newPassword,
+      'diary_type': diaryType == DiaryType.real_diary
+          ? 'real_diary'
+          : 'fake_diary',
+    };
+    if (oldPassword != null) {
+      body['previous_password'] = oldPassword;
+    }
+
+    final response = await _apiClient.post(
+      '$_basePath/set_password',
+      body: body,
+      requiresAuth: true,
+    );
+
+    return response as Map<String, dynamic>?;
+  }
+
+  /// Interroga il backend per sapere se l'utente ha già impostato la password del diario.
+  Future<bool> checkHasRealPassword() async {
+    try {
+      // Ipotizziamo che il backend esponga un endpoint GET per lo stato del diario.
+      final response = await _apiClient.get(
+        '$_basePath/status',
+        requiresAuth: true,
+      );
+
+      return response['has_real_password'] == true;
+    } catch (e) {
+      return false;
+    }
   }
 }

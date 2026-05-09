@@ -54,7 +54,7 @@ Resources:
       CodeUri: src/diary/
       Handler: lambda_handler.lambda_handler
       FunctionName: lambda-diary-notes-microservice-mvp
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-diary-mvp"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
       Environment:
         Variables:
           REGION: eu-south-1
@@ -107,7 +107,7 @@ Resources:
         GetDiaryNotes:
           Type: HttpApi
           Properties:
-            Path: /notes
+            Path: /notes/{diary_type}
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
@@ -115,7 +115,7 @@ Resources:
         GetDiaryNote:
           Type: HttpApi
           Properties:
-            Path: /notes/{note_id}
+            Path: /notes/{diary_type}/{note_id}
             Method: get
             ApiId: !Ref AppHttpApi
             Auth:
@@ -221,7 +221,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/trusted_contact/
-      Handler: app.lambda_handler
+      Handler: lambda_handler.lambda_handler
       FunctionName: lambda-trusted-contact-microservice-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
         tact-mvp"
@@ -357,12 +357,14 @@ Resources:
       Handler: lambda_function.lambda_handler
       FunctionName: lambda-chatbot-mvp
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Environment:
+        Variables:
+          TABLE_CHATS: !Ref ChatsTable
+          TABLE_MESSAGES: !Ref ChatsMessagesTable
+          PYTHONPATH: "/var/task"
       Layers:
         - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
       Runtime: python3.12
-      Environment:
-        Variables:
-          PYTHONPATH: "/var/task"
       Events:
         GetChats:
           Type: HttpApi
@@ -418,7 +420,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: chats_mvp
+      TableName: chats_mvp_v2
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: chat_id
@@ -447,7 +449,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: chats_messages_mvp
+      TableName: chats_messages_mvp_v2
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: chat_id

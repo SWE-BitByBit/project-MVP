@@ -1,97 +1,142 @@
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
+import '../../../domain/models/diary/diary_enums.dart';
+import '../../../domain/models/diary/diary_session.dart';
+import '../network/api_client.dart';
 
-/// Servizio responsabile della comunicazione HTTP/REST con il backend
-/// per la funzionalità dei diari.
+/// Servizio responsabile della gestione delle note (CRUD) nel diario.
 class NoteService {
-  final _placeHolderComplete = <Map<String, dynamic>>[
-    {
-      "id": "0",
-      "title": "Nota test 1",
-      "creationDate": "2026-04-11 10:00:30",
-      "lastModified": "2026-04-14 18:00:30",
-      "elements": [
-        {"type": "text", "content": "Nota di prova"},
-      ],
-    },
-    {
-      "id": "1",
-      "title": "Nota test 2",
-      "creationDate": "2026-04-14 10:00:30",
-      "lastModified": "2026-04-14 16:00:30",
-      "elements": [
-        {"type": "text", "content": "Nota di prova con due elementi"},
-        {"type": "text", "content": "Secondo elemento"},
-      ],
-    },
-    {
-      "id": "2",
-      "title": "Nota test 3",
-      "creationDate": "2026-04-12 10:00:30",
-      "lastModified": "2026-04-14 15:00:30",
-      "elements": [],
-    },
-  ];
+  final ApiClient _apiClient;
 
-  final _placeHolderQuick = <Map<String, dynamic>>[
-    {
-      "id": "0",
-      "title": "Nota test 1",
-      "creationDate": "2026-03-14 10:10:30",
-      "lastModified": "2026-04-14 18:00:30",
-    },
-    {
-      "id": "1",
-      "title": "Nota test 2",
-      "creationDate": "2026-02-14 10:30:30",
-      "lastModified": "2026-04-14 16:00:30",
-    },
-    {
-      "id": "2",
-      "title": "Nota test 3",
-      "creationDate": "2026-04-14 10:00:30",
-      "lastModified": "2026-04-14 15:00:30",
-    },
-  ];
+  static int _audioCounter = 0;
+  static int _imageCounter = 0;
 
+  static const String _basePath = '/notes';
+
+  NoteService({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  /// Metodo privato per iniettare il token della sessione diario negli header.
+  Map<String, String> _buildAuthHeaders() {
+    final sessionToken = DiarySession.session.token;
+    if (sessionToken == null || sessionToken.isEmpty) {
+      throw Exception(
+        "Accesso al diario non autorizzato: Session Token mancante.",
+      );
+    }
+    return {'X-Diary-Token': sessionToken};
+  }
+
+  /// Recupera le preview di tutte le note di un determinato diario.
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}].
   Future<List<Map<String, dynamic>>> fetchNotes(DiaryType targetDiary) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _placeHolderQuick;
+    final response = await _apiClient.get(
+      '$_basePath/${targetDiary.name}',
+      headers: _buildAuthHeaders(),
+    );
+
+    if (response is Map && response['notes'] is List) {
+      return (response['notes'] as List).cast<Map<String, dynamic>>();
+    }
+
+    return [];
   }
 
-  Future<Map<String, dynamic>> fetchNoteById(String noteId) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    ///Workaround data la mancanza della logica backend
-    Map<String, dynamic> out = _placeHolderComplete
-        .where((json) => (json["id"] == noteId))
-        .toList()[0];
-    return out;
-  }
-
-  ///Recupera una lista di [File] appartenenti alla nota di cui viene passato l'id.
-  /*Future<List<File>> fetchNoteMedia(
+  /// Recupera il contenuto completo di una singola nota.
+  ///
+  /// Corrisponde all'endpoint [GET /diary/{diary_type}/{note_id}].
+  Future<Map<String, dynamic>> fetchNoteById(
     DiaryType targetDiary,
     String noteId,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    return [];
-  }*/
-
-  Future<void> saveNote(Map<String, dynamic> json) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
+    final response = await _apiClient.get(
+      '$_basePath/${targetDiary.name}/$noteId',
+      headers: _buildAuthHeaders(),
+    );
+    return response as Map<String, dynamic>;
   }
 
-  Future<void> deleteNote(String noteId) async {
-    //PLACEHOLDER
-    //TODO: implementare chiamata reale
-    await Future.delayed(const Duration(milliseconds: 100));
+  /// Crea una nuova nota o aggiorna una esistente nel database.
+  Future<Map<String, dynamic>> saveNote(
+    DiaryType targetDiary,
+    Map<String, dynamic> noteData,
+  ) async {
+    noteData['diary_type'] = targetDiary.name;
+    return await _apiClient.put(
+      _basePath,
+      body: noteData,
+      headers: _buildAuthHeaders(),
+    );
+  }
+
+  /// Rimuove la nota dal database e i relativi file binari da S3.
+  Future<void> deleteNote(DiaryType targetDiary, String noteId) async {
+    await _apiClient.delete(
+      '$_basePath/${targetDiary.name}/$noteId',
+      headers: _buildAuthHeaders(),
+    );
+  }
+
+  Future<Map<String, dynamic>> saveNoteElement(
+    Map<String, dynamic> noteElementData,
+  ) async {
+    return await _apiClient.put(
+      '$_basePath/note_element',
+      body: noteElementData,
+      headers: _buildAuthHeaders(),
+    );
+  }
+
+  Future<void> deleteNoteElement(String noteId, String noteElementId) async {
+    await _apiClient.delete(
+      '$_basePath/note_element/$noteId/$noteElementId',
+      headers: _buildAuthHeaders(),
+    );
+  }
+
+  /// Utilizza il presigned url per fare il download del media dal bucket S3
+  Future<File> downloadFileFromUrl(String downloadUrl, String mediaType) async {
+    final tempDir = await getTemporaryDirectory();
+    final String filePath;
+    if (mediaType == 'audio') {
+      filePath = '${tempDir.path}/audio_$_audioCounter';
+      _audioCounter += 1;
+    } else if (mediaType == 'image') {
+      filePath = '${tempDir.path}/image_$_imageCounter';
+      _imageCounter += 1;
+    } else {
+      filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}';
+    }
+
+    final response = await http.get(Uri.parse(downloadUrl));
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to download file");
+    }
+
+    final file = File(filePath);
+    await file.writeAsBytes(response.bodyBytes);
+
+    return file;
+  }
+
+  /// Utilizza il presigned url per caricare il media nel bucket S3
+  Future<void> uploadFileFromUrl(
+    String uploadUrl,
+    File media, {
+    String contentType = 'application/octet-stream',
+  }) async {
+    final bytes = await media.readAsBytes();
+
+    final response = await http.put(
+      Uri.parse(uploadUrl),
+      headers: {'Content-Type': contentType},
+      body: bytes,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to upload file (${response.statusCode})');
+    }
   }
 }

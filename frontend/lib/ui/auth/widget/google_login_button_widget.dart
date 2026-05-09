@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 
 /// Rappresenta il pulsante per effettuare l'accesso tramite Google.
 class GoogleLoginButtonWidget extends StatelessWidget {
+  /// Azione eseguita alla pressione del pulsante.
   final VoidCallback onPressedCallback;
+
+  /// Indica se il processo di login è in corso.
   final bool isLoading;
 
-  /// Inizializza il pulsante richiedendo l'azione [onPressedCallback]
-  /// e lo stato di caricamento [isLoading].
+  /// Inizializza il pulsante richiedendo l'azione e lo stato.
   const GoogleLoginButtonWidget({
     super.key,
     required this.onPressedCallback,
     required this.isLoading,
   });
 
-  /// Costruisce l'interfaccia del pulsante.
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.teal));
+      return Center(child: CircularProgressIndicator(color: colorScheme.primary));
     }
 
     return OutlinedButton.icon(
@@ -26,7 +29,7 @@ class GoogleLoginButtonWidget extends StatelessWidget {
       label: const Text('Accedi con Google'),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        side: const BorderSide(color: Colors.grey),
+        side: BorderSide(color: colorScheme.outlineVariant),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );

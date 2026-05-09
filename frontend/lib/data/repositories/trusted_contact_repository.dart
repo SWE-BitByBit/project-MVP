@@ -1,49 +1,99 @@
-import '../../domain/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../../domain/models/trusted_contact/trusted_contact.dart';
 import '../dtos/trusted_contact_dto.dart';
 import '../services/trusted_contact_service.dart';
+import 'cacheable_repository.dart';
+
 
 /// Intermediario tra il ViewModel e il livello dati (Service).
 ///
-/// Si occupa di trasformare i dati grezzi JSON restituiti da [TrustedContactService]
-/// in oggetti di dominio [TrustedContact], isolando la logica di presentazione
-/// dai dettagli di implementazione della rete.
-class TrustedContactRepository {
+/// Gestisce la logica di business relativa ai contatti fidati
+class TrustedContactRepository implements CacheableRepository {
+  /// Il servizio per le chiamate API verso il backend.
   final TrustedContactService _trustedContactService;
+  final LocationService _locationService;
 
-  /// Crea un'istanza di [TrustedContactRepository] con il [TrustedContactService] specificato.
-  TrustedContactRepository(this._trustedContactService);
+  /// Cache locale dei contatti per evitare chiamate di rete ridondanti.
+  List<TrustedContact> _cachedContacts = [];
 
-  /// Recupera la lista completa dei contatti fidati dal backend.
-  ///
-  /// Richiede i dati grezzi tramite [TrustedContactService] e li converte
-  /// in una lista di oggetti di dominio [TrustedContact] tramite [TrustedContactDTO].
-  Future<List<TrustedContact>> getContacts() async {
-    final List<Map<String, dynamic>> rawData = await _trustedContactService
-        .getContacts();
-    return rawData.map((json) => TrustedContactDTO.fromJson(json)).toList();
+  TrustedContactRepository(TrustedContactService service, {required LocationService locationService})
+    : _trustedContactService = service, _locationService = locationService;
+
+  /// Recupera la lista completa dei contatti fidati dalla cache o direttamente dal backend.
+  Future<List<TrustedContact>> getContacts({bool forceRefresh = false}) async {
+    if (_cachedContacts.isEmpty || forceRefresh) {
+      final List<Map<String, dynamic>> rawData = await _trustedContactService
+          .getContacts();
+      print(rawData);
+      _cachedContacts = rawData
+          .map((json) => TrustedContactDTO.fromJson(json))
+          .toList();
+    }
+    return List.unmodifiable(_cachedContacts);
   }
 
-  /// Crea un nuovo contatto fidato nel backend.
-  ///
-  /// Converte il [TrustedContact] in JSON tramite [TrustedContactDTO], lo invia
-  /// al servizio e restituisce l'oggetto di dominio aggiornato con l'id assegnato.
+  /// Crea un nuovo contatto fidato e lo aggiunge alla cache locale.
   Future<TrustedContact> createContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
     final Map<String, dynamic> rawResponse = await _trustedContactService
         .addContact(contactData);
-    return TrustedContactDTO.fromJson(rawResponse);
+
+    final newContact = TrustedContactDTO.fromJson(rawResponse);
+    _cachedContacts.add(newContact);
+    return newContact;
   }
 
-  /// Aggiorna i dati di un contatto fidato esistente nel backend.
+  /// Aggiorna un contatto esistente e sincronizza la cache locale.
   Future<TrustedContact> updateContact(TrustedContact contact) async {
     final Map<String, dynamic> contactData = TrustedContactDTO.toJson(contact);
     final Map<String, dynamic> rawResponse = await _trustedContactService
         .updateContact(contactData);
-    return TrustedContactDTO.fromJson(rawResponse);
+
+    final updatedContact = TrustedContactDTO.fromJson(rawResponse);
+
+    // Aggiornamento della cache
+    final index = _cachedContacts.indexWhere((c) => c.id == updatedContact.id);
+    if (index != -1) {
+      _cachedContacts[index] = updatedContact;
+    }
+
+    return updatedContact;
   }
 
-  /// Elimina il contatto fidato identificato da [contactId] nel backend.
+  /// Elimina definitivamente il contatto identificato da [contactId].
   Future<void> deleteContact(String contactId) async {
-    await _trustedContactService.deleteContact(contactId);
+    final deletedContact = _cachedContacts.firstWhere((c) => c.id == contactId);
+    final deletedIndex = _cachedContacts.indexOf(deletedContact);
+
+    if (deletedIndex == -1) {
+      return;
+    }
+
+    _cachedContacts.removeAt(deletedIndex);
+
+    try {
+      await _trustedContactService.deleteContact(contactId);
+    } catch (e) {
+      _cachedContacts.insert(deletedIndex, deletedContact);
+      rethrow;
+    }
+  }
+
+  /// Attiva l'invio dell'SOS ai contatti fidati.
+  Future<void> sendSosAlert() async {
+    Position? userPosition = await _locationService.getCurrentPosition();
+    Map<String, dynamic> body = {
+      'latitude': userPosition.latitude,
+      'longitude': userPosition.longitude,
+    };
+    await _trustedContactService.sendSosAlert(body);
+  }
+
+  /// Svuota la cache locale.
+  @override
+  void clearCache() {
+    _cachedContacts.clear();
   }
 }

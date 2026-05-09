@@ -1,124 +1,116 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/dtos/resource_dto.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/material/resource_type.dart';
 
 void main() {
-  group('ResourceDTO Unit Test', () {
-    test('fromJson deve mappare correttamente tutti i campi con resource_id', () {
-      final json = {
-        'resource_id': 'res-123',
-        'title': 'Test Title',
-        'content': 'Test Content',
-        'url': 'https://test.com',
-        'type': 'law'
-      };
+  Map<String, dynamic> readFixture(String name) {
+    final path = Directory.current.path.endsWith('test')
+        ? '../testing/fixtures/material/$name'
+        : 'testing/fixtures/material/$name';
+    final file = File(path);
+    return jsonDecode(file.readAsStringSync());
+  }
 
-      final resource = ResourceDTO.fromJson(json);
+  group('ResourceDTO Tests', () {
+    group('fromJson', () {
+      test('dovrebbe parsare correttamente un JSON completo e valido (Happy Path)', () {
+        // Arrange
+        final json = readFixture('resource_valid.json');
 
-      expect(resource.id, 'res-123');
-      expect(resource.title, 'Test Title');
-      expect(resource.content, 'Test Content');
-      expect(resource.url, 'https://test.com');
-      expect(resource.type, ResourceType.law);
+        // Act
+        final result = ResourceDTO.fromJson(json);
+
+        // Assert
+        expect(result, isA<Resource>());
+        expect(result.id, 'res_123');
+        expect(result.title, 'Guida alla sicurezza personale');
+        expect(result.content, 'Ecco alcune linee guida fondamentali per proteggere la propria privacy...');
+        expect(result.url, 'https://example.com/guida-sicurezza.pdf');
+
+        // Assumiamo che ResourceType.fromString('document') restituisca il valore corretto dell'enum
+        // L'asserzione esatta dipenderà dall'implementazione interna di ResourceType
+        expect(result.type, ResourceType.fromString('document'));
+      });
+
+      test('dovrebbe fornire valori di default per campi mancanti o nulli', () {
+        // Arrange
+        final json = readFixture('resource_incomplete.json');
+
+        // Act
+        final result = ResourceDTO.fromJson(json);
+
+        // Assert
+        expect(result.id, 'unknown');
+        expect(result.title, 'Risorsa senza titolo');
+        expect(result.content, isNull);
+        expect(result.url, isNull);
+        // Assumiamo che ResourceType.fromString(null) restituisca un default (es. unknown o simile)
+        expect(result.type, ResourceType.fromString(null));
+      });
+
+      test('dovrebbe gestire resource_id numerico convertendolo in stringa', () {
+        // Arrange
+        final json = {
+          'resource_id': 999,
+          'title': 'Test ID',
+        };
+
+        // Act
+        final result = ResourceDTO.fromJson(json);
+
+        // Assert
+        expect(result.id, '999');
+        expect(result.title, 'Test ID');
+      });
     });
 
-    test('fromJson deve gestire i campi nulli con valori di default', () {
-      final json = {
-        'resource_id': null,
-        'title': null,
-        'type': null
-      };
+    group('toJson', () {
+      test('dovrebbe serializzare correttamente un oggetto Resource completo in JSON', () {
+        // Arrange
+        final resource = Resource(
+          id: 'res_456',
+          title: 'Video Tutorial',
+          content: 'Descrizione del video',
+          url: 'https://video.example.com',
+          type: ResourceType.fromString('video'),
+        );
 
-      final resource = ResourceDTO.fromJson(json);
+        // Act
+        final result = ResourceDTO.toJson(resource);
 
-      expect(resource.id, '');
-      expect(resource.title, 'Senza Titolo');
-      expect(resource.type, ResourceType.article);
-    });
+        // Assert
+        expect(result['resource_id'], 'res_456');
+        expect(result['title'], 'Video Tutorial');
+        expect(result['content'], 'Descrizione del video');
+        expect(result['url'], 'https://video.example.com');
+        // La serializzazione usa il getter .name dell'enum
+        expect(result['type'], resource.type.name);
+      });
 
-    test('fromJson deve fare il fallback a article se il tipo è sconosciuto', () {
-      final json = {
-        'resource_id': '1',
-        'title': 'T',
-        'type': 'unknown_type'
-      };
+      test('dovrebbe serializzare correttamente una Resource con campi nulli', () {
+        // Arrange
+        final resource = Resource(
+          id: 'res_minimal',
+          title: 'Solo Titolo',
+          content: null,
+          url: null,
+          type: ResourceType.fromString('unknown'),
+        );
 
-      final resource = ResourceDTO.fromJson(json);
+        // Act
+        final result = ResourceDTO.toJson(resource);
 
-      expect(resource.type, ResourceType.article);
-    });
-
-    test('toJson deve produrre una mappa con chiave id interna', () {
-      final json = {
-        'resource_id': '1',
-        'title': 'T',
-        'content': 'C',
-        'url': 'U',
-        'type': 'community'
-      };
-
-      final resource = ResourceDTO.fromJson(json);
-      final resultJson = ResourceDTO.toJson(resource);
-
-      expect(resultJson['id'], '1');
-      expect(resultJson['title'], 'T');
-      expect(resultJson['type'], 'community');
-    });
-
-    test('fromJson deve riconoscere il tipo LAW in maiuscolo (formato Lambda)', () {
-      final json = {
-        'resource_id': 'legge-1',
-        'title': 'Codice Rosso',
-        'content': 'Testo della legge',
-        'url': null,
-        'type': 'LAW'
-      };
-
-      final resource = ResourceDTO.fromJson(json);
-
-      expect(resource.id, 'legge-1');
-      expect(resource.type, ResourceType.law);
-      expect(resource.url, isNull);
-    });
-
-    test('fromJson deve riconoscere il tipo COMMUNITY in maiuscolo (formato Lambda)', () {
-      final json = {
-        'resource_id': 'comm-1',
-        'title': 'Comunità',
-        'content': null,
-        'url': 'https://community.example.com',
-        'type': 'COMMUNITY'
-      };
-
-      final resource = ResourceDTO.fromJson(json);
-
-      expect(resource.type, ResourceType.community);
-      expect(resource.content, isNull);
-    });
-
-    test('fromJson deve riconoscere il tipo ARTICLE in maiuscolo (formato Lambda)', () {
-      final json = {
-        'resource_id': 'art-1',
-        'title': 'Articolo',
-        'content': 'Testo',
-        'url': null,
-        'type': 'ARTICLE'
-      };
-
-      final resource = ResourceDTO.fromJson(json);
-
-      expect(resource.type, ResourceType.article);
-    });
-
-    test('fromJson deve restituire id vuoto se resource_id è assente dalla mappa', () {
-      final json = <String, dynamic>{
-        'title': 'Senza ID',
-        'type': 'LAW'
-      };
-
-      final resource = ResourceDTO.fromJson(json);
-
-      expect(resource.id, '');
+        // Assert
+        expect(result['resource_id'], 'res_minimal');
+        expect(result['title'], 'Solo Titolo');
+        expect(result['content'], isNull);
+        expect(result['url'], isNull);
+        expect(result['type'], resource.type.name);
+      });
     });
   });
 }

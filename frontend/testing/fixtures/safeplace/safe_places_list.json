@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "marker_id": "sp_1",
+      "name": "Ospedale Niguarda",
+      "address": "Piazza Ospedale Maggiore, 3",
+      "latitude": 45.505,
+      "longitude": 9.188,
+      "category": "ospedale"
+    },
+    {
+      "marker_id": "sp_2",
+      "name": "Commissariato Centro",
+      "address": "Via Croce Rossa, 5",
+      "latitude": 45.471,
+      "longitude": 9.193,
+      "category": "polizia"
+    }
+  ]
+}
