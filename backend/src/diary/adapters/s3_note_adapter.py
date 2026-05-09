@@ -1,11 +1,19 @@
 import os
 import boto3
 from botocore.exceptions import ClientError
+from botocore.config import Config
 
 class S3NoteAdapter:
 
     def __init__(self, s3_client=None):
-        self._s3_client = s3_client or boto3.client("s3")
+        self._s3_client = s3_client or boto3.client(
+                "s3",
+                region_name=os.environ["REGION"],
+                config=Config(
+                    signature_version="s3v4",
+                    s3={"addressing_style": "virtual"}
+                )
+            )
 
     def generate_presigned_url(self, client_method, params, expires_in = 3600):
         """

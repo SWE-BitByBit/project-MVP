@@ -1,144 +1,251 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+import 'package:command_it/command_it.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_form_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
 
-import '../../../../testing/mocks/mock_trusted_contact_repository.dart';
+// --- MOCKS ---
+class MockTrustedContactViewModel extends Mock
+    implements TrustedContactViewModel {}
+
+class MockCommandCreate extends Mock implements Command<TrustedContact, void> {}
+
+class MockCommandUpdate extends Mock implements Command<TrustedContact, void> {}
+
+class MockCommandError extends Mock implements CommandError<TrustedContact> {}
+
+// Fallback fittizio per intercettare parametri
+class FakeTrustedContact extends Fake implements TrustedContact {}
 
 void main() {
-  group('TrustedContactFormWidget Widget Test', () {
-    late MockTrustedContactRepository mockRepo;
-    late TrustedContactViewModel viewModel;
+  late MockTrustedContactViewModel mockVm;
+  late MockCommandCreate mockCreateCommand;
+  late MockCommandUpdate mockUpdateCommand;
+  late ValueNotifier<bool> createRunningNotifier;
+  late ValueNotifier<CommandError<TrustedContact>?> createErrorNotifier;
+  late ValueNotifier<bool> updateRunningNotifier;
+  late ValueNotifier<CommandError<TrustedContact>?> updateErrorNotifier;
 
-    setUp(() {
-      mockRepo = MockTrustedContactRepository();
-      viewModel = TrustedContactViewModel(mockRepo);
-    });
+  late bool onDismissCalled;
 
-    /// Helper: monta TrustedContactFormWidget con Provider e onDismiss.
-    Future<void> pumpFormWidget(
-      WidgetTester tester, {
-      required VoidCallback onDismiss,
-    }) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<TrustedContactViewModel>.value(
-              value: viewModel,
-              child: TrustedContactFormWidget(onDismiss: onDismiss),
-            ),
+  setUpAll(() {
+    registerFallbackValue(FakeTrustedContact());
+  });
+
+  setUp(() {
+    mockVm = MockTrustedContactViewModel();
+    mockCreateCommand = MockCommandCreate();
+    mockUpdateCommand = MockCommandUpdate();
+
+    createRunningNotifier = ValueNotifier<bool>(false);
+    createErrorNotifier = ValueNotifier<CommandError<TrustedContact>?>(null);
+    updateRunningNotifier = ValueNotifier<bool>(false);
+    updateErrorNotifier = ValueNotifier<CommandError<TrustedContact>?>(null);
+
+    // Setup Create Command
+    when(() => mockCreateCommand.isRunning).thenReturn(createRunningNotifier);
+    when(() => mockCreateCommand.errors).thenReturn(createErrorNotifier);
+    when(() => mockCreateCommand.runAsync(any())).thenAnswer((_) async {});
+
+    // Setup Update Command
+    when(() => mockUpdateCommand.isRunning).thenReturn(updateRunningNotifier);
+    when(() => mockUpdateCommand.errors).thenReturn(updateErrorNotifier);
+    when(() => mockUpdateCommand.runAsync(any())).thenAnswer((_) async {});
+
+    // Setup VM
+    when(() => mockVm.createContact).thenReturn(mockCreateCommand);
+    when(() => mockVm.updateContact).thenReturn(mockUpdateCommand);
+    when(() => mockVm.errors).thenReturn(<String, String>{});
+
+    onDismissCalled = false;
+  });
+
+  Widget createWidgetUnderTest({TrustedContact? initialContact}) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<TrustedContactViewModel>.value(
+          value: mockVm,
+          child: TrustedContactFormWidget(
+            initialContact: initialContact,
+            onDismiss: () {
+              onDismissCalled = true;
+            },
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    testWidgets('Deve mostrare il titolo e i tre campi del form', (
-      WidgetTester tester,
-    ) async {
-      await pumpFormWidget(tester, onDismiss: () {});
-
-      expect(find.text('Nuovo Contatto Fidato'), findsOneWidget);
-      expect(find.byIcon(Icons.person), findsOneWidget); // campo nome
-      expect(find.byIcon(Icons.phone), findsOneWidget); // campo telefono
-      expect(find.byIcon(Icons.email), findsOneWidget); // campo email
-      expect(find.text('Salva contatto'), findsOneWidget);
-    });
-
-    testWidgets('La validazione deve fallire se i campi sono vuoti', (
-      WidgetTester tester,
-    ) async {
-      await pumpFormWidget(tester, onDismiss: () {});
-
-      // Tocchiamo "Salva contatto" senza compilare nulla
-      await tester.tap(find.text('Salva contatto'));
-      await tester.pumpAndSettle();
-
-      // Flutter mostra i messaggi di errore di validazione
-      expect(find.text('Inserisci il nome'), findsOneWidget);
-      expect(find.text('Inserisci il numero di telefono'), findsOneWidget);
-      expect(find.text("Inserisci l'email"), findsOneWidget);
-    });
-
+  group('TrustedContactFormWidget - Validazione & Rendering', () {
     testWidgets(
-      'Con i campi validi, deve chiamare createContact e invocare onDismiss',
-      (WidgetTester tester) async {
-        bool dismissCalled = false;
+      'mostra messaggi di errore se si tenta di salvare con campi vuoti',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-        // Prepariamo il mock
-        mockRepo.mockedCreatedContact = TrustedContact(
-          id: 'c-new',
-          name: 'Anna Neri',
-          email: 'anna@email.com',
-          phoneNumber: '+39 333 7654321',
-        );
-        mockRepo.mockedContactsToReturn = [mockRepo.mockedCreatedContact!];
-
-        await pumpFormWidget(
-          tester,
-          onDismiss: () {
-            dismissCalled = true;
-          },
-        );
-
-        // Compiliamo i campi
-        await tester.enterText(
-          find.widgetWithIcon(TextFormField, Icons.person),
-          'Anna Neri',
-        );
-        await tester.enterText(
-          find.widgetWithIcon(TextFormField, Icons.phone),
-          '+39 333 7654321',
-        );
-        await tester.enterText(
-          find.widgetWithIcon(TextFormField, Icons.email),
-          'anna@email.com',
-        );
-
-        // Inviamo il form
+        // Il bottone in modalità creazione
         await tester.tap(find.text('Salva contatto'));
         await tester.pumpAndSettle();
 
-        // Verifichiamo che il contatto sia stato creato e il dismiss invocato
-        expect(viewModel.contacts.length, 1);
-        expect(viewModel.contacts.first.getName(), 'Anna Neri');
-        expect(
-          dismissCalled,
-          isTrue,
-          reason: 'onDismiss deve essere chiamata dopo il salvataggio',
-        );
+        expect(find.text('Inserisci il nome'), findsOneWidget);
+        expect(find.text('Inserisci il numero di telefono'), findsOneWidget);
+        expect(find.text('Inserisci l\'email'), findsOneWidget);
+
+        // Assicuriamoci che il comando non sia stato chiamato
+        verifyNever(() => mockCreateCommand.runAsync(any()));
+        expect(onDismissCalled, isFalse);
       },
     );
 
     testWidgets(
-      'In modalità modifica mostra titoli corretti e dati pre-popolati',
-      (WidgetTester tester) async {
+      'pre-popola i campi se viene passato un initialContact e adatta i testi',
+      (tester) async {
         final existingContact = TrustedContact(
-          id: 'c-1',
+          id: '123',
           name: 'Mario Rossi',
           email: 'mario@email.com',
-          phoneNumber: '123',
+          phoneNumber: '3331234567',
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChangeNotifierProvider<TrustedContactViewModel>.value(
-                value: viewModel,
-                child: TrustedContactFormWidget(
-                  onDismiss: () {},
-                  initialContact: existingContact,
-                ),
-              ),
-            ),
-          ),
+          createWidgetUnderTest(initialContact: existingContact),
         );
 
+        // Verifica titolo e bottone adatti alla modalità Modifica
         expect(find.text('Modifica Contatto'), findsOneWidget);
-        expect(find.text('Mario Rossi'), findsOneWidget);
         expect(find.text('Aggiorna contatto'), findsOneWidget);
+
+        // Verifica campi testo pre-popolati
+        expect(find.text('Mario Rossi'), findsOneWidget);
+        expect(find.text('3331234567'), findsOneWidget);
+        expect(find.text('mario@email.com'), findsOneWidget);
+      },
+    );
+  });
+
+  group('TrustedContactFormWidget - Creazione Contatto', () {
+    testWidgets(
+      'chiama createContact con i dati inseriti e invoca onDismiss su successo',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Compiliamo il form
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Nome e Cognome'),
+          'Luigi Bianchi',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Numero di Cellulare'),
+          '3339876543',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Indirizzo Email'),
+          'luigi@email.com',
+        );
+
+        await tester.tap(find.text('Salva contatto'));
+        await tester.pumpAndSettle();
+
+        // Verifica l'oggetto catturato
+        final captured = verify(
+          () => mockCreateCommand.runAsync(captureAny()),
+        ).captured;
+        final contactPassed = captured.first as TrustedContact;
+
+        expect(contactPassed.name, 'Luigi Bianchi');
+        expect(contactPassed.phoneNumber, '3339876543');
+        expect(contactPassed.email, 'luigi@email.com');
+        // ID vuoto perché in creazione
+        expect(contactPassed.id, '');
+
+        // Nessun errore simulato, quindi il form deve essersi chiuso
+        expect(onDismissCalled, isTrue);
+      },
+    );
+
+    testWidgets('NON invoca onDismiss se createContact emette errori', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nome e Cognome'),
+        'Test Error',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Numero di Cellulare'),
+        '123',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Indirizzo Email'),
+        'a@b.c',
+      );
+
+      // Mettiamo un errore di fallback che comparirà durante il runAsyc
+      // (Il widget legge errorNotifier.value subito dopo l'await runAsync)
+      when(() => mockCreateCommand.runAsync(any())).thenAnswer((_) async {
+        createErrorNotifier.value = MockCommandError();
+      });
+
+      await tester.tap(find.text('Salva contatto'));
+      await tester.pumpAndSettle();
+
+      expect(onDismissCalled, isFalse);
+    });
+  });
+
+  group('TrustedContactFormWidget - Modifica Contatto', () {
+    testWidgets('chiama updateContact mantenendo l\'ID originale', (
+      tester,
+    ) async {
+      final existingContact = TrustedContact(
+        id: 'ABC-123',
+        name: 'Vecchio Nome',
+        email: 'vecchia@email.com',
+        phoneNumber: '0000',
+      );
+
+      await tester.pumpWidget(
+        createWidgetUnderTest(initialContact: existingContact),
+      );
+
+      // Modifichiamo solo un campo
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nome e Cognome'),
+        'Nuovo Nome',
+      );
+
+      await tester.tap(find.text('Aggiorna contatto'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockUpdateCommand.runAsync(captureAny()),
+      ).captured;
+      final contactPassed = captured.first as TrustedContact;
+
+      expect(contactPassed.id, 'ABC-123'); // ID DEVE RIMANERE INVARIATO
+      expect(contactPassed.name, 'Nuovo Nome'); // Nome aggiornato
+
+      expect(onDismissCalled, isTrue);
+    });
+  });
+
+  group('TrustedContactFormWidget - Stato Caricamento', () {
+    testWidgets(
+      'mostra il CircularProgressIndicator sul bottone durante l\'esecuzione (modalità Creazione)',
+      (tester) async {
+        createRunningNotifier.value = true;
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester
+            .pump(); // Usiamo pump e non pumpAndSettle per via dell'animazione di caricamento
+
+        // Il bottone è diventato un CircularProgressIndicator
+        expect(find.text('Salva contatto'), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
       },
     );
   });

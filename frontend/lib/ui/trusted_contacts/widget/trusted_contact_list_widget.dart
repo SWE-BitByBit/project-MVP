@@ -1,79 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_model/trusted_contact_view_model.dart';
-import '../../../domain/trusted_contact.dart';
+import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import 'trusted_contact_form_widget.dart';
 
 /// Visualizza l'elenco dei contatti fidati salvati.
-///
-/// Implementa il pattern Consumer tramite [context.watch] per osservare
-/// il [TrustedContactViewModel] e reagire dinamicamente ai cambiamenti di stato,
-/// aggiornando l'interfaccia grafica ad ogni notifica.
 class TrustedContactListWidget extends StatelessWidget {
   const TrustedContactListWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<TrustedContactViewModel>();
-    if (viewModel.contacts.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.group_off, size: 64, color: Colors.teal.shade200),
-            const SizedBox(height: 16),
-            Text(
-              'Nessun contatto fidato',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Aggiungi un contatto fidato\ncon il pulsante qui sotto.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
-            ),
-          ],
-        ),
-      );
-    }
+    final theme = Theme.of(context);
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: viewModel.contacts.length,
-      separatorBuilder: (context, index) => const Divider(),
-      itemBuilder: (context, index) {
-        final contact = viewModel.contacts[index];
-        return ListTile(
-          onTap: () => _openEditForm(context, viewModel, contact),
-          leading: CircleAvatar(
-            backgroundColor: Colors.teal.shade100,
-            child: Text(
-              contact.getName()[0].toUpperCase(),
-              style: TextStyle(
-                color: Colors.teal.shade900,
-                fontWeight: FontWeight.bold,
+    // Usiamo il Consumer come richiesto dall'UML
+    return Consumer<TrustedContactViewModel>(
+      builder: (context, viewModel, child) {
+        // STATO: Lista Vuota
+        if (viewModel.contacts.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.group_off, size: 64, color: theme.disabledColor),
+                const SizedBox(height: 16),
+                Text(
+                  'Nessun contatto fidato',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Aggiungi un contatto fidato\ncon il pulsante qui sotto.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // STATO: Lista Popolata
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: viewModel.contacts.length,
+          separatorBuilder: (context, index) => const Divider(),
+          itemBuilder: (context, index) {
+            final contact = viewModel.contacts[index];
+
+            // Estrazione sicura dell'iniziale
+            final String initial = contact.name.isNotEmpty
+                ? contact.name[0].toUpperCase()
+                : '?';
+
+            return ListTile(
+              onTap: () => _openEditForm(context, viewModel, contact),
+              leading: CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ),
-          title: Text(
-            contact.getName(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          subtitle: Text('${contact.getEmail()}\n${contact.getPhone()}'),
-          isThreeLine: true,
-          trailing: IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: () => _showDeleteConfirmation(
-              context,
-              viewModel,
-              contact.getId(),
-              contact.getName(),
-            ),
-          ),
+              title: Text(
+                contact.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              subtitle: Text('${contact.email}\n${contact.phoneNumber}'),
+              isThreeLine: true,
+              trailing: IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                ),
+                onPressed: () => _showDeleteConfirmation(
+                  context,
+                  viewModel,
+                  contact.id,
+                  contact.name,
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -88,55 +104,61 @@ class TrustedContactListWidget extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
+        viewModel.clearInputErrors();
+        // Usiamo .value perché il ViewModel esiste già ed è gestito dal Provider padre
         return ChangeNotifierProvider.value(
           value: viewModel,
-          child: TrustedContactFormWidget(
-            initialContact: contact,
-            onDismiss: () => Navigator.pop(sheetContext),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+            ),
+            child: TrustedContactFormWidget(
+              initialContact: contact,
+              onDismiss: () {
+                Navigator.pop(sheetContext);
+              },
+            ),
           ),
         );
       },
     );
   }
 
-  /// Mostra un dialogo di conferma prima di eliminare il contatto.
+  /// Mostra un dialogo di conferma prima dell'eliminazione ottimistica.
   void _showDeleteConfirmation(
     BuildContext context,
     TrustedContactViewModel viewModel,
     String contactId,
     String contactName,
   ) {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Elimina Contatto'),
-          content: Text(
-            'Sei sicuro di voler rimuovere $contactName dai tuoi contatti fidati? ',
-          ),
+          content: Text('Rimuovere $contactName dai contatti fidati?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Annulla',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('Annulla', style: TextStyle(color: theme.hintColor)),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                viewModel.deleteContact.execute(contactId);
+                Navigator.pop(dialogContext);
+                viewModel.deleteContact.runAsync(contactId);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text(
-                'Elimina',
-                style: TextStyle(color: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: theme.colorScheme.onError,
               ),
+              child: const Text('Elimina'),
             ),
           ],
         );

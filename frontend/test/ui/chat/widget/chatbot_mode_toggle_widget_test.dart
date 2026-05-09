@@ -1,86 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
-// Sostituisci i percorsi in base al tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_mode_toggle_widget.dart'; // Nome del file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_mode_toggle_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
-// Importiamo la nostra controfigura
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
+
 
 void main() {
-  group('ChatbotModeToggleWidget Widget Test', () {
-    late MockChatbotRepository mockRepo;
-    late ChatbotViewModel viewModel;
+  late MockChatbotViewModel mockViewModel;
 
-    setUp(() {
-      mockRepo = MockChatbotRepository();
-      viewModel = ChatbotViewModel(mockRepo);
-    });
+  setUpAll(() {
+    registerFallbackValue(ChatMode.mirror);
+  });
 
-    Future<void> pumpToggleWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<ChatbotViewModel>.value(
-              value: viewModel,
-              child: const ChatbotModeToggleWidget(),
-            ),
+  setUp(() {
+    mockViewModel = MockChatbotViewModel();
+    // Setup di default per la chiamata setMode
+    when(() => mockViewModel.setMode(any())).thenReturn(null);
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: ChangeNotifierProvider<ChatbotViewModel>.value(
+            value: mockViewModel,
+            child: const ChatbotModeToggleWidget(),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    testWidgets('Stato Iniziale: Deve mostrare la modalità DETECTIVE di default con la sua icona', (WidgetTester tester) async {
-      await pumpToggleWidget(tester);
+  group('ChatbotModeToggleWidget', () {
+    testWidgets('Mostra l\'icona Mirror quando la modalità corrente è ChatMode.mirror', (tester) async {
+      when(() => mockViewModel.mode).thenReturn(ChatMode.mirror);
 
-      // Verifichiamo che il ViewModel parta effettivamente come DETECTIVE
-      expect(viewModel.selectedMode, ChatMode.detective);
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Verifichiamo che l'icona della psicologia (Detective) sia presente
+      expect(find.byIcon(Icons.auto_awesome_motion), findsOneWidget);
+      expect(find.byIcon(Icons.psychology), findsNothing);
+    });
+
+    testWidgets('Mostra l\'icona Detective quando la modalità corrente è ChatMode.detective', (tester) async {
+      when(() => mockViewModel.mode).thenReturn(ChatMode.detective);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
       expect(find.byIcon(Icons.psychology), findsOneWidget);
-      // Verifichiamo che l'altra icona NON ci sia
       expect(find.byIcon(Icons.auto_awesome_motion), findsNothing);
-
-      // Verifichiamo che lo Switch sia su "ON" (true)
-      final switchWidget = tester.widget<Switch>(find.byType(Switch));
-      expect(switchWidget.value, isTrue);
     });
 
-    testWidgets('Tappando lo Switch, cambia in modalità MIRROR e aggiorna l\'icona', (WidgetTester tester) async {
-      await pumpToggleWidget(tester);
+    testWidgets('Apre il menu a tendina e chiama setMode quando si seleziona una modalità', (tester) async {
+      when(() => mockViewModel.mode).thenReturn(ChatMode.mirror);
 
-      // Troviamo lo switch e ci clicchiamo sopra per spegnerlo
-      await tester.tap(find.byType(Switch));
-      await tester.pumpAndSettle(); // Aspettiamo che l'animazione dell'interruttore finisca
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // VERIFICA LOGICA: Il ViewModel ha registrato il cambio?
-      expect(viewModel.selectedMode, ChatMode.mirror);
-
-      // VERIFICA VISIVA: Le icone si sono scambiate?
-      expect(find.byIcon(Icons.auto_awesome_motion), findsOneWidget); // Appare Mirror
-      expect(find.byIcon(Icons.psychology), findsNothing); // Scompare Detective
-
-      // Verifichiamo che lo Switch ora sia "OFF" (false)
-      final switchWidget = tester.widget<Switch>(find.byType(Switch));
-      expect(switchWidget.value, isFalse);
-    });
-
-    testWidgets('Tappando due volte torna alla modalità DETECTIVE', (WidgetTester tester) async {
-      await pumpToggleWidget(tester);
-
-      // Doppio tap (Spegne e Riaccende)
-      await tester.tap(find.byType(Switch));
+      // 1. Tocca il widget per aprire il popup menu
+      await tester.tap(find.byType(PopupMenuButton<ChatMode>));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(Switch));
+      // 2. Verifica che le opzioni del menu siano visibili
+      expect(find.text('Specchio intelligente'), findsOneWidget);
+      expect(find.text('Detective delle relazioni'), findsOneWidget);
+
+      // 3. Seleziona la modalità Detective dal menu
+      await tester.tap(find.text('Detective delle relazioni'));
       await tester.pumpAndSettle();
 
-      // Verifica che sia tornato allo stato originario
-      expect(viewModel.selectedMode, ChatMode.detective);
-      expect(find.byIcon(Icons.psychology), findsOneWidget);
+      // 4. Verifica che il ViewModel sia stato aggiornato con la nuova modalità
+      verify(() => mockViewModel.setMode(ChatMode.detective)).called(1);
     });
   });
 }

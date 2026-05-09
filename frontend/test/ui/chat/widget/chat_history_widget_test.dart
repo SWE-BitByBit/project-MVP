@@ -1,118 +1,154 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
-// Sostituisci i percorsi con quelli del tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_history_widget.dart'; // Nome del tuo file
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_history_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 
-// Importiamo la nostra controfigura
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
+import '../../../../testing/mocks/chatbot/mock_chat.dart';
 
 void main() {
-  group('ChatHistoryWidget Widget Test', () {
-    late MockChatbotRepository mockRepo;
-    late ChatbotViewModel viewModel;
+  late MockChatbotViewModel mockViewModel;
+  late MockCommand<String, void> mockOpenChat;
+  late MockCommand<String, void> mockDeleteChat;
+  late MockCommand<void, void> mockCreateChat;
+  late GlobalKey<ScaffoldState> scaffoldKey;
 
-    setUp(() async {
-      mockRepo = MockChatbotRepository();
-      viewModel = ChatbotViewModel(mockRepo);
+  // Notifier per evitare l'eccezione di tipo Null sul ValueListenable
+  late ValueNotifier<bool> createChatIsRunningNotifier;
 
-      // Prepariamo il mock con un paio di chat fittizie
-      mockRepo.mockedPreviewsToReturn = [
-        LocalChat(id: '1', title: 'Indagine Omicidio', creationDate: DateTime.now(), messages: []),
-        LocalChat(id: '2', title: 'Rapina in Banca', creationDate: DateTime.now(), messages: []),
-      ];
+  setUp(() {
+    mockViewModel = MockChatbotViewModel();
+    mockOpenChat = MockCommand<String, void>();
+    mockDeleteChat = MockCommand<String, void>();
+    mockCreateChat = MockCommand<void, void>();
 
-      // Diciamo al ViewModel di caricare questa lista iniziale
-      await viewModel.loadChatPreviews();
-    });
+    createChatIsRunningNotifier = ValueNotifier<bool>(false);
 
-    /// Helper function per montare il widget all'interno di un finto ecosistema di navigazione
-    Future<void> pumpDrawer(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<ChatbotViewModel>.value(
-            value: viewModel,
-            child: Scaffold(
-              // Inseriamo una finta AppBar per avere il "menu hamburger"
-              appBar: AppBar(title: const Text('Home')),
-              // Montiamo il tuo widget esattamente dove dovrebbe stare: nel drawer!
-              drawer: const ChatHistoryWidget(),
-            ),
-          ),
+    scaffoldKey = GlobalKey<ScaffoldState>();
+
+    // Mock dei comandi principali
+    when(() => mockViewModel.openChat).thenReturn(mockOpenChat);
+    when(() => mockViewModel.deleteChat).thenReturn(mockDeleteChat);
+    when(() => mockViewModel.createChat).thenReturn(mockCreateChat);
+
+    // Setup essenziale per il widget figlio ChatbotCreateChatWidget che ascolta isRunning
+    when(
+      () => mockCreateChat.isRunning,
+    ).thenReturn(createChatIsRunningNotifier);
+
+    when(() => mockOpenChat.run(any())).thenAnswer((_) async {});
+    when(() => mockDeleteChat.run(any())).thenAnswer((_) async {});
+    when(() => mockCreateChat.run()).thenAnswer((_) async {});
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        key: scaffoldKey,
+        drawer: ChangeNotifierProvider<ChatbotViewModel>.value(
+          value: mockViewModel,
+          child: const ChatHistoryWidget(),
         ),
-      );
+        body: const Center(child: Text('Home')),
+      ),
+    );
+  }
 
-      // Ordiniamo al dito robotico di cliccare sull'icona del menu per aprire il Drawer
-      await tester.tap(find.byIcon(Icons.menu));
-      // Aspettiamo che l'animazione di scorrimento del menu sia finita
-      await tester.pumpAndSettle();
-    }
+  group('ChatHistoryWidget', () {
+    testWidgets('Mostra messaggio di stato vuoto se non ci sono chat', (
+      tester,
+    ) async {
+      when(() => mockViewModel.chats).thenReturn([]);
+      when(() => mockViewModel.currentChat).thenReturn(null);
 
-    testWidgets('Deve mostrare i titoli delle chat e le icone', (WidgetTester tester) async {
-      await pumpDrawer(tester);
-
-      // Verifichiamo che l'header sia presente
-      expect(find.text('Cronologia Chat'), findsOneWidget);
-
-      // Verifichiamo che i titoli delle due chat fittizie siano stampati a schermo
-      expect(find.text('Indagine Omicidio'), findsOneWidget);
-      expect(find.text('Rapina in Banca'), findsOneWidget);
-
-      // Verifichiamo che ci siano i bottoni di eliminazione (uno per ogni chat)
-      expect(find.byIcon(Icons.delete_outline), findsNWidgets(2));
-    });
-
-    testWidgets('Cliccare su una chat deve aprirla e chiudere il menu', (WidgetTester tester) async {
-      await pumpDrawer(tester);
-
-      // Prepariamo il mock per quando il ViewModel chiamerà getChatById('1')
-      mockRepo.mockedChatToReturn = LocalChat(
-          id: '1', title: 'Indagine Omicidio', creationDate: DateTime.now(), messages: []
-      );
-
-      // Tappiamo sul titolo della prima chat
-      await tester.tap(find.text('Indagine Omicidio'));
+      await tester.pumpWidget(createWidgetUnderTest());
+      scaffoldKey.currentState?.openDrawer();
       await tester.pumpAndSettle();
 
-      // VERIFICA 1: Il ViewModel ha impostato la chat corrente?
-      expect(viewModel.currentChat, isNotNull);
-      expect(viewModel.currentChat!.getId(), '1');
-
-      // VERIFICA 2: Il Drawer si è chiuso? (Il Navigator.pop ha funzionato?)
-      // Se si è chiuso, il testo "Cronologia Chat" non deve più essere visibile sullo schermo
-      expect(find.text('Cronologia Chat'), findsNothing);
+      expect(find.text('Nessuna conversazione salvata.'), findsOneWidget);
+      expect(find.byType(ListTile), findsNothing);
     });
 
-    testWidgets('Cliccare sull\'icona cestino deve eliminare la chat', (WidgetTester tester) async {
-      await pumpDrawer(tester);
+    testWidgets('Mostra la lista delle chat', (tester) async {
+      final chat1 = MockChat();
+      when(() => chat1.id).thenReturn('1');
+      when(() => chat1.title).thenReturn('Chat uno');
 
-      // TRUCCO DA MAESTRI: Prima di tappare "Elimina", modifichiamo la lista
-      // del mock in modo che la chat '2' non ci sia più.
-      // Così, quando il ViewModel ricaricherà le anteprime dopo aver eliminato,
-      // riceverà la nuova lista senza quella chat!
-      mockRepo.mockedPreviewsToReturn = [
-        LocalChat(id: '1', title: 'Indagine Omicidio', creationDate: DateTime.now(), messages: []),
-      ];
+      final chat2 = MockChat();
+      when(() => chat2.id).thenReturn('2');
+      when(() => chat2.title).thenReturn('Chat due');
 
-      // Troviamo tutti i bottoni "cestino" (ce ne sono 2). Clicchiamo il secondo (indice 1)
-      final cestini = find.byIcon(Icons.delete_outline);
-      await tester.tap(cestini.at(1));
+      when(() => mockViewModel.chats).thenReturn([chat1, chat2]);
+      when(() => mockViewModel.currentChat).thenReturn(null);
 
-      // Aspettiamo che il dialogo si apra
+      await tester.pumpWidget(createWidgetUnderTest());
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Chat uno'), findsOneWidget);
+      expect(find.text('Chat due'), findsOneWidget);
+      expect(find.byType(ListTile), findsNWidgets(2));
+    });
+
+    testWidgets(
+      'Il tap su una chat invia il comando openChat e chiude il drawer',
+      (tester) async {
+        final chat1 = MockChat();
+        when(() => chat1.id).thenReturn('1');
+        when(() => chat1.title).thenReturn('Chat di test');
+
+        when(() => mockViewModel.chats).thenReturn([chat1]);
+        when(() => mockViewModel.currentChat).thenReturn(null);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        scaffoldKey.currentState?.openDrawer();
+        await tester.pumpAndSettle();
+
+        // Tappiamo sulla riga della chat
+        await tester.tap(find.text('Chat di test'));
+        await tester
+            .pumpAndSettle(); // Aspettiamo l'animazione di chiusura del drawer
+
+        // Verifica comando
+        verify(() => mockOpenChat.run('1')).called(1);
+
+        // Verifica che il drawer sia stato chiuso (il testo non è più visibile/attivo nello scaffold)
+        expect(find.text('Cronologia Chat'), findsNothing);
+      },
+    );
+
+    testWidgets('Il tap sull\'icona cestino invia il comando deleteChat', (
+      tester,
+    ) async {
+      final chat1 = MockChat();
+      when(() => chat1.id).thenReturn('1');
+      when(() => chat1.title).thenReturn('Chat da eliminare');
+
+      when(() => mockViewModel.chats).thenReturn([chat1]);
+      when(() => mockViewModel.currentChat).thenReturn(null);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      scaffoldKey.currentState?.openDrawer();
+      await tester.pumpAndSettle();
+
+      final dotsBtns = find.byIcon(Icons.more_vert);
+      await tester.tap(dotsBtns.first);
+      await tester.pumpAndSettle();
+
+      // Troviamo tutti i bottoni "cestino"
+      final deleteBtns = find.byIcon(Icons.delete_outline);
+      await tester.tap(deleteBtns.first);
       await tester.pumpAndSettle();
 
       // Clicchiamo il pulsante 'Elimina' nel dialogo di conferma
       await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
 
-      // Aspettiamo che il ViewModel faccia la chiamata di rete finta e che Flutter ridisegni lo schermo
       await tester.pumpAndSettle();
 
-      // Verifichiamo che la seconda chat sia scomparsa dalla grafica!
-      expect(find.text('Rapina in Banca'), findsNothing);
-      expect(find.text('Indagine Omicidio'), findsOneWidget); // La prima deve esserci ancora
+      verify(() => mockDeleteChat.run('1')).called(1);
     });
   });
 }

@@ -1,5 +1,5 @@
 from enum import Enum
 
 class DiaryType(str, Enum):
-    REAL_DIARY = "REAL_DIARY"
-    FAKE_DIARY = "FAKE_DIARY"
+    REAL_DIARY = "real_diary"
+    FAKE_DIARY = "fake_diary"

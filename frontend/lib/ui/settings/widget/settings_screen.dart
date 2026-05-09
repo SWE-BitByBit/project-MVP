@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../view_model/settings_view_model.dart';
-import 'dead_mans_switch_screen.dart';
-import '../../core/widgets/error_banner_widget.dart';
+import '../../../utils/locator.dart';
+import '../view_model/dead_man_view_model.dart';
+import 'dead_man_form_widget.dart';
 
+/// Schermata principale delle Impostazioni.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SettingsViewModel(),
-      child: const SettingsScreenView(),
+    return ChangeNotifierProvider<DeadManViewModel>(
+      create: (_) => getIt<DeadManViewModel>(),
+      child: const _SettingsScreenBody(),
     );
   }
 }
 
-class SettingsScreenView extends StatelessWidget {
-  const SettingsScreenView({super.key});
+class _SettingsScreenBody extends StatelessWidget {
+  const _SettingsScreenBody();
 
   @override
   Widget build(BuildContext context) {
@@ -25,53 +26,59 @@ class SettingsScreenView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Impostazioni'),
         centerTitle: true,
-        backgroundColor: Colors.teal.shade200,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.teal.shade900),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
       ),
-      body: Consumer<SettingsViewModel>(
-        builder: (context, viewModel, child) {
-          return ListView(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+      body: ListView(
+        physics: const BouncingScrollPhysics(),
+        children: [
+          // --- ALLARME AUTOMATICO ---
+          ExpansionTile(
+            initiallyExpanded: true,
+            leading: Icon(Icons.timer_outlined, color: Theme.of(context).colorScheme.primary),
+            title: const Text('Allarme Automatico', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Configura il Dead Man\'s Switch'),
+            children: const [
+              // Qui richiamiamo il widget dal file separato
+              DeadManFormWidget(),
+            ],
+          ),
+
+          const Divider(height: 1),
+
+          // --- PRIVACY E DATI ---
+          ExpansionTile(
+            leading: Icon(Icons.privacy_tip_outlined, color: Theme.of(context).colorScheme.outline),
+            title: const Text('Privacy e Dati'),
             children: [
-              if (viewModel.error != null)
-                ErrorBannerWidget(
-                  error: viewModel.error!,
-                  onClose: viewModel.clearError,
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Gestione dei consensi e della privacy in arrivo...',
+                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
                 ),
-              ListTile(
-                leading: Icon(Icons.build, color: Colors.teal.shade900),
-                title: const Text('Impostazioni Dead Man\'s Switch'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const DeadMansSwitchScreen(),
-                    ),
-                  );
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.info_outline, color: Colors.teal.shade900),
-                title: const Text('Informazioni sull\'App'),
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'MVP App',
-                    applicationVersion: '0.0.0', // verifica che questa versione corrisponda a quella reale dell'app e uguale a quella nei test
-                    applicationIcon: Icon(Icons.security, size: 40, color: Colors.teal.shade900),
-                    children: [
-                      const Text('Applicazione che protegge e trasforma.'),
-                    ],
-                  );
-                },
               ),
             ],
-          );
-        },
+          ),
+
+          const Divider(height: 1),
+
+          // --- INFO APP ---
+          ExpansionTile(
+            leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.outline),
+            title: const Text('Informazioni App'),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Versione MVP 1.0.0',
+                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 32)
+
+        ],
       ),
     );
   }

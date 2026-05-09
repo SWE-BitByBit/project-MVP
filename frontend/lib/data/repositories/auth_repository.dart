@@ -1,38 +1,46 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import '../../domain/user.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../domain/models/auth/user.dart';
 import '../dtos/user_dto.dart';
 import '../services/auth_service.dart';
 
 /// Coordina l'accesso ai dati di autenticazione.
 ///
-/// Agisce da tramite tra il livello di servizio ([AuthService]) e il livello UI,
-/// gestendo lo stato dell'utente tramite [_currentUser].
+/// Agisce da tramite tra il livello di servizio ([AuthService]) e il livello UI.
 class AuthRepository {
   /// Servizio per le operazioni di rete con AWS Cognito.
   final AuthService _authService;
 
+  final _secureStorage = const FlutterSecureStorage();
+  final String _refreshTokenKey = 'cognito_refresh_token';
+
   /// Utente attualmente autenticato nella sessione locale.
   User? _currentUser;
 
-  /// Inizializza il repository con un'istanza di [_authService].
+  /// Inizializza il repository con l'istanza di [_authService] iniettata.
   AuthRepository(this._authService);
 
-  /// Restituisce l'utente attualmente memorizzato in [_currentUser], se presente.
+  /// Restituisce l'utente attualmente autenticato.
   User? getCurrentUser() => _currentUser;
 
-  /// Verifica se esiste un utente attualmente autenticato controllando [_currentUser].
+  /// Verifica se esiste un utente autenticato
   bool isLoggedIn() => _currentUser != null;
 
-  /// Avvia il processo di login delegando l'operazione di rete a [_authService].
+  /// Avvia il login.
   ///
-  /// In caso di successo, converte i dati grezzi in un oggetto [User] e lo salva
-  /// nella variabile [_currentUser].
+  /// In caso di successo, mappa i dati tramite [UserDTO] e aggiorna lo stato.
+  /// Restituisce un [Future] con l'oggetto [User] o [null] in caso di fallimento.
   Future<User?> login() async {
     try {
       final Map<String, dynamic> rawData = await _authService.login();
-      final String jsonString = jsonEncode(rawData);
-      _currentUser = UserDTO.fromJson(jsonString);
+      _currentUser = UserDTO.fromJson(rawData);
+
+      if (rawData.containsKey('refresh_token')) {
+        await _secureStorage.write(
+          key: _refreshTokenKey,
+          value: rawData['refresh_token'],
+        );
+      }
 
       return _currentUser;
     } catch (e) {
@@ -41,9 +49,33 @@ class AuthRepository {
     }
   }
 
-  /// Esegue il logout dell'utente tramite [_authService] e resetta [_currentUser].
   Future<void> logout() async {
-    await _authService.logout();
-    _currentUser = null;
+    try {
+      await _authService.logout();
+    } finally {
+      _currentUser = null;
+      await _secureStorage.delete(key: _refreshTokenKey);
+    }
+  }
+
+  Future<bool> restoreSession() async {
+    try {
+      final savedRefreshToken = await _secureStorage.read(
+        key: _refreshTokenKey,
+      );
+
+      if (savedRefreshToken == null) {
+        return false;
+      }
+      final Map<String, dynamic> rawData = await _authService.refreshToken(
+        savedRefreshToken,
+      );
+      _currentUser = UserDTO.fromJson(rawData);
+      return true;
+    } catch (e) {
+      debugPrint('Impossibile ripristinare la sessione (token scaduto?): $e');
+      await _secureStorage.delete(key: _refreshTokenKey);
+      return false;
+    }
   }
 }

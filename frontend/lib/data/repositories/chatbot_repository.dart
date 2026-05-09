@@ -1,39 +1,83 @@
 import '../../domain/models/chatbot/chat.dart';
 import '../../domain/models/chatbot/chat_enums.dart';
 import '../../domain/models/chatbot/chat_message.dart';
-import '../../domain/models/chatbot/proxy_chat.dart';
+import '../proxies/proxy_chat.dart';
 import '../../domain/models/chatbot/message_response.dart';
 import '../dtos/chat_dto.dart';
 import '../services/chatbot_service.dart';
+import 'cacheable_repository.dart';
 
 /// Intermediario tra la Presentation (ViewModel) e il livello Dati (Service).
-/// Si occupa di trasformare i dati grezzi JSON in Entità di Dominio sicure.
-class ChatbotRepository {
+/// Gestisce la cache locale e implementa il pattern Proxy per il lazy loading.
+class ChatbotRepository implements CacheableRepository {
   final ChatbotService _chatbotService;
+
+  final List<Chat> _cachedChats = [];
+  List<Chat> get cachedChats => List.unmodifiable(_cachedChats);
+
+  String? lastViewedChatId;
 
   ChatbotRepository(this._chatbotService);
 
-  Future<List<Chat>> getChatPreviews() async {
-    final List<Map<String, dynamic>> rawData = await _chatbotService
-        .fetchChatPreviews();
-
-    return rawData
-        .map(
-          (json) => ProxyChat(
-            id: (json['id'] ?? json['chat_id'] ?? '') as String,
-            title: (json['title'] ?? 'Senza Titolo') as String,
-            creationDate: DateTime.parse(
-              (json['creationDate'] ??
-                  json['created_at'] ??
-                  json['lastModified'] ??
-                  DateTime.now().toIso8601String()) as String,
-            ),
-            repository: this,
-          ),
-        )
-        .toList();
+  /// Svuota la cache al momento del Logout (chiamata dal CacheManager)
+  @override
+  void clearCache() {
+    _cachedChats.clear();
+    lastViewedChatId = null;
   }
 
+  void _sortCache() {
+    _cachedChats.sort((a, b) => b.updateDate.compareTo(a.updateDate));
+  }
+
+  /// Recupera le anteprime e le istanzia come [ProxyChat].
+  /// Restituisce una lista di [Chat] polimorfa per la UI.
+  Future<List<Chat>> getChatPreviews() async {
+    if (_cachedChats.isNotEmpty) {
+      _sortCache();
+      return _cachedChats;
+    }
+
+    final Map<String, dynamic> rawResponse = await _chatbotService
+        .fetchChatPreviews();
+    final List<dynamic> rawData = rawResponse['chats'] ?? [];
+
+    _cachedChats.clear();
+    for (var json in rawData) {
+      final creationStr = json['created_at']?.toString();
+      final updateStr = json['updated_at']?.toString();
+      final creationDate =
+          DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
+
+      final proxy = ProxyChat(
+        id: json['chat_id']?.toString() ?? '',
+        title: json['title']?.toString() ?? 'Nuova conversazione',
+        creationDate: creationDate,
+        updateDate: DateTime.tryParse(updateStr ?? '') ?? creationDate,
+        repository: this,
+      );
+
+      _cachedChats.add(proxy);
+    }
+
+    _sortCache();
+    return cachedChats;
+  }
+
+  String _generateChatTitle(ChatMessage initialMessage) {
+    const int maxLength = 20;
+    final content = initialMessage.content.trim();
+
+    if (content.isEmpty) return 'Nuova chat';
+
+    final title = content.length <= maxLength
+        ? content
+        : '${content.substring(0, maxLength)}...';
+
+    return title[0].toUpperCase() + title.substring(1);
+  }
+
+  /// Usato dalla [ProxyChat] per scaricare effettivamente i messaggi
   Future<Chat> getChatById(String chatId) async {
     final Map<String, dynamic> rawChat = await _chatbotService.fetchChat(
       chatId,
@@ -41,47 +85,82 @@ class ChatbotRepository {
     return ChatDTO.fromJson(rawChat);
   }
 
-  Future<Chat> createChat() async {
-    final Map<String, dynamic> rawChat = await _chatbotService.createChat();
-    return ChatDTO.fromJson(rawChat);
+  /// Crea una nuova conversazione e la aggiunge alla cache
+  Future<Chat> createChat(ChatMessage initialMessage) async {
+    final String title = _generateChatTitle(initialMessage);
+    final Map<String, dynamic> rawChat = await _chatbotService.createChat(
+      title,
+    );
+    final newChat = ChatDTO.fromJson(rawChat);
+
+    _cachedChats.insert(0, newChat);
+    return newChat;
   }
 
+  /// Elimina una chat dal server e dalla cache locale
   Future<void> deleteChat(String chatId) async {
-    await _chatbotService.deleteChat(chatId);
+    final chatToDelete = _cachedChats.firstWhere((c) => c.id == chatId);
+    final index = _cachedChats.indexOf(chatToDelete);
+    _cachedChats.removeAt(index);
+
+    try {
+      await _chatbotService.deleteChat(chatId);
+    } catch (e) {
+      _cachedChats.insert(index, chatToDelete);
+      rethrow;
+    }
   }
 
-  /// Invia un messaggio tramite il Service e restituisce una [MessageResponse].
+  /// Invia un messaggio e decodifica in modo sicuro la risposta del bot
   Future<MessageResponse> sendMessage(
     Chat chat,
     String content,
     ChatMode mode,
   ) async {
-    // Converte l'enum in stringa come richiesto dal Service ('MIRROR' o 'DETECTIVE')
-    final String modeString = mode.name;
+    final String modeString = mode.name.toUpperCase();
 
-    // Chiamata di rete passandogli l'id della chat
     final Map<String, dynamic> responseJson = await _chatbotService.sendMessage(
-      chat.getId(),
+      chat.id,
       content,
       modeString,
     );
 
-    // Mappatura manuale della risposta (che rappresenta un singolo messaggio)
-    // Supportiamo sia 'id' che 'message_id', e 'content' vs 'text'
     final ChatMessage responseMessage = ChatMessage(
-      id: (responseJson['id'] ?? responseJson['message_id'] ?? 'ai-msg-temp')
-          as String,
-      content: (responseJson['content'] ??
-          responseJson['text'] ??
-          responseJson['response'] ??
-          '') as String,
-      type: MessageType.ai,
+      // Se il backend non restituisce il message_id, ne generiamo uno temporaneo per la UI
+      id:
+          responseJson['message_id']?.toString() ??
+          'msg_${DateTime.now().millisecondsSinceEpoch}',
+
+      // Cerchiamo 'response' oppure facciamo fallback su 'text'
+      content:
+          responseJson['response']?.toString() ??
+          responseJson['text']?.toString() ??
+          '',
+
+      type: MessageType.ai, // È sicuramente l'AI a rispondere
       timestamp: DateTime.now(),
     );
 
-    // Estraggono l'eventuale titolo aggiornato (se inviato dal backend)
-    final String? updatedTitle = responseJson['updated_title'] as String?;
+    final String? updatedTitle = responseJson['title']?.toString();
 
-    return MessageResponse(response: responseMessage, updatedTitle: updatedTitle);
+    _sortCache();
+
+    return MessageResponse(
+      response: responseMessage,
+      updatedTitle: updatedTitle,
+    );
+  }
+
+  Future<void> updateChatTitle(String chatId, String newTitle) async {
+    final Map<String, dynamic> updatedChatJson = await _chatbotService
+        .updateChat(chatId, {'title': newTitle});
+
+    final updatedChat = ChatDTO.fromJson(updatedChatJson);
+    final index = _cachedChats.indexWhere((c) => c.id == chatId);
+
+    if (index != -1) {
+      _cachedChats[index].title = updatedChat.title;
+      _sortCache();
+    }
   }
 }

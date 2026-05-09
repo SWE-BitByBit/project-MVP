@@ -1,0 +1,20 @@
+{
+  "chat_id": "chat_123",
+  "title": "Emergenza e supporto",
+  "created_at": "2023-10-01T12:00:00.000Z",
+  "updated_at": "2023-10-01T12:30:00.000Z",
+  "messages": [
+    {
+      "message_id": "msg_1",
+      "text": "Ho bisogno di aiuto",
+      "sender": "user",
+      "created_at": "2023-10-01T12:05:00.000Z"
+    },
+    {
+      "message_id": "msg_2",
+      "text": "Come posso aiutarti oggi?",
+      "sender": "ai",
+      "created_at": "2023-10-01T12:05:05.000Z"
+    }
+  ]
+}

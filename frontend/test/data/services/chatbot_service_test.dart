@@ -1,214 +1,179 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/services/chatbot_service.dart';
 
+import '../../../testing/mocks/network/mock_api_client.dart';
+
 void main() {
-  group('ChatbotService Tests', () {
-    late ChatbotService service;
+  late ChatbotService chatbotService;
+  late MockApiClient mockApiClient;
 
-    setUp(() {
-      // Non è più necessario inizializzare dotenv se passiamo baseUrl esplicitamente
+  setUp(() {
+    mockApiClient = MockApiClient();
+    chatbotService = ChatbotService(apiClient: mockApiClient);
+  });
+
+  final tChatPreviewsResponse = {
+    "items": [
+      {
+        "chat_id": "1",
+        "title": "Discussione su sicurezza",
+        "created_at": "2023-10-27T09:00:00Z",
+        "updated_at": "2023-10-27T10:00:00Z",
+      },
+    ],
+  };
+
+  final tChatDetailResponse = {
+    "chat_id": "1",
+    "title": "Discussione su sicurezza",
+    "created_at": "2023-10-27T09:00:00Z",
+    "updated_at": "2023-10-27T10:00:00Z",
+    "messages": [
+      {
+        "chat_id": "1",
+        "message_id": "m1",
+        "text": "Ciao",
+        "sender": "user",
+        "created_at": "2023-10-27T09:01:00Z",
+      },
+    ],
+  };
+
+  final tMessageResponse = {
+    "response": {
+      "chat_id": "1",
+      "message_id": "m3",
+      "text": "Questo è il mio consiglio.",
+      "sender": "ai",
+      "created_at": "2023-10-27T09:05:00Z",
+    },
+    "updatedTitle": "Nuovo Titolo",
+  };
+
+  group('fetchChatPreviews', () {
+    test('should perform GET request on /chats and return data', () async {
+      when(
+        () => mockApiClient.get(any()),
+      ).thenAnswer((_) async => tChatPreviewsResponse);
+
+      final result = await chatbotService.fetchChatPreviews();
+
+      expect(result, equals(tChatPreviewsResponse));
+      verify(() => mockApiClient.get('/chats')).called(1);
     });
 
-    test('fetchChatPreviews restituisce una lista di mappe in caso di successo',
-        () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(
-            jsonEncode([
-              {
-                'id': 'chat-1',
-                'title': 'Test Chat',
-                'created_at': DateTime.now().toIso8601String(),
-                'messages': []
-              }
-            ]),
-            200);
-      });
+    test('should rethrow exception if ApiClient throws', () async {
+      when(
+        () => mockApiClient.get(any()),
+      ).thenThrow(Exception('Network error'));
 
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      final result = await service.fetchChatPreviews();
-      expect(result, isNotEmpty);
-      expect(result[0]['id'], 'chat-1');
+      expect(() => chatbotService.fetchChatPreviews(), throwsException);
     });
+  });
 
-    test('fetchChat restituisce i dati della chat corretta', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(
-            jsonEncode({
-              'id': 'chat-123',
-              'title': 'Specific Chat',
-              'created_at': DateTime.now().toIso8601String(),
-              'messages': []
-            }),
-            200);
-      });
+  group('fetchChat', () {
+    test(
+      'should perform GET request on /chats/{chatId} and return data',
+      () async {
+        const tChatId = '1';
+        when(
+          () => mockApiClient.get(any()),
+        ).thenAnswer((_) async => tChatDetailResponse);
 
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
+        final result = await chatbotService.fetchChat(tChatId);
 
-      final result = await service.fetchChat('chat-123');
-      expect(result['id'], 'chat-123');
-      expect(result['title'], 'Specific Chat');
+        expect(result, equals(tChatDetailResponse));
+        verify(() => mockApiClient.get('/chats/$tChatId')).called(1);
+      },
+    );
+  });
+
+  group('createChat', () {
+    test(
+      'should perform POST request on /chats with empty body and return data',
+      () async {
+        final tCreateResponse = {
+          "chat_id": "2",
+          "title": "Nuova conversazione",
+          "created_at": "2023-10-28T09:00:00Z",
+          "updated_at": "2023-10-28T09:00:00Z",
+          "messages": [],
+        };
+
+        final expectedBody = {"title": "Nuova conversazione"};
+
+        when(
+          () => mockApiClient.post(any(), body: any(named: 'body')),
+        ).thenAnswer((_) async => tCreateResponse);
+
+        final result = await chatbotService.createChat("Nuova conversazione");
+
+        expect(result, equals(tCreateResponse));
+        verify(
+          () => mockApiClient.post('/chats', body: expectedBody),
+        ).called(1);
+      },
+    );
+  });
+
+  group('updateChat', () {
+    test(
+      'should perform PUT request on /chats/{chatId} with correct body',
+      () async {
+        const tChatId = '1';
+        final tUpdateData = {'title': 'Updated Title'};
+        when(
+          () => mockApiClient.put(any(), body: any(named: 'body')),
+        ).thenAnswer((_) async => tUpdateData);
+
+        final result = await chatbotService.updateChat(tChatId, tUpdateData);
+
+        expect(result, equals(tUpdateData));
+        verify(
+          () => mockApiClient.put('/chats/$tChatId', body: tUpdateData),
+        ).called(1);
+      },
+    );
+  });
+
+  group('deleteChat', () {
+    test('should perform DELETE request on /chats/{chatId}', () async {
+      const tChatId = '1';
+      when(() => mockApiClient.delete(any())).thenAnswer((_) async => {});
+
+      await chatbotService.deleteChat(tChatId);
+
+      verify(() => mockApiClient.delete('/chats/$tChatId')).called(1);
     });
+  });
 
-    test('createChat crea una nuova chat con successo', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(
-            jsonEncode({
-              'id': 'new-chat-id',
-              'title': 'Nuova conversazione',
-              'created_at': DateTime.now().toIso8601String(),
-              'messages': []
-            }),
-            201);
-      });
+  group('sendMessage', () {
+    test(
+      'should perform POST request on /chats/{chatId}/messages with message and mode',
+      () async {
+        const tChatId = '1';
+        const tContent = 'Ciao chatbot';
+        const tMode = 'detective';
 
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
+        when(
+          () => mockApiClient.post(any(), body: any(named: 'body')),
+        ).thenAnswer((_) async => tMessageResponse);
 
-      final result = await service.createChat();
-      expect(result['id'], 'new-chat-id');
-      expect(result['title'], 'Nuova conversazione');
-    });
+        final result = await chatbotService.sendMessage(
+          tChatId,
+          tContent,
+          tMode,
+        );
 
-    test('deleteChat completa senza errori', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('', 204);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(service.deleteChat('chat-123'), completes);
-    });
-
-    test('sendMessage restituisce la risposta dell\'AI', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(
-            jsonEncode({
-              'id': 'msg-1',
-              'content': 'Risposta AI in modalità DETECTIVE',
-              'type': 'AI',
-              'timestamp': DateTime.now().toIso8601String()
-            }),
-            200);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      final result = await service.sendMessage('chat-123', 'Ciao', 'DETECTIVE');
-      expect(result['content'], contains('DETECTIVE'));
-    });
-
-    test('generateChatTitle restituisce il titolo generato dal server', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(jsonEncode({'title': 'Titolo Generato'}), 200);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      final result = await service.generateChatTitle('Messaggio utente');
-      expect(result, 'Titolo Generato');
-    });
-
-    test('generateChatTitle restituisce fallback se il server fallisce', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 500);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      final result = await service.generateChatTitle('Messaggio utente');
-      expect(result, 'Nuova conversazione');
-    });
-
-    test('fetchChatPreviews lancia Exception se status != 200', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 404);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(() => service.fetchChatPreviews(), throwsException);
-    });
-
-    test('fetchChat lancia Exception se status != 200', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 404);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(() => service.fetchChat('123'), throwsException);
-    });
-
-    test('createChat lancia Exception se status != 201 e != 200', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 500);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(() => service.createChat(), throwsException);
-    });
-
-    test('deleteChat lancia Exception se status != 200 e != 204', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 500);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(() => service.deleteChat('123'), throwsException);
-    });
-
-    test('sendMessage lancia Exception se status != 200 e != 201', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error', 500);
-      });
-
-      service = ChatbotService(
-        baseUrl: 'https://api.example.com',
-        client: mockClient,
-      );
-
-      expect(
-        () => service.sendMessage('123', 'hi', 'DETECTIVE'),
-        throwsException,
-      );
-    });
+        expect(result, equals(tMessageResponse));
+        verify(
+          () => mockApiClient.post(
+            '/chats/$tChatId/messages',
+            body: {'message': tContent, 'response_mode': tMode},
+          ),
+        ).called(1);
+      },
+    );
   });
 }

@@ -1,148 +1,337 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/chatbot_repository.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_message.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/message_response.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/proxies/proxy_chat.dart';
 
-import '../../../testing/mocks/mock_chatbot_service.dart';
+import '../../../testing/mocks/chatbot/mock_chatbot_service.dart';
 
 void main() {
-  group('ChatbotRepository', () {
-    late MockChatbotService mockService;
-    late ChatbotRepository repository;
+  late MockChatbotService mockService;
+  late ChatbotRepository repository;
 
-    final sampleDateString = '2024-05-20T14:30:00.000';
-    final sampleDate = DateTime.parse(sampleDateString);
+  setUp(() {
+    mockService = MockChatbotService();
+    repository = ChatbotRepository(mockService);
+  });
 
-    setUp(() {
-      mockService = MockChatbotService();
-      repository = ChatbotRepository(mockService);
-    });
+  group('ChatbotRepository Tests', () {
+    group('Cache Management', () {
+      test(
+        'clearCache dovrebbe svuotare la lista e resettare lastViewedChatId',
+        () async {
+          // Arrange
+          when(() => mockService.fetchChatPreviews()).thenAnswer(
+            (_) async => {
+              'chats': [
+                {
+                  'chat_id': 'chat_1',
+                  'title': 'Test',
+                  'created_at': '2023-01-01T10:00:00.000Z',
+                  'updated_at': '2023-01-01T10:00:00.000Z',
+                },
+              ],
+            },
+          );
 
-    test(
-      'getChatPreviews mappa correttamente il JSON in oggetti Chat',
-      () async {
-        // Arrange: Prepariamo un finto JSON di risposta dal Service
-        mockService.mockedPreviewsJson = [
-          {
-            'id': 'prev-1',
-            'title': 'Indagine 1',
-            'lastModified': sampleDateString,
-          },
-        ];
+          await repository.getChatPreviews();
+          repository.lastViewedChatId = 'chat_1';
+          expect(repository.cachedChats.isNotEmpty, isTrue);
 
-        // Act
-        final previews = await repository.getChatPreviews();
+          // Act
+          repository.clearCache();
 
-        // Assert: Verifichiamo che il Repository abbia fatto bene la traduzione
-        expect(previews.length, 1);
-        expect(previews.first.getId(), 'prev-1');
-        expect(previews.first.getTitle(), 'Indagine 1');
-        expect(previews.first.getCreationDate(), sampleDate);
-      },
-    );
-
-    test('getChatById delega al ChatDTO per il parsing', () async {
-      // Arrange
-      mockService.mockedChatJson = {
-        'id': 'chat-1',
-        'title': 'Chat Completa',
-        'creationDate': sampleDateString,
-        'messages': [], // Testiamo una chat vuota per semplicità
-      };
-
-      // Act
-      final chat = await repository.getChatById('chat-1');
-
-      // Assert
-      expect(chat.getId(), 'chat-1');
-      expect(chat.getTitle(), 'Chat Completa');
-    });
-
-    test('sendMessage mappa correttamente la risposta', () async {
-      // Arrange: Creiamo una chat finta da passare come parametro
-      final dummyChat = LocalChat(
-        id: 'chat-99',
-        title: 'Vecchia',
-        creationDate: DateTime.now(),
-        messages: [],
-      );
-
-      // Act
-      final response = await repository.sendMessage(
-        dummyChat,
-        'Ciao',
-        ChatMode.detective,
-      );
-
-      // Assert: Controlliamo il messaggio
-      final msg = response.getResponse();
-      expect(msg.content, 'Questa è la mia risposta');
-    });
-
-    test('getChatPreviews gestisce chiavi alternative (chat_id, created_at)', () async {
-      mockService.mockedPreviewsJson = [
-        {
-          'chat_id': 'chat-alt',
-          'title': 'Alternative',
-          'created_at': sampleDateString,
+          // Assert
+          expect(repository.cachedChats, isEmpty);
+          expect(repository.lastViewedChatId, isNull);
         },
-      ];
-
-      final previews = await repository.getChatPreviews();
-
-      expect(previews.first.getId(), 'chat-alt');
-      expect(previews.first.getTitle(), 'Alternative');
-      expect(previews.first.getCreationDate(), sampleDate);
+      );
     });
 
-    test('getChatPreviews fallback per data mancante', () async {
-      mockService.mockedPreviewsJson = [
-        {
-          'id': 'chat-no-date',
-          'title': 'No Date',
+    group('getChatPreviews', () {
+      test(
+        'dovrebbe scaricare dalla rete, creare i ProxyChat e ordinarli per data decrescente',
+        () async {
+          // Arrange
+          final rawResponse = {
+            'chats': [
+              {
+                'chat_id': 'chat_old',
+                'title': 'Vecchia Chat',
+                'created_at': '2023-10-01T10:00:00.000Z',
+                'updated_at': '2023-10-01T12:00:00.000Z', // Più vecchia
+              },
+              {
+                'chat_id': 'chat_new',
+                'title': 'Nuova Chat',
+                'created_at': '2023-10-02T10:00:00.000Z',
+                'updated_at': '2023-10-05T12:00:00.000Z', // Più recente
+              },
+            ],
+          };
+
+          when(
+            () => mockService.fetchChatPreviews(),
+          ).thenAnswer((_) async => rawResponse);
+
+          // Act
+          final results = await repository.getChatPreviews();
+
+          // Assert
+          expect(results.length, 2);
+          expect(
+            results[0].id,
+            'chat_new',
+          ); // Deve essere la prima perché ordinata per updateDate
+          expect(results[1].id, 'chat_old');
+          expect(results[0], isA<ProxyChat>());
+
+          verify(() => mockService.fetchChatPreviews()).called(1);
         },
-      ];
-
-      final previews = await repository.getChatPreviews();
-      expect(previews.first.getCreationDate(), isNotNull);
-    });
-
-    test('sendMessage gestisce chiavi alternative nella risposta (message_id, text, response)', () async {
-      final dummyChat = LocalChat(
-        id: '1',
-        title: 'T',
-        creationDate: DateTime.now(),
-        messages: [],
       );
 
-      // Test con message_id e text
-      mockService.mockedMessageResponseJson = {
-        'message_id': 'm-alt',
-        'text': 'Alternative text'
-      };
-      var response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
-      expect(response.getResponse().id, 'm-alt');
-      expect(response.getResponse().content, 'Alternative text');
+      test(
+        'dovrebbe restituire la cache senza chiamare il service se la cache non è vuota',
+        () async {
+          // Arrange
+          when(() => mockService.fetchChatPreviews()).thenAnswer(
+            (_) async => {
+              'chats': [
+                {'chat_id': 'c1', 'updated_at': '2023-01-01T00:00:00.000Z'},
+              ],
+            },
+          );
 
-      // Test con response (stile alcuni backend LLM)
-      mockService.mockedMessageResponseJson = {
-        'id': 'm-resp',
-        'response': 'Response content'
-      };
-      response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
-      expect(response.getResponse().content, 'Response content');
+          await repository.getChatPreviews(); // Prima chiamata (popola cache)
+          clearInteractions(mockService);
+
+          // Act
+          final results = await repository
+              .getChatPreviews(); // Seconda chiamata
+
+          // Assert
+          expect(results.length, 1);
+          verifyNever(() => mockService.fetchChatPreviews());
+        },
+      );
     });
 
-    // Test degli Errori (Essenziale per la Coverage)
-    test(
-      'Se il Service lancia un\'eccezione, il Repository la lascia passare verso il ViewModel',
-      () async {
-        mockService.shouldThrowError = true;
+    group('getChatById', () {
+      test(
+        'dovrebbe chiamare il service e restituire una LocalChat completa via ChatDTO',
+        () async {
+          // Arrange
+          final rawChat = {
+            'chat_id': 'chat_123',
+            'title': 'Test Chat',
+            'created_at': '2023-10-01T12:00:00.000Z',
+            'updated_at': '2023-10-01T12:00:00.000Z',
+            'messages': [
+              {
+                'message_id': 'msg_1',
+                'text': 'Ciao',
+                'sender': 'user',
+                'created_at': '2023-10-01T12:05:00.000Z',
+              },
+            ],
+          };
 
-        // Usiamo 'throwsException' per verificare che l'errore arrivi fino a noi
-        expect(() => repository.getChatPreviews(), throwsException);
-        expect(() => repository.createChat(), throwsException);
-      },
-    );
+          when(
+            () => mockService.fetchChat(any()),
+          ).thenAnswer((_) async => rawChat);
+
+          // Act
+          final result = await repository.getChatById('chat_123');
+
+          // Assert
+          expect(result, isA<LocalChat>());
+          expect(result.id, 'chat_123');
+          expect(result.messages.length, 1);
+          verify(() => mockService.fetchChat('chat_123')).called(1);
+        },
+      );
+    });
+
+    group('createChat', () {
+      test(
+        'dovrebbe chiamare il service, aggiungere la chat in cima alla cache e restituirla',
+        () async {
+          // Arrange
+          final rawChat = {
+            'chat_id': 'new_chat_1',
+            'title': 'Nuova conversazione',
+            'created_at': '2024-01-01T12:00:00.000Z',
+            'updated_at': '2024-01-01T12:00:00.000Z',
+            'messages': [],
+          };
+
+          final initialMessage = ChatMessage(
+            id: 'temp_msg_1',
+            content: 'Messaggio di test',
+            type: MessageType.user,
+            timestamp: DateTime.now(),
+          );
+
+          when(
+            () => mockService.createChat(initialMessage.content),
+          ).thenAnswer((_) async => rawChat);
+
+          // Act
+          final result = await repository.createChat(initialMessage);
+
+          // Assert
+          expect(result.id, 'new_chat_1');
+          expect(repository.cachedChats.first.id, 'new_chat_1');
+          verify(
+            () => mockService.createChat(initialMessage.content),
+          ).called(1);
+        },
+      );
+    });
+
+    group('deleteChat', () {
+      test(
+        'dovrebbe rimuovere la chat dalla cache e chiamare il service',
+        () async {
+          // Arrange
+          when(() => mockService.fetchChatPreviews()).thenAnswer(
+            (_) async => {
+              'chats': [
+                {'chat_id': 'del_1', 'updated_at': '2024-01-01T00:00:00.000Z'},
+              ],
+            },
+          );
+          await repository.getChatPreviews(); // Popoliamo la cache
+
+          when(
+            () => mockService.deleteChat('del_1'),
+          ).thenAnswer((_) async => {});
+
+          // Act
+          await repository.deleteChat('del_1');
+
+          // Assert
+          expect(repository.cachedChats.isEmpty, isTrue);
+          verify(() => mockService.deleteChat('del_1')).called(1);
+        },
+      );
+
+      test(
+        'dovrebbe ripristinare la chat nella cache se l\'eliminazione via service fallisce',
+        () async {
+          // Arrange
+          when(() => mockService.fetchChatPreviews()).thenAnswer(
+            (_) async => {
+              'chats': [
+                {
+                  'chat_id': 'del_fail',
+                  'updated_at': '2024-01-01T00:00:00.000Z',
+                },
+              ],
+            },
+          );
+          await repository.getChatPreviews();
+
+          when(
+            () => mockService.deleteChat('del_fail'),
+          ).thenThrow(Exception('Errore di rete'));
+
+          // Act & Assert
+          expect(() => repository.deleteChat('del_fail'), throwsException);
+          expect(
+            repository.cachedChats.length,
+            1,
+          ); // La chat deve essere tornata
+          expect(repository.cachedChats.first.id, 'del_fail');
+        },
+      );
+    });
+
+    group('sendMessage', () {
+      test(
+        'dovrebbe chiamare il service, parsare la risposta e restituire un MessageResponse',
+        () async {
+          // Arrange
+          final dummyChat = LocalChat(
+            id: 'chat_msg_1',
+            title: 'Test',
+            creationDate: DateTime.now(),
+            updateDate: DateTime.now(),
+            messages: [],
+          );
+
+          final apiResponse = {
+            'message_id': 'msg_ai_123',
+            'response':
+                'Ecco la mia risposta', // Chiave 'response' usata nel backend Python
+            'title': 'Nuovo Titolo Aggiornato',
+          };
+
+          when(
+            () => mockService.sendMessage('chat_msg_1', 'Ciao bot', 'MIRROR'),
+          ).thenAnswer((_) async => apiResponse);
+
+          // Act
+          final result = await repository.sendMessage(
+            dummyChat,
+            'Ciao bot',
+            ChatMode.mirror,
+          );
+
+          // Assert
+          expect(result, isA<MessageResponse>());
+          expect(result.response.id, 'msg_ai_123');
+          expect(result.response.content, 'Ecco la mia risposta');
+          expect(result.response.type, MessageType.ai);
+          expect(result.updatedTitle, 'Nuovo Titolo Aggiornato');
+
+          verify(
+            () => mockService.sendMessage('chat_msg_1', 'Ciao bot', 'MIRROR'),
+          ).called(1);
+        },
+      );
+
+      test(
+        'dovrebbe fare fallback sulla chiave text se response manca e generare un id temporaneo se assente',
+        () async {
+          // Arrange
+          final dummyChat = LocalChat(
+            id: 'chat_msg_2',
+            title: 'Test',
+            creationDate: DateTime.now(),
+            updateDate: DateTime.now(),
+            messages: [],
+          );
+
+          final apiResponse = {
+            'text': 'Risposta di fallback', // Chiave 'text'
+            // Nessun message_id
+            // Nessun title
+          };
+
+          when(
+            () => mockService.sendMessage('chat_msg_2', 'Ciao', 'DETECTIVE'),
+          ).thenAnswer((_) async => apiResponse);
+
+          // Act
+          final result = await repository.sendMessage(
+            dummyChat,
+            'Ciao',
+            ChatMode.detective,
+          );
+
+          // Assert
+          expect(result.response.content, 'Risposta di fallback');
+          expect(
+            result.response.id,
+            startsWith('msg_'),
+          ); // Id generato con timestamp
+          expect(result.updatedTitle, isNull);
+        },
+      );
+    });
   });
 }
