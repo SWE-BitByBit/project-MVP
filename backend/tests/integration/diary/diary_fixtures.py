@@ -32,7 +32,7 @@ if not any(isinstance(h, DiaryImportHook) for h in sys.meta_path):
     sys.meta_path.insert(0, DiaryImportHook())
 
 # Helper function
-def build_event(route, body=None, user_id="user1"):
+def build_event(route, body=None, user_id="user1", path_parameters=None):
     return {
         "routeKey": route,
         "requestContext": {
@@ -44,6 +44,7 @@ def build_event(route, body=None, user_id="user1"):
                 }
             }
         },
+        "pathParameters": path_parameters or {},
         "body": json.dumps(body) if body else "{}"
     }
 
@@ -51,6 +52,12 @@ def build_event(route, body=None, user_id="user1"):
 @pytest.fixture(scope="function")
 def setup_aws():
     with mock_aws():
+        os.environ["REGION"] = "us-east-1"
+        os.environ["NOTES_TABLE"] = "diary_notes"
+        os.environ["NOTES_ELEMENTS_TABLE"] = "diary_elements"
+        os.environ["BUCKET_NAME"] = "diary-media"
+        os.environ["S3_BUCKET_NOTES_NAME"] = "diary-media"
+
         dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
         s3 = boto3.client("s3", region_name="us-east-1")
         
@@ -62,13 +69,19 @@ def setup_aws():
         )
         dynamodb.create_table(
             TableName="diary_elements",
-            KeySchema=[{"AttributeName": "note_id", "KeyType": "HASH"}, {"AttributeName": "element_id", "KeyType": "RANGE"}],
-            AttributeDefinitions=[{"AttributeName": "note_id", "AttributeType": "S"}, {"AttributeName": "element_id", "AttributeType": "S"}],
+            KeySchema=[{"AttributeName": "note_id", "KeyType": "HASH"}, {"AttributeName": "note_element_id", "KeyType": "RANGE"}],
+            AttributeDefinitions=[{"AttributeName": "note_id", "AttributeType": "S"}, {"AttributeName": "note_element_id", "AttributeType": "S"}],
             ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
         )
         s3.create_bucket(Bucket="diary-media")
         
         yield {"dynamodb": dynamodb, "s3_client": s3}
+
+
+@pytest.fixture(scope="function")
+def aws_s3_client(setup_aws):
+    return setup_aws["s3_client"]
+
 
 @pytest.fixture(scope="function")
 def controller(setup_aws):
