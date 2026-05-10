@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 'task/creazione-ipa'
+      - 'develop'
+      - 'main'
+  workflow_dispatch:
 
 jobs:
   build-ios:
