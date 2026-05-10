@@ -1,0 +1,7 @@
+{
+  "is_active": true,
+  "first_inactivity_timer": 5,
+  "second_inactivity_timer": 3,
+  "message_subject": "Allarme di sicurezza",
+  "message_body": "Se ricevi questo messaggio, significa che non ho fatto il check-in."
+}

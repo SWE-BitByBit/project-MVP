@@ -1,43 +1,81 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:command_it/command_it.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/home/view_model/home_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/dead_man/dead_man_settings.dart';
+
+import '../../../../testing/mocks/dead_man/mock_dead_man_repository.dart';
+
+class FakeDeadManSettings extends Fake implements DeadManSettings {
+  @override
+  final bool isActive;
+  FakeDeadManSettings({required this.isActive});
+}
 
 void main() {
   late HomeViewModel viewModel;
+  late MockDeadManRepository mockDeadManRepository;
 
   setUp(() {
-    viewModel = HomeViewModel();
+    Command.globalExceptionHandler = (error, stackTrace) {};
+    mockDeadManRepository = MockDeadManRepository();
+
+    // Setup di default per il costruttore che chiama loadDashboard.run()
+    when(() => mockDeadManRepository.currentSettings).thenReturn(null);
   });
 
-  group('HomeViewModel - Stato Iniziale', () {
-    test('Lo stato iniziale deve essere pulito e senza errori', () {
-      expect(viewModel.isLoading, isFalse);
-      expect(viewModel.error, isNull);
+  Future<void> initViewModel() async {
+    viewModel = HomeViewModel(mockDeadManRepository);
+  }
+
+  group('HomeViewModel - Dashboard Items', () {
+    test('loadDashboard dovrebbe restituire esattamente 3 elementi al termine', () async {
+      await initViewModel();
+
+      expect(viewModel.loadDashboard.value, isNotNull);
+      expect(viewModel.loadDashboard.value.length, 3);
+
+      final titles = viewModel.loadDashboard.value.map((e) => e.title).toList();
+      expect(titles, containsAll([
+        'Contatti Fidati',
+        'Informazioni',
+        'Luoghi Sicuri'
+      ]));
+    });
+
+    test('Stato iniziale del comando dovrebbe essere popolato con gli elementi del dashboard', () {
+      viewModel = HomeViewModel(mockDeadManRepository);
+      expect(viewModel.loadDashboard.value, isNotEmpty);
+      expect(viewModel.loadDashboard.value.length, 3);
     });
   });
 
-  group('HomeViewModel - Gestione Errori', () {
-    test('clearError azzera il messaggio di errore e notifica i listener', () {
-      // Arrange: impostiamo un errore manualmente accedendo al campo privato
-      // tramite l'invocazione di clearError partendo da uno stato con errore.
-      // Dato che _error è privato, verifichiamo il comportamento atteso
-      // tramite il ChangeNotifier.
-      int notifyCount = 0;
-      viewModel.addListener(() => notifyCount++);
+  group('HomeViewModel - Dead Man Switch Status', () {
+    test('isDeadManActive dovrebbe essere true se il repository ha impostazioni attive', () async {
+      when(() => mockDeadManRepository.currentSettings)
+          .thenReturn(FakeDeadManSettings(isActive: true));
 
-      // Act: chiamiamo clearError (che setta _error = null e notifica)
-      viewModel.clearError();
+      await initViewModel();
 
-      // Assert: il listener è stato chiamato e l'errore è ancora null
-      expect(notifyCount, 1);
-      expect(viewModel.error, isNull);
+      expect(viewModel.isDeadManActive, isTrue);
+      verify(() => mockDeadManRepository.currentSettings).called(1);
     });
 
-    test('isLoading è sempre false (non ci sono operazioni asincrone attive)', () {
-      // Il ViewModel Home è attualmente predisposto per future espansioni.
-      // Verifichiamo che il getter sia stabile.
-      expect(viewModel.isLoading, isFalse);
-      viewModel.clearError();
-      expect(viewModel.isLoading, isFalse);
+    test('isDeadManActive dovrebbe essere false se il repository ha impostazioni disattive', () async {
+      when(() => mockDeadManRepository.currentSettings)
+          .thenReturn(FakeDeadManSettings(isActive: false));
+
+      await initViewModel();
+
+      expect(viewModel.isDeadManActive, isFalse);
+    });
+
+    test('isDeadManActive dovrebbe essere false se le impostazioni sono null', () async {
+      when(() => mockDeadManRepository.currentSettings).thenReturn(null);
+
+      await initViewModel();
+
+      expect(viewModel.isDeadManActive, isFalse);
     });
   });
 }

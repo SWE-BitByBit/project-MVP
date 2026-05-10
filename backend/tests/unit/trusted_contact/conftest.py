@@ -15,8 +15,19 @@ modules_to_clean = ["ports", "controller", "repository", "models", "service", "s
 for mod in list(sys.modules.keys()):
     if any(mod == clean_mod or mod.startswith(clean_mod + ".") for clean_mod in modules_to_clean):
         del sys.modules[mod]
+        import importlib
+        importlib.invalidate_caches()
 
 import pytest
+import src.trusted_contact.lambda_handler as lambda_func
+
+@pytest.fixture(autouse=True)
+def reset_lambda_state():
+    "Resetta lo stato globale della lambda"
+    lambda_func._controller = None
+    yield
+    lambda_func._controller = None
+
 import boto3
 import json
 from moto import mock_aws
@@ -24,16 +35,16 @@ from unittest.mock import patch
 
 
 @pytest.fixture(scope="function")
-def aws_credentials():
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-    os.environ["REGION"] = "us-east-1"
-    os.environ["DMS_TABLE"] = "dms_table"
-    os.environ["TRUSTED_CONTACT_TABLE"] = "trusted_contact_table"
-    os.environ["SOURCE_EMAIL"] = "noreply@app.com"
+def aws_credentials(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+    monkeypatch.setenv("REGION", "us-east-1")
+    monkeypatch.setenv("DMS_TABLE", "dms_table")
+    monkeypatch.setenv("TRUSTED_CONTACT_TABLE", "trusted_contact_table")
+    monkeypatch.setenv("SOURCE_EMAIL", "noreply@app.com")
 
 
 @pytest.fixture(scope="function")

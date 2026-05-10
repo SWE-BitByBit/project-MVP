@@ -11,10 +11,6 @@ class DashboardButtonWidget extends StatelessWidget {
   final VoidCallback onTap;
 
   /// Crea un'istanza di [DashboardButtonWidget] con le proprietà visive e il comportamento specificati.
-  ///
-  /// I parametri [title], [description], [icon], [backgroundColor], [iconColor] e [onTap]
-  /// sono obbligatori e definiscono rispettivamente il testo del titolo, la descrizione,
-  /// l'icona, i colori e la callback invocata al tocco del pulsante.
   const DashboardButtonWidget({
     super.key,
     required this.title,
@@ -26,11 +22,6 @@ class DashboardButtonWidget extends StatelessWidget {
   });
 
   /// Costruisce il widget grafico di un singolo pulsante della dashboard.
-  ///
-  /// Restituisce un [Material] con bordi arrotondati che racchiude un [InkWell] per
-  /// il feedback visivo al tocco. Il contenuto interno è organizzato in una [Column]
-  /// allineata a sinistra, composta da una [Row] con [icon] e [title] in alto,
-  /// e dal testo [description] in basso.
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -64,7 +55,7 @@ class DashboardButtonWidget extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey.shade700,
+                  color: Color.lerp(iconColor, Colors.black, 0.7),
                   height: 1.4,
                 ),
               ),

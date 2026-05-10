@@ -1,109 +1,92 @@
 import 'package:flutter/material.dart';
-import '../../../../data/repositories/auth_repository.dart';
+import 'package:provider/provider.dart';
 import '../view_model/auth_view_model.dart';
 import 'header_widget.dart';
 import 'google_login_button_widget.dart';
 import 'logged_in_banner_widget.dart';
+import '../../core/widgets/error_banner_widget.dart';
 
-/// Rappresenta la schermata principale per l'autenticazione dell'utente.
-class LoginScreen extends StatefulWidget {
-  /// Repository per la gestione dell'autenticazione.
-  final AuthRepository authRepository;
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
 
-  /// Inizializza la schermata con il [authRepository] fornito.
-  const LoginScreen({super.key, required this.authRepository});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  /// View Model per la gestione dello stato della schermata di login.
-  late final AuthViewModel _viewModel;
-
-  /// Inizializza i servizi e i componenti necessari per la schermata.
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = AuthViewModel(widget.authRepository);
-    _viewModel.checkExistingSession();
-  }
-
-  /// Esegue la pulizia delle risorse, tra cui la chiusura del [_viewModel].
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  /// Costruisce l'interfaccia utente complessiva delegando la logica ai widget figli.
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: Colors.teal.shade200,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: ListenableBuilder(
-              listenable: Listenable.merge([_viewModel, _viewModel.login, _viewModel.logout]),
-              builder: (context, child) {
-                final isUserLoggedIn = _viewModel.currentUser != null;
+    return Consumer<AuthViewModel>(
+      builder: (context, viewModel, child) {
+        final isUserLoggedIn = viewModel.currentUser != null;
+        final colorScheme = Theme.of(context).colorScheme;
 
-                return Column(
+        return Scaffold(
+          appBar: AppBar(title: const Text('Login'), centerTitle: true),
+          body: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const HeaderWidget(),
                     const SizedBox(height: 48),
 
-                    if (_viewModel.login.error != null) ...[
-                      Text(
-                        _viewModel.login.error.toString().replaceAll('Exception: ', ''),
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                    ValueListenableBuilder(
+                      valueListenable: viewModel.login.errors,
+                      builder: (context, commandError, _) {
+                        if (commandError != null) {
+                          return ErrorBannerWidget(
+                            error: commandError.error.toString().replaceFirst(
+                              'Exception: ',
+                              '',
+                            ),
+                            onClose: () => viewModel.login.clearErrors(),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
 
                     if (isUserLoggedIn) ...[
-                      LoggedInBannerWidget(
-                        email: _viewModel.currentUser!.email,
-                      ),
+                      LoggedInBannerWidget(email: viewModel.currentUser!.email),
                       const SizedBox(height: 20),
                       TextButton(
-                        onPressed: () => _viewModel.logout.execute(),
-                        child: const Text(
+                        onPressed: viewModel.logout.run,
+                        child: Text(
                           'Disconnetti',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     ] else ...[
-                      GoogleLoginButtonWidget(
-                        isLoading: _viewModel.login.running,
-                        onPressedCallback: () async {
-                          await _viewModel.login.execute();
+                      ValueListenableBuilder<bool>(
+                        valueListenable: viewModel.login.isRunning,
+                        builder: (context, isRunning, _) {
+                          return GoogleLoginButtonWidget(
+                            isLoading: isRunning,
+                            // AGGIORNAMENTO 4: Da execute a run
+                            onPressedCallback: isRunning
+                                ? () {}
+                                : viewModel.login.run,
+                          );
                         },
                       ),
+
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'L\'accesso è consentito solo tramite account Google ufficiale.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ],
-                );
-              },
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,132 +1,64 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../data/dtos/chat_dto.dart';
+import '../network/api_client.dart';
 
 /// Servizio responsabile della comunicazione HTTP/REST con il backend AWS
-/// per la funzionalità del Chatbot.
+/// per la funzionalità del Chatbot (Detective e Specchio).
 class ChatbotService {
-  /// URL base dell'API Gateway per il Chatbot.
-  final String baseUrl;
+  /// Il client per le comunicazioni HTTP autenticate.
+  final ApiClient _apiClient;
 
-  /// Il client HTTP per le richieste.
-  final http.Client client;
+  /// Percorso base per le API del chatbot
+  static const String _basePath = '/chats';
 
-  /// Costruttore con iniezione delle dipendenze.
-  /// Se [baseUrl] non viene fornita, viene letta da [dotenv].
-  ChatbotService({
-    String? baseUrl,
-    http.Client? client,
-  })  : baseUrl = baseUrl ?? dotenv.env['API_BASE_URL'] ?? '',
-        client = client ?? http.Client();
+  ChatbotService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  Map<String, String> _headers() {
-    // TODO: Recuperare il token reale dall'AuthRepository
-    const String token = "";
-    return {
-      'Content-Type': 'application/json',
-      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
-    };
+  /// Recupera le preview di tutte le chat dell'utente.
+  Future<Map<String, dynamic>> fetchChatPreviews() async {
+    final response = await _apiClient.get(_basePath);
+    return response as Map<String, dynamic>;
   }
 
-  /// Recupera la lista delle anteprime delle chat.
-  Future<List<Map<String, dynamic>>> fetchChatPreviews() async {
-    final uri = Uri.parse('$baseUrl/chats/');
-    final res = await client.get(uri, headers: _headers());
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to fetch chat previews');
-    }
-
-    final List data = jsonDecode(res.body);
-
-    return data.map<Map<String, dynamic>>((e) {
-      final chat = ChatDTO.fromJson(e);
-      return ChatDTO.toJson(chat);
-    }).toList();
-  }
-
-  /// Recupera una singola chat completa tramite il suo ID.
+  /// Recupera il contenuto completo di una chat, inclusi tutti i messaggi.
   Future<Map<String, dynamic>> fetchChat(String chatId) async {
-    final uri = Uri.parse('$baseUrl/chats/$chatId');
-    final res = await client.get(uri, headers: _headers());
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to fetch chat');
-    }
-
-    final data = jsonDecode(res.body);
-    final chat = ChatDTO.fromJson(data);
-
-    return ChatDTO.toJson(chat);
+    return await _apiClient.get('$_basePath/$chatId');
   }
 
-  /// Richiede al server la creazione di una nuova chat.
-  Future<Map<String, dynamic>> createChat() async {
-    final uri = Uri.parse('$baseUrl/chats/');
-
-    final res = await client.post(
-      uri,
-      headers: _headers(),
-      body: jsonEncode({}),
-    );
-
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to create chat');
-    }
-
-    final data = jsonDecode(res.body);
-    final chat = ChatDTO.fromJson(data);
-
-    return ChatDTO.toJson(chat);
+  /// Crea una nuova istanza di chat nel database.
+  Future<Map<String, dynamic>> createChat(String title) async {
+    return await _apiClient.post(_basePath, body: {'title': title});
   }
 
-  /// Richiede al server l'eliminazione di una chat.
+  /// Aggiorna i metadati di una chat esistente (es. il titolo).
+  Future<Map<String, dynamic>> updateChat(
+    String chatId,
+    Map<String, dynamic> data,
+  ) async {
+    return await _apiClient.put('$_basePath/$chatId', body: data);
+  }
+
+  /// Rimuove permanentemente una chat dal sistema.
   Future<void> deleteChat(String chatId) async {
-    final uri = Uri.parse('$baseUrl/chats/$chatId');
-
-    final res = await client.delete(uri, headers: _headers());
-
-    if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception('Failed to delete chat');
-    }
+    await _apiClient.delete('$_basePath/$chatId');
   }
 
-  /// Invia un messaggio all'AI specificando la modalità (Mirror o Detective) in formato stringa.
+  /// Invia un messaggio al modello linguistico tramite il sistema RAG.
   Future<Map<String, dynamic>> sendMessage(
     String chatId,
     String content,
     String mode,
   ) async {
-    final uri = Uri.parse('$baseUrl/chats/$chatId/messages');
+    final body = {'message': content, 'response_mode': mode};
 
-    final res = await client.post(
-      uri,
-      headers: _headers(),
-      body: jsonEncode({'content': content, 'mode': mode}),
-    );
-
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to send message');
-    }
-
-    return jsonDecode(res.body);
+    // La specifica indica che questo metodo ritorna risposta + titolo aggiornato.
+    return await _apiClient.post('$_basePath/$chatId/messages', body: body);
   }
 
-  /// Genera un titolo per la chat basato sul primo messaggio inviato.
-  Future<String> generateChatTitle(String content) async {
-    final uri = Uri.parse('$baseUrl/chats/generate-title');
-    final res = await client.post(
-      uri,
-      headers: _headers(),
-      body: jsonEncode({'content': content}),
+  Future<Map<String, dynamic>> updateChatTitle(
+    String chatId,
+    String newTitle,
+  ) async {
+    return await _apiClient.put(
+      '$_basePath/$chatId',
+      body: {'title': newTitle},
     );
-
-    if (res.statusCode != 200) {
-      return "Nuova conversazione"; // Fallback
-    }
-
-    final data = jsonDecode(res.body);
-    return data['title'] as String;
   }
 }

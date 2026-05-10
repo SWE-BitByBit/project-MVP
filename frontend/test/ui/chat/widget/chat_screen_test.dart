@@ -1,102 +1,216 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+// Nascondiamo MockCommand da command_it per evitare conflitti con il nostro mock personalizzato
+import 'package:command_it/command_it.dart' hide MockCommand;
 
-// Sostituisci i percorsi in base al tuo progetto
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/view_model/chatbot_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chat_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_send_message_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/chat/widget/chatbot_mode_info_dialog_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat.dart';
 
-import '../../../../testing/mocks/mock_chatbot_repository.dart';
+import '../../../../testing/mocks/chatbot/mock_chatbot_view_model.dart';
+import '../../../../testing/mocks/chatbot/mock_chat.dart';
+
+typedef SendMessageParam = ({Chat chat, String content, ChatMode mode});
 
 void main() {
-  group('ChatScreen (Integration UI Test)', () {
-    late MockChatbotRepository mockRepo;
-    late ChatbotViewModel viewModel;
+  late MockChatbotViewModel mockViewModel;
 
-    setUp(() {
-      mockRepo = MockChatbotRepository();
-      viewModel = ChatbotViewModel(mockRepo);
-    });
+  // Notifiers per i vari comandi e stati reattivi
+  late ValueNotifier<String?> asyncErrorNotifier;
+  late ValueNotifier<bool> loadIsRunningNotifier;
+  late ValueNotifier<CommandError<void>?> loadErrorsNotifier;
+  late ValueNotifier<bool> openChatIsRunningNotifier;
+  late ValueNotifier<bool> createChatIsRunningNotifier;
+  late ValueNotifier<bool> sendMessageIsRunningNotifier;
+  late ValueNotifier<CommandError<SendMessageParam>?> sendMessageErrorsNotifier;
 
-    Future<void> pumpScreen(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<ChatbotViewModel>.value(
-            value: viewModel,
-            // ATTENZIONE: Testiamo la ChatScreenView, non il ChatScreen wrapper!
-            child: const ChatScreenView(),
-          ),
+  // Mocks per i comandi usati nello schermo e nei widget figli
+  late MockCommand<void, void> mockLoadChatPreviews;
+  late MockCommand<String, void> mockOpenChat;
+  late MockCommand<void, void> mockCreateChat;
+  late MockCommand<String, void> mockDeleteChat;
+  late MockCommand<SendMessageParam, void> mockSendMessage;
+
+  setUpAll(() {
+    // Registriamo il fallback per ChatMode richiesto da mocktail per il metodo `any()`
+    registerFallbackValue(ChatMode.mirror);
+  });
+
+  setUp(() {
+    mockViewModel = MockChatbotViewModel();
+
+    // Inizializzazione Notifiers con i tipi generici corretti per CommandError
+    asyncErrorNotifier = ValueNotifier<String?>(null);
+    loadIsRunningNotifier = ValueNotifier<bool>(false);
+    loadErrorsNotifier = ValueNotifier<CommandError<void>?>(null);
+    openChatIsRunningNotifier = ValueNotifier<bool>(false);
+    createChatIsRunningNotifier = ValueNotifier<bool>(false);
+    sendMessageIsRunningNotifier = ValueNotifier<bool>(false);
+    sendMessageErrorsNotifier = ValueNotifier<CommandError<SendMessageParam>?>(
+      null,
+    );
+
+    // Inizializzazione Mocks Comandi
+    mockLoadChatPreviews = MockCommand<void, void>();
+    mockOpenChat = MockCommand<String, void>();
+    mockCreateChat = MockCommand<void, void>();
+    mockDeleteChat = MockCommand<String, void>();
+    mockSendMessage = MockCommand<SendMessageParam, void>();
+
+    // Setup base del ViewModel
+    when(() => mockViewModel.asyncError).thenReturn(asyncErrorNotifier);
+    when(() => mockViewModel.chats).thenReturn([]);
+    when(() => mockViewModel.currentChat).thenReturn(null);
+    when(() => mockViewModel.mode).thenReturn(ChatMode.mirror);
+    when(() => mockViewModel.setMode(any())).thenReturn(null);
+
+    // Setup mockLoadChatPreviews
+    when(() => mockViewModel.loadChatPreviews).thenReturn(mockLoadChatPreviews);
+    when(
+      () => mockLoadChatPreviews.isRunning,
+    ).thenReturn(loadIsRunningNotifier);
+    when(() => mockLoadChatPreviews.errors).thenReturn(loadErrorsNotifier);
+    when(() => mockLoadChatPreviews.run(any())).thenAnswer((_) async {});
+
+    // Setup mockOpenChat
+    when(() => mockViewModel.openChat).thenReturn(mockOpenChat);
+    when(() => mockOpenChat.isRunning).thenReturn(openChatIsRunningNotifier);
+    when(() => mockOpenChat.run(any())).thenAnswer((_) async {});
+
+    // Setup mockCreateChat (usato da ChatHistoryWidget -> ChatbotCreateChatWidget)
+    when(() => mockViewModel.createChat).thenReturn(mockCreateChat);
+    when(
+      () => mockCreateChat.isRunning,
+    ).thenReturn(createChatIsRunningNotifier);
+    when(() => mockCreateChat.run(any())).thenAnswer((_) async {});
+
+    // Setup mockDeleteChat (usato da ChatHistoryWidget)
+    when(() => mockViewModel.deleteChat).thenReturn(mockDeleteChat);
+    when(() => mockDeleteChat.run(any())).thenAnswer((_) async {});
+
+    // Setup mockSendMessage (usato da ChatbotSendMessageWidget)
+    when(() => mockViewModel.sendMessage).thenReturn(mockSendMessage);
+    when(
+      () => mockSendMessage.isRunning,
+    ).thenReturn(sendMessageIsRunningNotifier);
+    when(() => mockSendMessage.errors).thenReturn(sendMessageErrorsNotifier);
+    when(() => mockSendMessage.run(any())).thenAnswer((_) async {});
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<ChatbotViewModel>.value(
+          value: mockViewModel,
+          child: const ChatbotScreenView(),
         ),
+      ),
+    );
+  }
+
+  group('ChatbotScreenView', () {
+    testWidgets(
+      'Mostra CircularProgressIndicator durante il caricamento iniziale vuoto',
+      (tester) async {
+        loadIsRunningNotifier.value = true;
+        when(() => mockViewModel.chats).thenReturn([]);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Mostra ErrorIndicator se loadChatPreviews fallisce e la lista è vuota',
+      (tester) async {
+        loadErrorsNotifier.value = CommandError<void>(
+          error: Exception('Network Error'),
+          stackTrace: StackTrace.empty,
+        );
+        when(() => mockViewModel.chats).thenReturn([]);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.byType(ErrorIndicator), findsOneWidget);
+        expect(find.text('Errore di connessione'), findsOneWidget);
+
+        // Verifica il pulsante Riprova
+        await tester.tap(find.text('Riprova'));
+        verify(() => mockLoadChatPreviews.run(null)).called(1);
+      },
+    );
+
+    testWidgets('Mostra messaggio di fallback se currentChat è null', (
+      tester,
+    ) async {
+      // Dati caricati ma nessuna chat selezionata
+      when(() => mockViewModel.chats).thenReturn([MockChat()]);
+      when(() => mockViewModel.currentChat).thenReturn(null);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(
+        find.text('Seleziona una conversazione dal menu.'),
+        findsOneWidget,
       );
-    }
+      expect(find.byType(ChatWidget), findsNothing);
+    });
 
-    testWidgets('Deve montare tutti i widget principali e mostrare il titolo di default', (WidgetTester tester) async {
-      await pumpScreen(tester);
+    testWidgets('Mostra ChatWidget se c\'è una currentChat', (tester) async {
+      final chat = MockChat();
+      when(() => chat.title).thenReturn('Chat di Test');
+      when(() => chat.messages).thenReturn([]);
 
-      // Verifichiamo che i pezzi del puzzle ci siano tutti
+      when(() => mockViewModel.chats).thenReturn([chat]);
+      when(() => mockViewModel.currentChat).thenReturn(chat);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
       expect(find.byType(ChatWidget), findsOneWidget);
-      expect(find.byType(ChatbotSendMessageWidget), findsOneWidget);
-
-      // Verifichiamo l'_AppBarTitle di default
-      expect(find.text('Nuova Conversazione'), findsOneWidget);
     });
 
-    testWidgets('Deve mostrare l\'indicatore di caricamento quando isLoading è true', (WidgetTester tester) async {
-      await pumpScreen(tester);
+    testWidgets(
+      'Mostra LinearProgressIndicator quando openChat è in esecuzione',
+      (tester) async {
+        openChatIsRunningNotifier.value = true;
 
-      // 1. Diciamo al mock principale di "rallentare" solo per questo test!
-      mockRepo.simulatedDelay = const Duration(seconds: 1);
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      // 2. Facciamo partire l'azione (senza usare 'await', così non rimaniamo bloccati)
-      viewModel.createChat();
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      },
+    );
 
-      // 3. Facciamo avanzare Flutter di un singolo frame
-      await tester.pump();
+    testWidgets('Apre la modale informativa al tap sull\'icona info', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // 4. Verifichiamo che la barra di caricamento sia apparsa
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-
-      // 5. Ripuliamo il tempo rimasto per concludere il test senza errori
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-
-      // Opzionale: rimettiamo il tempo a zero per i test futuri (anche se il setUp lo resetta già)
-      mockRepo.simulatedDelay = Duration.zero;
-    });
-
-    testWidgets('Deve mostrare il messaggio di errore rosso se il backend fallisce', (WidgetTester tester) async {
-      await pumpScreen(tester);
-
-      // Diciamo al mock di lanciare un'eccezione
-      mockRepo.shouldThrowError = true;
-
-      // Proviamo ad aprire una chat (che fallirà per colpa del mock)
-      await viewModel.openChat('chat-1');
+      await tester.tap(find.byIcon(Icons.info_outline));
       await tester.pumpAndSettle();
 
-      // Verifichiamo che il Consumer abbia disegnato il testo rosso dell'errore
-      expect(find.textContaining('Errore nell\'apertura della chat'), findsOneWidget);
+      expect(find.byType(ChatbotModeInfoDialog), findsOneWidget);
     });
 
-    testWidgets('Tappare sullo schermo fuori dalla tastiera deve togliere il focus', (WidgetTester tester) async {
-      await pumpScreen(tester);
+    testWidgets('Mostra una SnackBar quando asyncError emette un valore', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
 
-      // 1. Troviamo il campo di testo e ci clicchiamo per aprire la "tastiera"
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
+      // Triggeriamo l'errore asincrono
+      asyncErrorNotifier.value = "Errore di connessione al server AI";
+      await tester
+          .pump(); // Usiamo pump e non pumpAndSettle per dare tempo alla SnackBar di apparire
 
-      // Verifica sicura: c'è un elemento attivo (la tastiera è aperta)?
-      expect(FocusManager.instance.primaryFocus?.hasFocus, isTrue);
-
-      // 2. Tocchiamo un punto "sicuro" che non ruba i tocchi (il testo dell'AppBar)
-      await tester.tap(find.text('Nuova Conversazione'));
-      await tester.pump();
-
-      // 3. Se il tuo GestureDetector ha funzionato, il focus primario è stato rimosso
-      // e l'app non è più focalizzata sul campo di testo!
-      final isKeyboardOpen = FocusManager.instance.primaryFocus?.context?.widget is EditableText;
-      expect(isKeyboardOpen, isFalse, reason: 'La tastiera dovrebbe essersi chiusa');
+      expect(find.text('Errore di connessione al server AI'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
     });
   });
 }

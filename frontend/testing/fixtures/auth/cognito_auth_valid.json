@@ -1,0 +1,5 @@
+{
+  "id_token": "eyJhbGciOiJub25lIn0=.eyJzdWIiOiJ1c2VyXzEyMyIsImVtYWlsIjoibWFyaW8ucm9zc2lAZXhhbXBsZS5jb20iLCJuYW1lIjoiTWFyaW8iLCJmYW1pbHlfbmFtZSI6IlJvc3NpIn0=.fake_signature",
+  "access_token": "fake_access_token_123",
+  "refresh_token": "fake_refresh_token_456"
+}

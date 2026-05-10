@@ -1,55 +1,79 @@
 import 'package:flutter/material.dart';
-import '../../../../domain/user.dart';
+import 'package:command_it/command_it.dart';
+import '../../../utils/cache_manager.dart';
+import '../../../utils/locator.dart';
+import '../../../domain/models/auth/user.dart';
 import '../../../../data/repositories/auth_repository.dart';
-import '../../../../utils/command.dart';
+import '../../../../data/repositories/dead_man_repository.dart';
 
 /// Gestisce lo stato della UI per l'autenticazione e coordina le azioni dell'utente.
-///
-/// Utilizza [_authRepository] per eseguire le operazioni di accesso e aggiorna
-/// lo stato di [_isLoading] e [_errorMessage].
 class AuthViewModel extends ChangeNotifier {
   /// Repository per l'accesso ai dati di autenticazione.
   final AuthRepository _authRepository;
 
-  /// Comando reattivo per avviare il login
-  late final Command0<void> login;
+  /// Comando per l'esecuzione del login.
+  late final Command<void, void> login;
 
-  /// Comando reattivo per avviare il logout
-  late final Command0<void> logout;
+  /// Comando per l'esecuzione del logout.
+  late final Command<void, void> logout;
 
-  /// Inizializza il view model associando l'istanza di [_authRepository].
+  bool isInitializing = true;
+
+  /// Inizializza il view model configurando i comandi reattivi.
   AuthViewModel(this._authRepository) {
-    login = Command0<void>(_login);
-    logout = Command0<void>(_logout);
+    login = Command.createAsyncNoParamNoResult(_login);
+    logout = Command.createAsyncNoParamNoResult(_logout);
   }
 
-  /// Restituisce l'utente corrente recuperandolo direttamente da [_authRepository].
+  /// Restituisce l'utente attualmente autenticato.
   User? get currentUser => _authRepository.getCurrentUser();
 
-  /// Controlla se esiste una sessione utente valida e notifica i listener.
-  void checkExistingSession() {
-    if (_authRepository.getCurrentUser() != null) {
-      notifyListeners();
+  /// Verifica se esiste una sessione utente attiva nel repository.
+  Future<void> checkExistingSession() async {
+    isInitializing = true;
+    notifyListeners();
+
+    if (!_authRepository.isLoggedIn()) {
+      await _authRepository.restoreSession();
     }
+
+    if (_authRepository.isLoggedIn()) {
+      final deadManRepo = getIt<DeadManRepository>();
+
+      try {
+        await deadManRepo.createSettings();
+      } catch (e) {
+        debugPrint("Errore creazione settings: $e");
+      }
+
+      try {
+        await deadManRepo.sendHeartbeat();
+        debugPrint("Heartbeat inviato con successo al login!");
+      } catch (e) {
+        debugPrint("Attenzione: Impossibile inviare l'Heartbeat al login: $e");
+      }
+    }
+
+    isInitializing = false;
+    notifyListeners();
   }
 
-  /// Avvia la procedura di login tramite [_authRepository].
+  /// Logica interna per la procedura di login.
   Future<void> _login() async {
-    try {
-      final user = await _authRepository.login();
-      if (user == null) {
-        throw Exception('Autenticazione fallita o annullata.');
-      }
-    } catch (e) {
-      if (e is Exception && e.toString().contains('Autenticazione fallita')) {
-        rethrow;
-      }
-      throw Exception('Si è verificato un errore di connessione.');
+    final user = await _authRepository.login();
+    if (user == null) {
+      throw Exception('Autenticazione fallita o annullata dall\'utente.');
     }
+
+    notifyListeners();
   }
 
-  /// Avvia la procedura di logout richiamando [_authRepository].
+  /// Logica interna per la procedura di logout.
   Future<void> _logout() async {
     await _authRepository.logout();
+
+    getIt<CacheManager>().clearAllCaches();
+
+    notifyListeners();
   }
 }

@@ -1,102 +1,197 @@
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:mocktail/mocktail.dart';
 import 'package:mvp_app_protegge_e_trasforma/data/repositories/trusted_contact_repository.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
-
-import '../../../testing/mocks/mock_trusted_contact_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
+import '../../../testing/mocks/core/mock_location_service.dart';
+import '../../../testing/mocks/trusted_contacts/mock_trusted_contact_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
-  group('TrustedContactRepository', () {
-    late MockTrustedContactService mockService;
-    late TrustedContactRepository repository;
+  late TrustedContactRepository repository;
+  late MockTrustedContactService mockService;
+  late MockLocationService mockLocationService;
 
-    setUp(() {
-      mockService = MockTrustedContactService();
-      repository = TrustedContactRepository(mockService);
+  final List<Map<String, dynamic>> tContactsListJson = [
+    {
+      "contactId": "1",
+      "name": "Mario Rossi",
+      "email": "mario.rossi@example.com",
+      "phoneNumber": "+393331234567",
+    },
+    {
+      "contactId": "2",
+      "name": "Giulia Bianchi",
+      "email": "giulia.bianchi@example.com",
+      "phoneNumber": "+393337654321",
+    },
+  ];
+
+  final tContactJson = tContactsListJson.first;
+  final tContactModel = TrustedContact(
+    id: "1",
+    name: "Mario Rossi",
+    email: "mario.rossi@example.com",
+    phoneNumber: "+393331234567",
+  );
+
+  final Map<String, dynamic> tPosition = {
+    "latitude": 45.4642,
+    "longitude": 9.1900,
+  };
+
+  setUp(() {
+    mockService = MockTrustedContactService();
+    mockLocationService = MockLocationService();
+    mockLocationService.setPosition(Position.fromMap(tPosition));
+    repository = TrustedContactRepository(
+      mockService,
+      locationService: mockLocationService,
+    );
+    registerFallbackValue(tContactModel);
+  });
+
+  group('getContacts', () {
+    test(
+      'should return list of contacts from service and cache them',
+      () async {
+        when(
+          () => mockService.getContacts(),
+        ).thenAnswer((_) async => tContactsListJson);
+
+        final result = await repository.getContacts();
+
+        expect(result.length, 2);
+        expect(result.first.id, "1");
+        expect(result.first.name, "Mario Rossi");
+        verify(() => mockService.getContacts()).called(1);
+      },
+    );
+
+    test(
+      'should return cached contacts without calling service if cache is not empty',
+      () async {
+        when(
+          () => mockService.getContacts(),
+        ).thenAnswer((_) async => tContactsListJson);
+        await repository.getContacts();
+
+        final result = await repository.getContacts();
+
+        expect(result.length, 2);
+        verify(() => mockService.getContacts()).called(1);
+      },
+    );
+
+    test('should call service when forceRefresh is true', () async {
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
+      await repository.getContacts();
+
+      await repository.getContacts(forceRefresh: true);
+
+      verify(() => mockService.getContacts()).called(2);
     });
+  });
 
-    test('getContacts mappa correttamente il JSON in oggetti TrustedContact', () async {
-      // Arrange
-      mockService.mockedContactsJson = [
-        {
-          'id': 'c-1',
-          'name': 'Mario Rossi',
-          'email': 'mario@email.com',
-          'phoneNumber': '+39 333 0000001',
-        },
-        {
-          'id': 'c-2',
-          'name': 'Laura Bianchi',
-          'email': 'laura@email.com',
-          'phoneNumber': '+39 333 0000002',
-        },
-      ];
+  group('createContact', () {
+    test('should call service and add new contact to cache', () async {
+      repository.clearCache();
+      when(
+        () => mockService.addContact(any()),
+      ).thenAnswer((_) async => tContactJson);
 
-      // Act
-      final contacts = await repository.getContacts();
+      final result = await repository.createContact(tContactModel);
 
-      // Assert
-      expect(contacts.length, 2);
-      expect(contacts.first.getId(), 'c-1');
-      expect(contacts.first.getName(), 'Mario Rossi');
-      expect(contacts.first.getEmail(), 'mario@email.com');
-      expect(contacts.first.getPhone(), '+39 333 0000001');
+      expect(result.id, "1");
+      final list = await repository.getContacts();
+      expect(list.any((c) => c.id == "1"), true);
+      verify(() => mockService.addContact(any())).called(1);
     });
+  });
 
-    test('createContact invia i dati e mappa correttamente la risposta', () async {
-      // Arrange: prepariamo la risposta del Service con l'id assegnato dal backend
-      mockService.mockedAddedContactJson = {
-        'id': 'c-backend-99',
-        'name': 'Giulia Verdi',
-        'email': 'giulia@email.com',
-        'phoneNumber': '+39 399 9999999',
+  group('updateContact', () {
+    test('should update contact in cache after service success', () async {
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
+      await repository.getContacts();
+
+      final updatedJson = {
+        "contactId": "1",
+        "name": "Mario Rossi Updated",
+        "email": "mario.rossi@example.com",
+        "phoneNumber": "+393331234567",
       };
 
-      // Costruiamo il contatto di dominio da passare al repository
-      final contactDaSalvare = TrustedContact(
-        id: '',
-        name: 'Giulia Verdi',
-        email: 'giulia@email.com',
-        phoneNumber: '+39 399 9999999',
+      when(
+        () => mockService.updateContact(any()),
+      ).thenAnswer((_) async => updatedJson);
+
+      final result = await repository.updateContact(
+        tContactModel.copyWith(name: "Mario Rossi Updated"),
       );
 
-      // Act
-      final saved = await repository.createContact(contactDaSalvare);
+      expect(result.name, "Mario Rossi Updated");
+      final list = await repository.getContacts();
+      expect(list.firstWhere((c) => c.id == "1").name, "Mario Rossi Updated");
+    });
+  });
 
-      // Assert: verifichiamo che il Repository abbia usato l'id restituito dal backend
-      expect(saved.getId(), 'c-backend-99');
-      expect(saved.getName(), 'Giulia Verdi');
+  group('deleteContact', () {
+    test('should remove contact from cache if service success', () async {
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
+      await repository.getContacts();
+      when(() => mockService.deleteContact(any())).thenAnswer((_) async => {});
+
+      await repository.deleteContact("1");
+
+      final list = await repository.getContacts();
+      expect(list.any((c) => c.id == "1"), false);
+      verify(() => mockService.deleteContact("1")).called(1);
     });
 
-    test('updateContact invia i dati modificati e mappa la risposta', () async {
-      // Arrange
-      mockService.mockedUpdatedContactJson = {
-        'id': 'c-1',
-        'name': 'Nome Modificato',
-        'email': 'mod@email.com',
-        'phoneNumber': '111',
-      };
-      final updateData = TrustedContact(id: 'c-1', name: 'Nome Modificato', email: 'mod@email.com', phoneNumber: '111');
+    test('should rollback cache if service fails during deletion', () async {
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
+      await repository.getContacts();
+      when(
+        () => mockService.deleteContact(any()),
+      ).thenThrow(Exception("Network Error"));
 
-      // Act
-      final updated = await repository.updateContact(updateData);
+      expect(() => repository.deleteContact("1"), throwsException);
 
-      // Assert
-      expect(updated.getName(), 'Nome Modificato');
+      final list = await repository.getContacts();
+      expect(list.any((c) => c.id == "1"), true);
     });
+  });
 
-    test('deleteContact completa senza eccezioni in caso di successo', () async {
-      await expectLater(
-        repository.deleteContact('c-1'),
-        completes,
-      );
+  group('sendSosAlert', () {
+    test('should call service sendSosAlert', () async {
+      when(
+        () => mockService.sendSosAlert(tPosition),
+      ).thenAnswer((_) async => {});
+
+      await repository.sendSosAlert();
+
+      verify(() => mockService.sendSosAlert(tPosition)).called(1);
     });
+  });
 
-    test('Se il Service lancia un\'eccezione, il Repository la lascia passare al ViewModel', () async {
-      mockService.shouldThrowError = true;
+  group('clearCache', () {
+    test('should empty the local cache', () async {
+      when(
+        () => mockService.getContacts(),
+      ).thenAnswer((_) async => tContactsListJson);
+      await repository.getContacts();
 
-      expect(() => repository.getContacts(), throwsException);
-      expect(() => repository.deleteContact('c-1'), throwsException);
+      repository.clearCache();
+
+      await repository.getContacts();
+      verify(() => mockService.getContacts()).called(2);
     });
   });
 }

@@ -1,102 +1,114 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:provider/provider.dart';
+import 'package:command_it/command_it.dart';
+
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/login_screen.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/header_widget.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/auth/view_model/auth_view_model.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/google_login_button_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/auth/widget/logged_in_banner_widget.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/user.dart';
-import '../../../../testing/mocks/mock_auth_repository.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_banner_widget.dart';
+
+import '../../../../testing/mocks/auth/mock_user.dart';
+import '../../../../testing/mocks/auth/mock_auth_view_model.dart';
 
 void main() {
-  late MockAuthRepository mockRepository;
+  late MockAuthViewModel mockViewModel;
+  late MockLoginCommand mockLoginCommand;
+  late MockLogoutCommand mockLogoutCommand;
+  late MockUser mockUser;
+
+  late ValueNotifier<bool> loginIsRunningNotifier;
+  late ValueNotifier<CommandError?> loginErrorsNotifier;
 
   setUp(() {
-    mockRepository = MockAuthRepository();
+    mockViewModel = MockAuthViewModel();
+    mockLoginCommand = MockLoginCommand();
+    mockLogoutCommand = MockLogoutCommand();
+    mockUser = MockUser();
+
+    loginIsRunningNotifier = ValueNotifier<bool>(false);
+    loginErrorsNotifier = ValueNotifier<CommandError?>(null);
+
+    // Setup dei command_it
+    when(() => mockLoginCommand.isRunning).thenReturn(loginIsRunningNotifier);
+    when(() => mockLoginCommand.errors).thenReturn(loginErrorsNotifier);
+    when(() => mockLoginCommand.run()).thenAnswer((_) async {});
+    when(() => mockLoginCommand.clearErrors()).thenAnswer((_) {});
+
+    when(() => mockLogoutCommand.run()).thenAnswer((_) async {});
+
+    // Setup del ViewModel
+    when(() => mockViewModel.login).thenReturn(mockLoginCommand);
+    when(() => mockViewModel.logout).thenReturn(mockLogoutCommand);
+    when(() => mockViewModel.currentUser).thenReturn(null);
   });
 
-  Widget createLoginScreen() {
+  Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: LoginScreen(authRepository: mockRepository),
+      home: ChangeNotifierProvider<AuthViewModel>.value(
+        value: mockViewModel,
+        child: const LoginScreen(),
+      ),
     );
   }
 
-  group('LoginScreen Widget Test', () {
-    testWidgets('Deve mostrare HeaderWidget e GoogleLoginButtonWidget per utente non loggato', (WidgetTester tester) async {
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pump(); // Per permettere al ListenableBuilder di stabilizzarsi
+  group('LoginScreen', () {
+    testWidgets('Mostra GoogleLoginButtonWidget se l\'utente NON è loggato', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(HeaderWidget), findsOneWidget);
       expect(find.byType(GoogleLoginButtonWidget), findsOneWidget);
       expect(find.byType(LoggedInBannerWidget), findsNothing);
+      expect(find.text('Disconnetti'), findsNothing);
     });
 
-    testWidgets('Deve mostrare LoggedInBannerWidget e pulsante Disconnetti per utente già loggato', (WidgetTester tester) async {
-      // Arrange
-      mockRepository.setMockedUser(const User(
-        sub: '1',
-        email: 'logged@example.com',
-        name: 'Logged',
-        surname: 'User',
-        idToken: 'i',
-        accessToken: 'a',
-      ));
+    testWidgets('Passa isLoading=true al bottone se il comando login è in esecuzione', (tester) async {
+      loginIsRunningNotifier.value = true;
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pump();
+      final button = tester.widget<GoogleLoginButtonWidget>(find.byType(GoogleLoginButtonWidget));
+      expect(button.isLoading, isTrue);
+    });
+
+    testWidgets('Mostra ErrorBannerWidget se c\'è un errore nel comando di login', (tester) async {
+      loginErrorsNotifier.value = CommandError(error: Exception('Credenziali errate'));
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.byType(ErrorBannerWidget), findsOneWidget);
+      expect(find.text('Credenziali errate'), findsOneWidget);
+    });
+
+    testWidgets('Mostra LoggedInBannerWidget e bottone Disconnetti se l\'utente è loggato', (tester) async {
+      when(() => mockUser.email).thenReturn('mario.rossi@example.com');
+      when(() => mockViewModel.currentUser).thenReturn(mockUser);
+
+      await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byType(LoggedInBannerWidget), findsOneWidget);
-      expect(find.text('logged@example.com'), findsOneWidget);
       expect(find.text('Disconnetti'), findsOneWidget);
       expect(find.byType(GoogleLoginButtonWidget), findsNothing);
     });
 
-    testWidgets('Il click su GoogleLoginButton avvia la procedura di login', (WidgetTester tester) async {
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pump();
+    testWidgets('Il bottone Disconnetti chiama il comando logout', (tester) async {
+      when(() => mockUser.email).thenReturn('mario.rossi@example.com');
+      when(() => mockViewModel.currentUser).thenReturn(mockUser);
 
-      await tester.tap(find.byType(GoogleLoginButtonWidget));
-      await tester.pump(); 
-
-      // Dopo il tap, il mock dovrebbe aver impostato un utente (successo di default)
-      expect(mockRepository.isLoggedIn(), isTrue);
-      
-      await tester.pump(); // Notifica la UI
-      expect(find.byType(LoggedInBannerWidget), findsOneWidget);
-    });
-
-    testWidgets('Il click su Disconnetti effettua il logout', (WidgetTester tester) async {
-      // Arrange: partiamo loggati
-      mockRepository.setMockedUser(const User(
-        sub: '1',
-        email: 'a@a.com',
-        name: 'A',
-        surname: 'S',
-        idToken: 'i',
-        accessToken: 'a',
-      ));
-
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pump();
+      await tester.pumpWidget(createWidgetUnderTest());
 
       await tester.tap(find.text('Disconnetti'));
-      await tester.pump();
-
-      expect(mockRepository.isLoggedIn(), isFalse);
-      expect(find.byType(GoogleLoginButtonWidget), findsOneWidget);
+      verify(() => mockLogoutCommand.run()).called(1);
     });
 
-    testWidgets('Mostra messaggio di errore in caso di fallimento login', (WidgetTester tester) async {
-      // Arrange
-      mockRepository.shouldThrowError = true;
+    testWidgets('Il GoogleLoginButtonWidget ha la callback collegata al comando run', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.pumpWidget(createLoginScreen());
-      await tester.pump();
+      final button = tester.widget<GoogleLoginButtonWidget>(find.byType(GoogleLoginButtonWidget));
 
-      await tester.tap(find.byType(GoogleLoginButtonWidget));
-      await tester.pump(); // Aspetta il completamento dell'operazione asincrona
+      // Eseguiamo la callback esposta dal custom widget
+      button.onPressedCallback();
 
-      // Nota: il viewModel cattura l'eccezione e imposta errorMessage
-      expect(find.textContaining('Autenticazione fallita'), findsOneWidget);
+      verify(() => mockLoginCommand.run()).called(1);
     });
   });
 }

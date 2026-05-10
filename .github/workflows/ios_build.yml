@@ -1,0 +1,59 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - 'task/creazione-ipa'
+      - 'develop'
+      - 'main'
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS Runner.app
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Xcode version
+        run: xcodebuild -version
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Precache iOS artifacts
+        run: flutter precache --ios
+
+      - name: Create .env from Secrets
+        working-directory: frontend
+        run: |
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          echo "COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}" >> .env
+          echo "COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}" >> .env
+          echo "COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}" >> .env
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build iOS
+        working-directory: frontend
+        run: flutter build ios --no-codesign --release
+
+      - name: Create IPA (Unsigned)
+        run: |
+          mkdir -p Payload
+          cp -R frontend/build/ios/iphoneos/Runner.app Payload/
+          zip -r app_unsigned.ipa Payload
+          mkdir -p build_output
+          mv app_unsigned.ipa build_output/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Runner-App
+          path: build_output/

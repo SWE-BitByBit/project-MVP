@@ -3,84 +3,74 @@ import '../../domain/models/chatbot/local_chat.dart';
 import '../../domain/models/chatbot/chat_message.dart';
 import '../repositories/chatbot_repository.dart';
 
-/// Implementa il pattern Virtual Proxy per le sessioni di Chat.
-/// Permette di mostrare le informazioni di base di una chat (titolo, data)
-/// rimandando il download dei messaggi pesanti solo a quando l'utente la apre.
+/// Implementazione Proxy dell'interfaccia [Chat].
+/// Conserva in memoria solo i metadati (anteprima). Scarica i messaggi
+/// pesanti dal server solo quando viene esplicitamente richiesto tramite [load].
 class ProxyChat implements Chat {
   final String _id;
   String _title;
   final DateTime _creationDate;
-  DateTime _lastModified;
+  DateTime _updateDate;
 
-  /// Il riferimento al repository per scaricare i dati reali
-  final ChatbotRepository _repository;
-
-  /// La chat reale contenente i messaggi (inizialmente null)
+  // Il "Real Subject" (L'oggetto reale nascosto nel proxy)
   LocalChat? _localChat;
+  final ChatbotRepository _repository;
 
   ProxyChat({
     required String id,
     required String title,
     required DateTime creationDate,
-    required DateTime lastModified,
+    required DateTime updateDate,
     required ChatbotRepository repository,
   }) : _id = id,
        _title = title,
        _creationDate = creationDate,
-       _lastModified = lastModified,
+       _updateDate = updateDate,
        _repository = repository;
 
-  /// Metodo chiave del Proxy: scarica i messaggi completi solo quando richiesto.
-  Future<void> load() async {
-    if (_localChat == null) {
-      // Usa il repository per fare la chiamata di rete e ottenere la chat completa
-      final chatComplete = await _repository.getChatById(_id);
+  @override
+  String get id => _id;
 
-      // Salviamo l'istanza reale nella variabile
-      _localChat = chatComplete as LocalChat;
+  // Se l'oggetto reale esiste, deleghiamo a lui. Altrimenti usiamo la cache locale.
+  @override
+  String get title => _localChat?.title ?? _title;
 
-      // Sincronizziamo eventuali discrepanze di titolo/data
-      _title = _localChat!.getTitle();
-      _lastModified = _localChat!.getUpdateDate();
-    }
+  @override
+  set title(String newTitle) {
+    _title = newTitle;
+    _localChat?.title = newTitle;
   }
 
-  // --- Metodi delegati ---
-  // Se la localChat è caricata, usa i suoi dati, altrimenti usa quelli base del Proxy.
+  @override
+  DateTime get creationDate => _creationDate;
 
   @override
-  String getId() => _id;
+  DateTime get updateDate => _localChat?.updateDate ?? _updateDate;
 
   @override
-  String getTitle() => _localChat?.getTitle() ?? _title;
-
-  @override
-  DateTime getCreationDate() => _creationDate;
-
-  @override
-  DateTime getUpdateDate() => _localChat?.getUpdateDate() ?? _lastModified;
-
-  @override
-  List<ChatMessage> getMessages() {
-    if (_localChat == null) {
-      // Se si chiedono i messaggi prima di fare load(), si restituisce lista vuota
-      // oppure si potrebbe lanciare un'eccezione, a seconda delle vostre logiche.
-      return [];
-    }
-    return _localChat!.getMessages();
+  List<ChatMessage> get messages {
+    // Se la chat non è ancora stata caricata, restituiamo vuoto.
+    // L'UI sa che deve chiamare load() prima di disegnare i messaggi.
+    return _localChat?.messages ?? [];
   }
 
   @override
   void addMessage(ChatMessage message) {
-    // Aggiunge il messaggio solo se la chat è caricata
     _localChat?.addMessage(message);
-    _lastModified = DateTime.now();
   }
 
   @override
-  void setTitle(String title) {
-    _title = title;
-    _localChat?.setTitle(title);
-    _lastModified = DateTime.now();
+  void removeMessage(String messageId) {
+    _localChat?.removeMessage(messageId);
+  }
+
+  /// Recupera i dati dal backend solo se non sono già caricati.
+  Future<void> load() async {
+    if (_localChat == null) {
+      _localChat = await _repository.getChatById(_id) as LocalChat;
+
+      _title = _localChat!.title;
+      _updateDate = _localChat!.updateDate;
+    }
   }
 }

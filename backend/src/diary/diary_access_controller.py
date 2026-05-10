@@ -26,7 +26,7 @@ class DiaryAccessController:
         )
         return claims.get("sub")
 
-    def handle_request(self, event, context):
+    def handle_request(self, event, context = None):
         route = event.get("routeKey")
 
         if route == "POST /diary/auth/login":

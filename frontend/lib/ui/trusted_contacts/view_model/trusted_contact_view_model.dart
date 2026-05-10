@@ -1,74 +1,129 @@
 import 'package:flutter/material.dart';
+import 'package:command_it/command_it.dart';
+import 'package:mvp_app_protegge_e_trasforma/data/network/api_exception.dart';
+import 'dart:convert';
 
-import '../../../domain/trusted_contact.dart';
+import '../../../domain/models/trusted_contact/trusted_contact.dart';
 import '../../../data/repositories/trusted_contact_repository.dart';
-import '../../../utils/command.dart';
+import '../../../data/repositories/auth_repository.dart';
 
-/// Gestisce lo stato della UI e la logica di presentazione per la funzionalità
-/// dei contatti fidati. Utilizza il mixin [ChangeNotifier] per notificare
-/// i widget in ascolto ad ogni modifica dello stato.
+/// Gestisce lo stato della UI per i Contatti Fidati.
 class TrustedContactViewModel extends ChangeNotifier {
   final TrustedContactRepository _repository;
 
   // --- STATO DELLA UI ---
-
   List<TrustedContact> _contacts = [];
+  Map<String, String> _errors = {"name": "", "email": "", "phone": ""};
 
-  late final Command0 loadContacts;
-  late final Command1<void, TrustedContact> createContact;
-  late final Command1<void, TrustedContact> updateContact;
-  late final Command1<void, String> deleteContact;
-
-  // --- GETTERS ---
+  late final Command<void, void> loadContacts;
+  late final Command<TrustedContact, void> createContact;
+  late final Command<TrustedContact, void> updateContact;
+  late final Command<String, void> deleteContact;
 
   /// Restituisce una copia non modificabile della lista dei contatti fidati.
   List<TrustedContact> get contacts => List.unmodifiable(_contacts);
+  Map<String, String> get errors => _errors;
 
-  /// Crea un'istanza di [TrustedContactViewModel] con il [repository] specificato.
-  TrustedContactViewModel(this._repository) {
-    loadContacts = Command0(_loadContacts)..execute();
-    createContact = Command1(_createContact);
-    updateContact = Command1(_updateContact);
-    deleteContact = Command1(_deleteContact);
+  /// Inizializza il ViewModel
+  TrustedContactViewModel(
+    this._repository, {
+    required AuthRepository authRepository,
+  }) {
+    // Inizializzazione comandi
+    loadContacts = Command.createAsyncNoParam<void>(
+      _loadContacts,
+      initialValue: null,
+    );
+    createContact = Command.createAsync<TrustedContact, void>(
+      _createContact,
+      initialValue: null,
+    );
+    updateContact = Command.createAsync<TrustedContact, void>(
+      _updateContact,
+      initialValue: null,
+    );
+    deleteContact = Command.createAsync<String, void>(
+      _deleteContact,
+      initialValue: null,
+    );
 
-    loadContacts.addListener(notifyListeners);
-    createContact.addListener(notifyListeners);
-    updateContact.addListener(notifyListeners);
-    deleteContact.addListener(notifyListeners);
+    // Caricamento iniziale al boot del ViewModel
+    loadContacts.run();
   }
 
-  // --- METODI ---
+  /// Carica la lista dei contatti fidati dal repository e notifica la UI.
+  Future<void> _loadContacts({bool forceRefresh = true}) async {
+    _contacts = await _repository.getContacts(forceRefresh: forceRefresh);
+    notifyListeners();
+  }
 
-  /// Carica la lista dei contatti fidati dal repository.
-  ///
-  /// Aggiorna [isLoading] durante il caricamento e imposta [error]
-  /// in caso di fallimento.
-  Future<void> _loadContacts() async {
+  /// Crea un nuovo contatto e aggiorna la lista.
+  Future<void> _createContact(TrustedContact newContact) async {
+    await _repository.createContact(newContact);
+    await _loadContacts(forceRefresh: false);
+  }
+
+  /// Aggiorna un contatto esistente.
+  Future<void> _updateContact(TrustedContact updatedContact) async {
+    await _repository.updateContact(updatedContact);
+    await _loadContacts(forceRefresh: false);
+  }
+
+  /// Elimina un contatto fidato
+  Future<void> _deleteContact(String contactId) async {
+    final deleteFuture = _repository.deleteContact(contactId);
+    await _loadContacts(forceRefresh: false);
+
     try {
-      _contacts = await _repository.getContacts();
-    } finally {
-      notifyListeners();
+      await deleteFuture;
+    } catch (e) {
+      // Rollback in caso di errore
+      await _loadContacts(forceRefresh: true);
+      rethrow;
     }
   }
 
-  /// Crea un nuovo contatto fidato con i dati forniti e aggiorna la lista.
-  ///
-  /// Costruisce un [TrustedContact] con i parametri ricevuti, lo invia al
-  /// repository e ricarica la lista aggiornata in caso di successo.
-  Future<void> _createContact(TrustedContact newContact) async {
-    await _repository.createContact(newContact);
-    await _loadContacts();
+  /// Resetta gli errori di validazione dei campi del form.
+  void clearInputErrors() {
+    _errors = {"name": "", "email": "", "phone": ""};
   }
 
-  /// Aggiorna un contatto esistente con i nuovi dati forniti.
-  Future<void> _updateContact(TrustedContact updatedContact) async {
-    await _repository.updateContact(updatedContact);
-    await _loadContacts();
+  /// Mappa un errore di validazione in un campo d'errore per l'UI
+  void handleInputError(Object e) {
+    if (e is! ApiException) return;
+
+    final body = jsonDecode(e.message);
+    final String? message = body['message']?.toString().toLowerCase();
+
+    if (body.containsKey('errors')) {
+      final backendErrors = body['errors'] as Map<String, dynamic>;
+      if (backendErrors.isEmpty) return;
+
+      if (backendErrors.containsKey('contact_name')) {
+        _errors['name'] = "Il nome inserito non è valido";
+      }
+      if (backendErrors.containsKey('contact_email')) {
+        _errors['email'] = "L'email inserita non è valida";
+      }
+      if (backendErrors.containsKey('contact_phone_number')) {
+        _errors['phone'] = "Il numero di telefono inserito non è valido";
+      }
+    }
+
+    if (message == "email already exists") {
+      _errors['email'] =
+          "L'email inserita è già associata a un contatto fidato";
+    }
+
+    notifyListeners();
   }
 
-  /// Elimina il contatto identificato da [contactId] e aggiorna la lista.
-  Future<void> _deleteContact(String contactId) async {
-    await _repository.deleteContact(contactId);
-    _contacts.removeWhere((c) => c.getId() == contactId);
+  @override
+  void dispose() {
+    loadContacts.dispose();
+    createContact.dispose();
+    updateContact.dispose();
+    deleteContact.dispose();
+    super.dispose();
   }
 }

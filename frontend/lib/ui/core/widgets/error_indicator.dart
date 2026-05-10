@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../themes/colors.dart';
 
 class ErrorIndicator extends StatelessWidget {
   const ErrorIndicator({
@@ -15,6 +14,8 @@ class ErrorIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,13 +28,13 @@ class ErrorIndicator extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.error_outline,
-                    color: Theme.of(context).colorScheme.onError,
+                    color: colorScheme.error,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     title,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onError,
+                      color: colorScheme.error,
                     ),
                   ),
                 ],
@@ -44,9 +45,11 @@ class ErrorIndicator extends StatelessWidget {
         const SizedBox(height: 10),
         FilledButton(
           onPressed: onPressed,
-          style: const ButtonStyle(
-            backgroundColor: WidgetStatePropertyAll(AppColors.red1),
-            foregroundColor: WidgetStatePropertyAll(Colors.white),
+          style: ButtonStyle(
+            // Usa il colore di errore come sfondo del bottone
+            backgroundColor: WidgetStatePropertyAll(colorScheme.error),
+            // Usa il colore "onError" (solitamente bianco) per il testo sul bottone
+            foregroundColor: WidgetStatePropertyAll(colorScheme.onError),
           ),
           child: Text(label),
         ),

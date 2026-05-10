@@ -1,57 +1,66 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:command_it/command_it.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../domain/models/safeplace/safe_place.dart';
-import '../../../data/services/location_service.dart';
 import '../../../data/repositories/safe_place_repository.dart';
-import '../../../utils/command.dart';
+import '../../../data/services/location_service.dart';
 
+/// Gestisce lo stato della UI per i Luoghi Sicuri.
 class SafePlaceViewModel extends ChangeNotifier {
   final SafePlaceRepository _repository;
   final LocationService _locationService;
 
-  List<SafePlace> _safePlaces = [];
+  // --- STATO LOCALE DELLA UI ---
   SafePlace? _selectedPlace;
+  Position? _userPosition;
 
-  Position? _currentPosition;
+  late final Command<void, void> loadPlaces;
+  late final Command<void, void> getUserLocation;
 
-  late final Command0<void> fetchSafePlacesCommand;
+  // --- GETTER PROTETTI ---
+  List<SafePlace> get safePlaces => _repository.cachedPlaces;
 
-  late final Command0<void> getUserLocationCommand;
+  /// Espone lo stato della sessione della mappa.
+  MapSessionState? get cachedMapState => _repository.cachedMapState;
 
+  SafePlace? get selectedPlace => _selectedPlace;
+  Position? get userPosition => _userPosition;
+
+  /// Inizializza il ViewModel e configura i comandi reattivi.
   SafePlaceViewModel(
       this._repository, {
-        LocationService? locationService,
-      }) : _locationService = locationService ?? LocationService() {
-    fetchSafePlacesCommand = Command0<void>(_fetchSafePlaces);
-    getUserLocationCommand = Command0<void>(_getUserLocation);
+        required LocationService locationService,
+      }) : _locationService = locationService {
+
+    loadPlaces = Command.createAsyncNoParam<void>(
+      _loadPlaces,
+      initialValue: null,
+    );
+
+    getUserLocation = Command.createAsyncNoParam<void>(
+      _getUserLocation,
+      initialValue: null,
+    );
+
+    // Caricamento iniziale al boot del ViewModel
+    loadPlaces.run();
+    getUserLocation.run();
   }
 
-  List<SafePlace> get safePlaces => _safePlaces;
-  SafePlace? get selectedPlace => _selectedPlace;
-  Position? get currentPosition => _currentPosition;
-
-  Future<void> _fetchSafePlaces() async {
-    _safePlaces = await _repository.getPlaces();
+  /// Carica la lista dei luoghi dal repository e notifica la UI.
+  Future<void> _loadPlaces() async {
+    await _repository.getPlaces();
     notifyListeners();
   }
 
-  void selectPlace(SafePlace place) {
-    _selectedPlace = place;
-    notifyListeners();
-  }
-
-  /// Metodo privato eseguito da [getUserLocationCommand].
-  /// Gestisce i permessi e recupera la posizione del GPS.
+  /// Gestisce i permessi e recupera la posizione GPS dell'utente.
   Future<void> _getUserLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await _locationService.isLocationServiceEnabled();
+    final serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception('I servizi di localizzazione sono disabilitati. Accendi il GPS.');
     }
 
-    permission = await _locationService.checkPermission();
+    var permission = await _locationService.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await _locationService.requestPermission();
       if (permission == LocationPermission.denied) {
@@ -60,10 +69,28 @@ class SafePlaceViewModel extends ChangeNotifier {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Permessi negati permanentemente. Modificali nelle impostazioni del telefono.');
+      throw Exception('Permessi negati permanentemente. Modificali nelle impostazioni.');
     }
 
-    _currentPosition = await _locationService.getCurrentPosition();
+    _userPosition = await _locationService.getCurrentPosition();
     notifyListeners();
+  }
+
+  /// Seleziona un luogo per mostrarne i dettagli.
+  void selectPlace(SafePlace? place) {
+    _selectedPlace = place;
+    notifyListeners();
+  }
+
+  /// Salva lo stato visivo della mappa nel Repository per sessioni future.
+  void saveMapSessionState(double lat, double lng, double zoom) {
+    _repository.cachedMapState = (latitude: lat, longitude: lng, zoom: zoom);
+  }
+
+  @override
+  void dispose() {
+    loadPlaces.dispose();
+    getUserLocation.dispose();
+    super.dispose();
   }
 }

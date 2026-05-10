@@ -1,53 +1,182 @@
-import 'package:mvp_app_protegge_e_trasforma/data/services/note_service.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/diary_type.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/models/diary/note.dart';
-import 'package:mvp_app_protegge_e_trasforma/data/dtos/note_dto.dart';
+import 'dart:io';
 
-///Classe che fa da intermediario tra Service e ViewModel
+import '../../domain/models/diary/diary_enums.dart';
+import '../../domain/models/diary/diary_session.dart';
+import '../../domain/models/diary/note.dart';
+import '../../domain/models/diary/note_element.dart';
+import '../proxies/proxy_note.dart';
+import '../dtos/note_dto.dart';
+import '../dtos/note_element_dto.dart';
+import '../services/note_service.dart';
+import 'cacheable_repository.dart';
+
+/// Intermediario tra la Presentation (ViewModel) e il livello Dati (Service) per i diari.
 ///
-///Si occupa del recupero dei dati grezzi tramite Service e della loro conversione in oggetti di dominio [Note] prima di passarli al ViewModel.
-///Inoltre gestisce anche le richieste del ViewModel relative al salvataggio e all'eliminazione delle note, convertendo gli oggetti [Note] passati dal ViewModel
-///nei formati richiesti dal Service.
-class NoteRepository {
+/// Gestisce la cache locale e implementa il pattern Proxy per il lazy loading delle note.
+class NoteRepository implements CacheableRepository {
   final NoteService _noteService;
-  final NoteDTO _noteDTO = NoteDTO();
+
+  final List<Note> _cachedNotes = [];
+  List<Note> get cachedNotes => List.unmodifiable(_cachedNotes);
+
   NoteRepository(this._noteService);
 
-  ///Recupera le note di un diario senza le informazioni sui loro elementi
-  ///
-  ///Ottiene la lista di note in formato JSON dal service, poi la converte in lista di [Note] tramite [NoteDTO]
-  Future<List<Note>> getNotes(DiaryType targetDiary) async {
-    List<Map<String, dynamic>> rawNotes = await _noteService.fetchNotes(
+  @override
+  void clearCache() {
+    _cachedNotes.clear();
+  }
+
+  /// Ordina la cache in base alla data di ultima modifica (dalla più recente).
+  void _sortCache() {
+    _cachedNotes.sort((a, b) => b.updateDate.compareTo(a.updateDate));
+  }
+
+  /// Recupera le anteprime delle note di un diario e le istanzia come [ProxyNote].
+  Future<List<Note>> getNotes(
+    DiaryType targetDiary, {
+    bool forceRefresh = false,
+  }) async {
+    if (_cachedNotes.isNotEmpty && !forceRefresh) {
+      _sortCache();
+      return _cachedNotes;
+    }
+
+    final List<Map<String, dynamic>> rawNotes = await _noteService.fetchNotes(
       targetDiary,
     );
-    List<Note> noteOut = [];
-    for (int i = 0; i < rawNotes.length; i++) {
-      noteOut.add(_noteDTO.fromJson(rawNotes[i]));
+
+    _cachedNotes.clear();
+    for (var json in rawNotes) {
+      final creationStr = json['created_at']?.toString();
+      final updateStr = json['last_modified_at']?.toString();
+      final creationDate =
+          DateTime.tryParse(creationStr ?? '') ?? DateTime.now();
+
+      final proxy = ProxyNote(
+        id: json['note_id']?.toString() ?? '',
+        title: json['title']?.toString() ?? 'Nuova Nota',
+        creationDate: creationDate,
+        lastModified: DateTime.tryParse(updateStr ?? '') ?? creationDate,
+        repository: this,
+      );
+
+      _cachedNotes.add(proxy);
     }
-    return noteOut;
+
+    _sortCache();
+    return cachedNotes;
   }
 
-  ///Ritorna una nota completa recuperata dal service in base al [noteId] fornito
-  ///
-  ///Il service fornisce la nota in formato JSON, che quindi viene convertita in Note tramite [NoteDTO]
+  /// Recupera il contenuto completo di una nota scaricando prima i file.
   Future<Note> getNoteById(String noteId) async {
-    Map<String, dynamic> json = await _noteService.fetchNoteById(noteId);
-    return _noteDTO.fromJson(json);
+    final targetDiary = DiarySession.session.loggedDiary;
+    if (targetDiary == null) {
+      throw Exception("Nessun diario attivo nella sessione.");
+    }
+
+    final Map<String, dynamic> rawNote = await _noteService.fetchNoteById(
+      targetDiary,
+      noteId,
+    );
+
+    final List<dynamic> rawElements = rawNote['note_elements'] ?? [];
+    for (var elemJson in rawElements) {
+      final type = elemJson['type']?.toString();
+
+      if (type == 'image' || type == 'audio') {
+        final downloadUrl = elemJson['download_url'].toString();
+        if (downloadUrl.isNotEmpty) {
+          final File downloadedFile = await _noteService.downloadFileFromUrl(
+            downloadUrl,
+            type!,
+          );
+
+          elemJson['content'] = downloadedFile.path;
+        }
+      }
+    }
+    return NoteDTO.fromJson(rawNote);
   }
 
-  ///Crea una nuova nota nel backend
-  ///
-  ///Converte [note] in JSON tramite [NoteDTO], e poi lo invia al service
-  Future<void> saveNote(DiaryType targetDiary, Note note) async {
-    Map<String, dynamic> json = _noteDTO.toJson(note);
-    json.addAll({"diary_type": targetDiary.toString()});
-    await _noteService.saveNote(json);
+  /// CREAZIONE: Registra una nuova nota sul backend per ottenere l'ID reale.
+  /// Simile a `createChat` del Chatbot. Non carica gli elementi, solo la nota "guscio".
+  Future<Note> createNote(DiaryType targetDiary, Note virtualNote) async {
+    final Map<String, dynamic> jsonNote = NoteDTO.toJson(virtualNote);
+
+    jsonNote['note_elements'] = [];
+
+    final Map<String, dynamic> rawResponse = await _noteService.saveNote(
+      targetDiary,
+      jsonNote,
+    );
+
+    final Note savedNote = NoteDTO.fromJson(rawResponse);
+
+    // Inseriamo la nota reale in testa alla cache
+    _cachedNotes.insert(0, savedNote);
+    _sortCache();
+
+    return savedNote;
   }
 
-  ///Elimina una nota dal backend
-  ///
-  ///Recupera l'[id] della nota e lo invia al service per completare l'eliminazione
-  Future<void> deleteNote(Note note) async {
-    await _noteService.deleteNote(note.getId());
+  /// AGGIORNAMENTO TITOLO: Invia un aggiornamento al server per il titolo della nota.
+  Future<void> updateNoteTitle(DiaryType targetDiary, Note note) async {
+    final Map<String, dynamic> jsonNote = NoteDTO.toJson(note);
+
+    await _noteService.saveNote(targetDiary, jsonNote);
+
+    _sortCache();
+  }
+
+  /// ELIMINAZIONE NOTA: Identico al Chatbot (Optimistic Delete)
+  Future<void> deleteNote(DiaryType targetDiary, Note note) async {
+    final noteToDelete = _cachedNotes.firstWhere((n) => n.id == note.id);
+    final index = _cachedNotes.indexOf(noteToDelete);
+
+    if (index == -1) return;
+
+    // Rimozione ottimistica dalla cache
+    _cachedNotes.removeAt(index);
+
+    try {
+      await _noteService.deleteNote(targetDiary, note.id);
+    } catch (e) {
+      // Rollback in caso di errore
+      _cachedNotes.insert(index, noteToDelete);
+      rethrow;
+    }
+  }
+
+  /// AGGIUNTA ELEMENTO: Salva il singolo elemento e aggiorna il suo ID.
+  Future<void> addNoteElement(NoteElement element) async {
+    if (element.noteParentId == null || element.noteParentId!.startsWith('virtual_')) {
+      throw Exception("Impossibile aggiungere un elemento remoto senza un Parent ID reale.");
+    }
+
+    final Map<String, dynamic> jsonNoteElement = NoteElementDTO.toJson(element);
+    final Map<String, dynamic> response = await _noteService.saveNoteElement(
+      jsonNoteElement,
+    );
+
+    // Gestione upload S3 per i media
+    final uploadUrl = response['upload_url']?.toString();
+    if (uploadUrl != null && element.mediaFile != null) {
+      await _noteService.uploadFileFromUrl(uploadUrl, element.mediaFile!);
+    }
+
+    // Aggiorniamo l'ID dell'istanza in locale con quello fornito dal backend
+    element.noteElementId = response['note_element_id']?.toString();
+  }
+
+  /// ELIMINAZIONE ELEMENTO: Rimuove l'elemento dal backend.
+  Future<void> deleteNoteElement(NoteElement element) async {
+    if (element.noteElementId == null || element.noteParentId == null) {
+      return; // Elemento non ancora sincronizzato col server, nulla da fare
+    }
+
+    await _noteService.deleteNoteElement(
+      element.noteParentId!,
+      element.noteElementId!,
+    );
   }
 }

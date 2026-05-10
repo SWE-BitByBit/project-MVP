@@ -1,211 +1,185 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
+import 'package:command_it/command_it.dart';
 
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_list_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/view_model/trusted_contact_view_model.dart';
-import 'package:mvp_app_protegge_e_trasforma/domain/trusted_contact.dart';
-import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contacts_screen.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/trusted_contact/trusted_contact.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/trusted_contacts/widget/trusted_contact_form_widget.dart';
 
-import '../../../../testing/mocks/mock_trusted_contact_repository.dart';
+// --- MOCKS ---
+class MockTrustedContactViewModel extends Mock
+    implements TrustedContactViewModel {}
+
+class MockCommandDelete extends Mock implements Command<String, void> {}
+
+class MockCommandUpdate extends Mock implements Command<TrustedContact, void> {}
+
+class MockCommandCreate extends Mock implements Command<TrustedContact, void> {}
+
+// --- FALLBACKS ---
+class FakeTrustedContact extends Fake implements TrustedContact {}
 
 void main() {
-  group('TrustedContactListWidget Widget Test', () {
-    late MockTrustedContactRepository mockRepo;
-    late TrustedContactViewModel viewModel;
+  late MockTrustedContactViewModel mockVm;
+  late MockCommandDelete mockDeleteCommand;
+  late MockCommandUpdate mockUpdateCommand;
+  late MockCommandCreate mockCreateCommand;
 
-    setUp(() {
-      mockRepo = MockTrustedContactRepository();
-      viewModel = TrustedContactViewModel(mockRepo);
-    });
+  setUpAll(() {
+    registerFallbackValue(FakeTrustedContact());
+  });
 
-    /// Helper: monta TrustedContactListWidget con il Provider.
-    Future<void> pumpListWidget(WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChangeNotifierProvider<TrustedContactViewModel>.value(
-              value: viewModel,
-              child: const TrustedContactListWidget(),
-            ),
-          ),
+  setUp(() {
+    mockVm = MockTrustedContactViewModel();
+    mockDeleteCommand = MockCommandDelete();
+    mockUpdateCommand = MockCommandUpdate();
+    mockCreateCommand = MockCommandCreate();
+
+    // Setup base ViewModel
+    when(() => mockVm.contacts).thenReturn([]);
+
+    // Setup Delete Command
+    when(
+      () => mockDeleteCommand.isRunning,
+    ).thenReturn(ValueNotifier<bool>(false));
+    when(
+      () => mockDeleteCommand.errors,
+    ).thenReturn(ValueNotifier<CommandError<String>?>(null));
+    when(() => mockDeleteCommand.runAsync(any())).thenAnswer((_) async {});
+    when(() => mockVm.deleteContact).thenReturn(mockDeleteCommand);
+
+    // Setup Update Command (Fondamentale per far sopravvivere il form in modalità modifica)
+    when(
+      () => mockUpdateCommand.isRunning,
+    ).thenReturn(ValueNotifier<bool>(false));
+    when(
+      () => mockUpdateCommand.errors,
+    ).thenReturn(ValueNotifier<CommandError<TrustedContact>?>(null));
+    when(() => mockVm.updateContact).thenReturn(mockUpdateCommand);
+
+    // Setup Create Command (Fondamentale per far sopravvivere il form)
+    when(
+      () => mockCreateCommand.isRunning,
+    ).thenReturn(ValueNotifier<bool>(false));
+    when(
+      () => mockCreateCommand.errors,
+    ).thenReturn(ValueNotifier<CommandError<TrustedContact>?>(null));
+    when(() => mockVm.createContact).thenReturn(mockCreateCommand);
+    when(() => mockVm.errors).thenReturn(<String, String>{});
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: ChangeNotifierProvider<TrustedContactViewModel>.value(
+          value: mockVm,
+          child: const TrustedContactListWidget(),
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  group('TrustedContactListWidget - Stati di Rendering', () {
     testWidgets(
-      'Stato vuoto: deve mostrare il messaggio "Nessun contatto fidato"',
-      (WidgetTester tester) async {
-        // Nessun contatto caricato -> lista vuota
-        await pumpListWidget(tester);
+      'mostra il messaggio "Nessun contatto" quando la lista è vuota',
+      (tester) async {
+        when(() => mockVm.contacts).thenReturn([]);
+
+        await tester.pumpWidget(createWidgetUnderTest());
 
         expect(find.text('Nessun contatto fidato'), findsOneWidget);
         expect(find.byIcon(Icons.group_off), findsOneWidget);
+        expect(find.byType(ListView), findsNothing);
       },
     );
 
-    testWidgets('mostra CircularProgressIndicator durante il loading', (
-      tester,
-    ) async {
-      final mockRepo = MockTrustedContactRepository()
-        ..simulatedDelay = const Duration(seconds: 1);
+    testWidgets(
+      'mostra una ListView con i dettagli se ci sono contatti salvati',
+      (tester) async {
+        when(() => mockVm.contacts).thenReturn([
+          TrustedContact(
+            id: '1',
+            name: 'Giulia Bianchi',
+            email: 'giulia@email.com',
+            phoneNumber: '3331112233',
+          ),
+        ]);
 
-      await tester.pumpWidget(
-        ChangeNotifierProvider(
-          create: (_) => TrustedContactViewModel(mockRepo),
-          child: const MaterialApp(home: TrustedContactScreenView()),
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.byType(ListView), findsOneWidget);
+        expect(find.text('Giulia Bianchi'), findsOneWidget);
+        // expect per il sotttotitolo multilinea
+        expect(find.text('giulia@email.com\n3331112233'), findsOneWidget);
+        // expect per l'iniziale nell'avatar
+        expect(find.text('G'), findsOneWidget);
+      },
+    );
+  });
+
+  group('TrustedContactListWidget - Interazioni Utente', () {
+    testWidgets('tap su un ListTile apre il form di modifica', (tester) async {
+      when(() => mockVm.contacts).thenReturn([
+        TrustedContact(
+          id: '1',
+          name: 'Marco Neri',
+          email: 'marco@email.com',
+          phoneNumber: '3330001122',
         ),
-      );
+      ]);
 
-      // Primo frame: il Future NON è ancora completato
-      await tester.pump();
+      await tester.pumpWidget(createWidgetUnderTest());
 
-      // Loader visibile
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // Assicuriamoci che non ci sia il form a schermo
+      expect(find.byType(TrustedContactFormWidget), findsNothing);
 
-      // Facciamo finire il delay
-      await tester.pumpAndSettle();
+      // Tap sul contatto (la card)
+      await tester.tap(find.text('Marco Neri'));
+      await tester.pumpAndSettle(); // Animazione del BottomSheet
 
-      // Loader sparisce
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // Verifica che la modale con il form sia comparsa
+      expect(find.byType(TrustedContactFormWidget), findsOneWidget);
     });
 
-    testWidgets('Popolato: deve mostrare tutti i contatti caricati', (
-      WidgetTester tester,
-    ) async {
-      // Arrange
-      mockRepo.mockedContactsToReturn = [
-        TrustedContact(
-          id: 'c-1',
-          name: 'Mario Rossi',
-          email: 'mario@email.com',
-          phoneNumber: '+39 333 0000001',
-        ),
-        TrustedContact(
-          id: 'c-2',
-          name: 'Laura Bianchi',
-          email: 'laura@email.com',
-          phoneNumber: '+39 333 0000002',
-        ),
-      ];
-      await viewModel.loadContacts.execute();
-      await pumpListWidget(tester);
-      await tester.pumpAndSettle();
+    testWidgets(
+      'tap sul cestino mostra un Dialog e conferma elimina invoca runAsync',
+      (tester) async {
+        when(() => mockVm.contacts).thenReturn([
+          TrustedContact(
+            id: '123-abc',
+            name: 'Marco Neri',
+            email: 'marco@email.com',
+            phoneNumber: '3330001122',
+          ),
+        ]);
 
-      // Assert: i nomi sono visibili nella lista
-      expect(find.text('Mario Rossi'), findsOneWidget);
-      expect(find.text('Laura Bianchi'), findsOneWidget);
-    });
+        await tester.pumpWidget(createWidgetUnderTest());
 
-    testWidgets('Il click sul pulsante elimina mostra il dialog di conferma', (
-      WidgetTester tester,
-    ) async {
-      // Arrange: un contatto in lista
-      mockRepo.mockedContactsToReturn = [
-        TrustedContact(
-          id: 'c-1',
-          name: 'Da Eliminare',
-          email: 'x@x.com',
-          phoneNumber: '0001',
-        ),
-      ];
-      await viewModel.loadContacts.execute();
-      await pumpListWidget(tester);
-      await tester.pumpAndSettle();
+        // 1. Troviamo e premiamo l'icona del cestino
+        await tester.tap(find.byIcon(Icons.delete_outline));
+        await tester.pumpAndSettle(); // Apre il Dialog
 
-      // Act: tocchiamo l'icona del cestino
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
+        // 2. Verifichiamo che il Dialog sia apparso con i dati corretti
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Elimina Contatto'), findsOneWidget);
+        expect(
+          find.text('Rimuovere Marco Neri dai contatti fidati?'),
+          findsOneWidget,
+        );
 
-      // Assert: il dialog di conferma è apparso
-      expect(find.text('Elimina Contatto'), findsOneWidget);
-      expect(find.text('Annulla'), findsOneWidget);
-      expect(find.text('Elimina'), findsOneWidget);
-    });
+        // 3. Premiamo il tasto di conferma eliminazione
+        await tester.tap(find.text('Elimina'));
+        await tester.pumpAndSettle(); // Chiude il Dialog
 
-    testWidgets('Il click su "Annulla" nel dialog chiude senza eliminare', (
-      WidgetTester tester,
-    ) async {
-      // Arrange
-      mockRepo.mockedContactsToReturn = [
-        TrustedContact(
-          id: 'c-1',
-          name: 'Stabile',
-          email: 'a@a.com',
-          phoneNumber: '0001',
-        ),
-      ];
-      await viewModel.loadContacts.execute();
-      await pumpListWidget(tester);
-      await tester.pumpAndSettle();
+        // 4. Verifichiamo che il Dialog non ci sia più
+        expect(find.byType(AlertDialog), findsNothing);
 
-      // Apriamo il dialog
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
-      expect(find.text('Annulla'), findsOneWidget);
-
-      // Annulliamo
-      await tester.tap(find.text('Annulla'));
-      await tester.pumpAndSettle();
-
-      // Il dialog è chiuso e il contatto c'è ancora
-      expect(find.text('Elimina Contatto'), findsNothing);
-      expect(viewModel.contacts.length, 1);
-    });
-
-    testWidgets('Il click su "Elimina" nel dialog rimuove il contatto', (
-      WidgetTester tester,
-    ) async {
-      // Arrange
-      mockRepo.mockedContactsToReturn = [
-        TrustedContact(
-          id: 'c-1',
-          name: 'Via',
-          email: 'via@via.com',
-          phoneNumber: '0001',
-        ),
-      ];
-      await viewModel.loadContacts.execute();
-      await pumpListWidget(tester);
-      await tester.pumpAndSettle();
-
-      // Apriamo il dialog
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
-
-      // Confirmiamo l'eliminazione
-      // Ci sono due widget con 'Elimina': il titolo del dialog e il pulsante.
-      // Usiamo il finder per il pulsante ElevatedButton.
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Elimina'));
-      await tester.pumpAndSettle();
-
-      // Il dialog è chiuso e la lista è vuota
-      expect(find.text('Elimina Contatto'), findsNothing);
-      expect(viewModel.contacts, isEmpty);
-    });
-    testWidgets('Il click su un contatto apre il modulo di modifica', (
-      WidgetTester tester,
-    ) async {
-      // Arrange
-      mockRepo.mockedContactsToReturn = [
-        TrustedContact(
-          id: 'c-1',
-          name: 'Mario Rossi',
-          email: 'mario@email.com',
-          phoneNumber: '123',
-        ),
-      ];
-      await viewModel.loadContacts.execute();
-      await pumpListWidget(tester);
-      await tester.pumpAndSettle();
-
-      // Act: tap sulla riga del contatto
-      await tester.tap(find.text('Mario Rossi'));
-      await tester.pumpAndSettle();
-
-      // Assert: il form di modifica è apparso
-      expect(find.text('Modifica Contatto'), findsOneWidget);
-      expect(find.text('Aggiorna contatto'), findsOneWidget);
-    });
+        // 5. Controlliamo che il viewModel sia stato istruito per eliminare l'ID corretto
+        verify(() => mockDeleteCommand.runAsync('123-abc')).called(1);
+      },
+    );
   });
 }

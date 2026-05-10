@@ -1,3 +1,5 @@
+import 'safe_place_enums.dart';
+
 /// Rappresenta un luogo sicuro all'interno del dominio dell'applicazione.
 class SafePlace {
   /// L'identificatore univoco del luogo sicuro.
@@ -16,7 +18,7 @@ class SafePlace {
   final double longitude;
 
   /// La categoria a cui appartiene il luogo sicuro.
-  final String category;
+  final SafePlaceCategory category;
 
   /// Crea un'istanza immutabile di [SafePlace].
   const SafePlace({

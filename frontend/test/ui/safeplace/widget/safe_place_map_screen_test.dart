@@ -1,99 +1,165 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:command_it/command_it.dart';
 import 'package:get_it/get_it.dart';
 
-// Modifica questi import con i percorsi reali del tuo progetto
 import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/widget/safe_place_map_screen.dart';
 import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/view_model/safe_place_view_model.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/safeplace/widget/safe_place_map_widget.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place.dart';
-import '../../../../testing/mocks/mock_safe_place_repository.dart';
-import '../../../../testing/mocks/mock_location_service.dart';
+import 'package:mvp_app_protegge_e_trasforma/domain/models/safeplace/safe_place_enums.dart';
+import 'package:mvp_app_protegge_e_trasforma/ui/core/widgets/error_indicator.dart';
 
+// --- MOCKS ---
+class MockSafePlaceViewModel extends Mock implements SafePlaceViewModel {}
+class MockCommandLoadPlaces extends Mock implements Command<void, void> {}
+class MockCommandGetUserLocation extends Mock implements Command<void, void> {}
+class MockCommandError extends Mock implements CommandError<void> {}
 
 void main() {
-  /// Test per il widget [SafePlaceMapScreen].
-  /// 
-  /// Verifica l'integrazione della UI con il [SafePlaceViewModel]
-  /// gestendo la localizzazione e i dettagli dei marker.
-  group('SafePlaceMapScreen Test', () {
-    late MockSafePlaceRepository mockRepository;
-    late MockLocationService mockLocation;
-    late SafePlaceViewModel mockViewModel;
+  late MockSafePlaceViewModel mockVm;
+  late MockCommandLoadPlaces mockLoadPlacesCommand;
+  late MockCommandGetUserLocation mockGetUserLocationCommand;
 
-    setUp(() async {
-      await GetIt.instance.reset();
+  // 1. SETUP ASINCRONO: Fondamentale per l'await su GetIt.reset()
+  setUp(() async {
+    final sl = GetIt.instance;
+    await sl.reset(); // <-- ATTENDE la pulizia prima di registrare!
 
-      mockRepository = MockSafePlaceRepository();
-      mockLocation = MockLocationService();
-      mockViewModel = SafePlaceViewModel(mockRepository, locationService: mockLocation);
+    mockVm = MockSafePlaceViewModel();
+    mockLoadPlacesCommand = MockCommandLoadPlaces();
+    mockGetUserLocationCommand = MockCommandGetUserLocation();
 
-      GetIt.instance.registerSingleton<SafePlaceViewModel>(mockViewModel);
+    // Setup loadPlaces
+    when(() => mockLoadPlacesCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
+    when(() => mockLoadPlacesCommand.errors).thenReturn(ValueNotifier<CommandError<void>?>(null));
+    when(() => mockLoadPlacesCommand.run(null)).thenReturn(null);
+    when(() => mockLoadPlacesCommand.run()).thenReturn(null);
+
+    // Setup getUserLocation
+    when(() => mockGetUserLocationCommand.isRunning).thenReturn(ValueNotifier<bool>(false));
+    when(() => mockGetUserLocationCommand.errors).thenReturn(ValueNotifier<CommandError<void>?>(null));
+    when(() => mockGetUserLocationCommand.runAsync()).thenAnswer((_) async {});
+
+    // Setup ViewModel
+    when(() => mockVm.loadPlaces).thenReturn(mockLoadPlacesCommand);
+    when(() => mockVm.getUserLocation).thenReturn(mockGetUserLocationCommand);
+    when(() => mockVm.safePlaces).thenReturn([]);
+    when(() => mockVm.cachedMapState).thenReturn(null);
+    when(() => mockVm.selectedPlace).thenReturn(null);
+    when(() => mockVm.userPosition).thenReturn(null);
+    when(() => mockVm.saveMapSessionState(any(), any(), any())).thenReturn(null);
+
+    // Registrazione in GetIt
+    sl.registerSingleton<SafePlaceViewModel>(mockVm);
+  });
+
+  // 2. TEARDOWN: Assicura che i test successivi trovino un ambiente pulito
+  tearDown(() async {
+    await GetIt.instance.reset();
+  });
+
+  Widget createWidgetUnderTest() {
+    return const MaterialApp(
+      home: SafePlaceMapScreen(),
+    );
+  }
+
+  group('SafePlaceMapScreen - UI Layout', () {
+    testWidgets('renderizza la AppBar con titolo e bottone informazioni', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Luoghi Sicuri'), findsOneWidget);
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
     });
 
-    Widget createScreenUnderTest() {
-      return const MaterialApp(
-        home: SafePlaceMapScreen(),
-      );
-    }
-
-    /// Verifica che venga mostrato uno SnackBar
-    /// in caso di fallimento della localizzazione.
-    testWidgets('Mostra uno SnackBar se la localizzazione fallisce', (WidgetTester tester) async {
-      mockLocation.shouldFail = true;
-
-      await tester.pumpWidget(createScreenUnderTest());
+    testWidgets('mostra il FAB di geolocalizzazione', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final locationFab = find.byIcon(Icons.my_location);
-      expect(locationFab, findsOneWidget);
-      await tester.tap(locationFab);
+      expect(find.byIcon(Icons.my_location), findsOneWidget);
+    });
+  });
 
-      await tester.pumpAndSettle();
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(find.textContaining('disabilitati'), findsOneWidget);
+  group('SafePlaceMapScreen - States', () {
+    testWidgets('mostra CircularProgressIndicator in fase di caricamento iniziale a cache vuota', (tester) async {
+      when(() => mockLoadPlacesCommand.isRunning).thenReturn(ValueNotifier<bool>(true));
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    /// Verifica che se la localizzazione ha successo
-    /// non vi siano errori nel ViewModel.
-    testWidgets('Esegue lo spostamento della mappa se la localizzazione ha successo', (WidgetTester tester) async {
-      await tester.pumpWidget(createScreenUnderTest());
+    testWidgets('mostra ErrorIndicator in caso di errore a cache vuota', (tester) async {
+      final mockError = MockCommandError();
+      when(() => mockLoadPlacesCommand.errors).thenReturn(ValueNotifier<CommandError<void>?>(mockError));
+
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.my_location));
-      await tester.pumpAndSettle();
+      expect(find.byType(ErrorIndicator), findsOneWidget);
+      expect(find.text('Errore nel caricamento'), findsOneWidget);
 
-      expect(mockViewModel.getUserLocationCommand.error, isNull);
-      expect(mockViewModel.currentPosition, isNotNull);
-      expect(mockViewModel.currentPosition!.latitude, 45.0);
+      await tester.tap(find.text('Prego riprovare'));
+      verify(() => mockLoadPlacesCommand.run(null)).called(1);
     });
 
-    /// Verifica che premendo il bottone delle info
-    /// vengano mostrati i dettagli del luogo selezionato.
-    testWidgets('Mostra i dettagli del luogo in un BottomSheet quando un luogo è selezionato', (WidgetTester tester) async {
-      await tester.pumpWidget(createScreenUnderTest());
+    testWidgets('mostra SafePlaceMapWidget se i dati sono stati caricati', (tester) async {
+      when(() => mockVm.safePlaces).thenReturn([
+        SafePlace(
+          id: '1',
+          name: 'Ospedale',
+          address: 'Via Roma',
+          latitude: 45.0,
+          longitude: 9.0,
+          category: SafePlaceCategory.hospital,
+        )
+      ]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      const testPlace = SafePlace(
-        id: "10",
-        name: "Ospedale Centrale",
-        address: "Via Roma 1",
-        latitude: 45.0,
-        longitude: 11.0,
-        category: "Ospedale",
-      );
-      mockViewModel.selectPlace(testPlace);
+      expect(find.byType(SafePlaceMapWidget), findsOneWidget);
+    });
+  });
 
+  group('SafePlaceMapScreen - Interactions & Modals', () {
+
+    testWidgets('toccando il FAB info si apre la Legenda (BottomSheet)', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final detailsFab = find.byIcon(Icons.info_outline);
-      expect(detailsFab, findsOneWidget);
-      await tester.tap(detailsFab);
-
+      await tester.tap(find.byIcon(Icons.info_outline));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ospedale Centrale'), findsWidgets);
-      expect(find.text('Via Roma 1'), findsWidgets);
-      expect(find.text('Ospedale'), findsWidgets);
+      expect(find.text('Mappa Luoghi Sicuri'), findsOneWidget);
+      expect(find.text('Legenda'), findsOneWidget);
+      expect(find.byIcon(Icons.local_hospital), findsOneWidget);
+    });
+
+
+
+    testWidgets('toccando il FAB GPS avvia getUserLocation e cambia icona in caricamento', (tester) async {
+      final isRunningNotifier = ValueNotifier<bool>(false);
+      when(() => mockGetUserLocationCommand.isRunning).thenReturn(isRunningNotifier);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final fabFinder = find.byIcon(Icons.my_location);
+      expect(fabFinder, findsOneWidget);
+
+      // Tap
+      await tester.tap(fabFinder);
+      // Simula il cambio di stato del comando
+      isRunningNotifier.value = true;
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      verify(() => mockGetUserLocationCommand.runAsync()).called(1);
     });
   });
 }

@@ -1,0 +1,14 @@
+[
+  {
+    "contactId": "1",
+    "name": "Mario Rossi",
+    "email": "mario.rossi@example.com",
+    "phoneNumber": "+393331234567"
+  },
+  {
+    "contactId": "2",
+    "name": "Giulia Bianchi",
+    "email": "giulia.bianchi@example.com",
+    "phoneNumber": "+393337654321"
+  }
+]
