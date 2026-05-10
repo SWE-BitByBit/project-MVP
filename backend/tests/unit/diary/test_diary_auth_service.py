@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-from services.diary_auth_service import DiaryAuthService
-from commands.set_password_command import SetPasswordCmd
+from src.diary.services.diary_auth_service import DiaryAuthService
+from src.diary.commands.set_password_command import SetPasswordCmd
 from domain.diary_type import DiaryType
 
 @pytest.fixture
