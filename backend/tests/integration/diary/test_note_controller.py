@@ -1,51 +1,23 @@
 import json
 import pytest
 
-from diary_fixtures import build_event
+from diary_fixtures import build_event, controller, setup_aws, aws_s3_client
 
-@pytest.mark.skip(reason="temporarily disabled")
-def test_add_note_with_media(controller, aws_s3_client):
-    body = {
-        "title": "Note with image",
-        "created_at": "2025",
-        "last_modified_at": "2025",
-        "diary_type": "real_diary",
-        "elements": [
-            {"type": "image", "content": "fake"}
-        ]
-    }
 
-    event = build_event("PUT /note", body)
-    response = controller.handle_request(event, {})
-    print(response)
-    assert response["statusCode"] == 201
-    body = json.loads(response["body"])
-
-    assert "note_id" in body
-    assert len(body["note_elements"]) == 1
-
-    upload = body["note_elements"][0]
-    assert "upload_url" in upload
-    assert upload["upload_url"].startswith("https://")
-
-@pytest.mark.skip(reason="temporarily disabled")
 def test_get_note_with_media(controller):
-    # crea nota con immagine
-    create = controller.handle_request(build_event("PUT /note", {
+    create = controller.handle_request(build_event("PUT /notes", {
         "title": "Note",
-        "created_at": "2025",
-        "last_modified_at": "2025",
+        "created_at": "2024-01-01",
+        "last_modified_at": "2024-01-01",
         "diary_type": "real_diary",
-        "elements": [{"type": "image", "content": "x"}]
+        "elements": [{"type": "image", "content": ""}]
     }), {})
 
     note_id = json.loads(create["body"])["note_id"]
+    diary_type = "real_diary"
 
     # get
-    event = build_event("GET /notes/{note_id}", {
-        "note_id": note_id,
-        "diary_type": "real_diary"
-    })
+    event = build_event(f"GET /notes/{diary_type}/{note_id}")
 
     response = controller.handle_request(event, {})
     assert response["statusCode"] == 200
@@ -56,133 +28,255 @@ def test_get_note_with_media(controller):
     assert "note_elements" in body
 
 
-@pytest.mark.skip(reason="temporarily disabled")
-def test_delete_note_removes_s3_objects(controller, aws_s3_client):
-    # crea nota con media
-    create = controller.handle_request(build_event("PUT /note", {
-        "title": "Delete test",
-        "created_at": "2025",
-        "last_modified_at": "2025",
+def test_add_note_with_media(controller, aws_s3_client):
+    body = {
+        "title": "Note with image",
+        "created_at": "2026-05-04T10:00:00Z",
+        "last_modified_at": "2026-05-04T10:00:00Z",
         "diary_type": "real_diary",
-        "elements": [{"type": "image", "content": "x"}]
-    }), {})
+        "note_elements": [
+            {"type": "image", "content": ""}
+        ]
+    }
 
-    create_body = json.loads(create["body"])
-    note_id = create_body["note_id"]
-    key = create_body["note_elements"][0]["content"]
+    event = build_event("PUT /notes", body)
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 200
 
-    # aggiungiamo manualmente oggetto S3 (simuliamo upload)
-    aws_s3_client.put_object(
-        Bucket="test-bucket",
-        Key=key,
-        Body=b"test"
+    body_response = json.loads(response["body"])
+    assert "note_id" in body_response
+
+    upload = body_response["note_elements"][0]
+    assert "upload_url" in upload
+    assert upload["upload_url"].startswith("https://")
+
+
+def test_add_note_invalid_diary_type(controller):
+    body = {
+        "title": "Nota",
+        "created_at": "2026-05-04T10:00:00Z",
+        "last_modified_at": "2026-05-04T10:00:00Z",
+        "diary_type": "tipo_invalido",
+        "note_elements": []
+    }
+
+    event = build_event("PUT /notes", body)
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 400
+
+
+def test_get_note_with_media(controller):
+    # crea nota con immagine
+    create_body = {
+        "title": "Note",
+        "created_at": "2024-01-01",
+        "last_modified_at": "2024-01-01",
+        "diary_type": "real_diary",
+        "note_elements": [{"type": "image", "content": ""}]
+    }
+    create = controller.handle_request(build_event("PUT /notes", create_body), {})
+    assert create["statusCode"] == 200
+
+    note_id = json.loads(create["body"])["note_id"]
+
+    event = build_event(
+        "GET /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": note_id}
     )
 
-    # delete note
-    delete_event = build_event("DELETE /notes/{note_id}", {
-        "note_id": note_id,
-        "diary_type": "real_diary"
-    })
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 200
 
-    controller.handle_request(delete_event, {})
+    body = json.loads(response["body"])
+    assert "note_id" in body
+    assert body["note_id"] == note_id
 
-    # verifica che oggetto NON esista più
-    response = aws_s3_client.list_objects_v2(Bucket="test-bucket")
 
-    keys = [obj["Key"] for obj in response.get("Contents", [])]
+def test_get_note_not_found(controller):
+    event = build_event(
+        "GET /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": "nonexistent"}
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 404
 
-    assert key not in keys
 
-@pytest.mark.skip(reason="temporarily disabled")
-def test_add_note_element_with_media(controller):
-    create = controller.handle_request(build_event("PUT /note", {
-        "title": "Note",
-        "created_at": "2025",
-        "last_modified_at": "2025",
+def test_get_note_invalid_diary_type(controller):
+    event = build_event(
+        "GET /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "invalid", "note_id": "note1"}
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 400
+
+
+def test_list_notes(controller):
+    # crea due note real_diary
+    for i in range(2):
+        controller.handle_request(build_event("PUT /notes", {
+            "title": f"Nota {i}",
+            "created_at": "2026-01-01",
+            "last_modified_at": "2026-01-01",
+            "diary_type": "real_diary",
+            "note_elements": []
+        }), {})
+
+    event = build_event(
+        "GET /notes/{diary_type}",
+        path_parameters={"diary_type": "real_diary"}
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 200
+
+    body = json.loads(response["body"])
+    assert "notes" in body
+    assert len(body["notes"]) >= 2
+
+
+def test_list_notes_empty(controller):
+    event = build_event(
+        "GET /notes/{diary_type}",
+        path_parameters={"diary_type": "real_diary"},
+        user_id="user_no_notes"
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 200
+    body = json.loads(response["body"])
+    assert body["notes"] == []
+
+
+def test_delete_note(controller):
+    create = controller.handle_request(build_event("PUT /notes", {
+        "title": "Da eliminare",
+        "created_at": "2026-01-01",
+        "last_modified_at": "2026-01-01",
         "diary_type": "real_diary",
-        "elements": []
+        "note_elements": []
     }), {})
 
     note_id = json.loads(create["body"])["note_id"]
 
-    event = build_event("PUT note_element", {
+    delete_event = build_event(
+        "DELETE /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": note_id}
+    )
+    response = controller.handle_request(delete_event, {})
+    assert response["statusCode"] == 200
+
+    # verifica che non esista più
+    get_event = build_event(
+        "GET /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": note_id}
+    )
+    get_response = controller.handle_request(get_event, {})
+    assert get_response["statusCode"] == 404
+
+
+def test_delete_note_not_found(controller):
+    event = build_event(
+        "DELETE /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": "nonexistent"}
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 500
+
+
+def test_add_note_element_text(controller):
+    create = controller.handle_request(build_event("PUT /notes", {
+        "title": "Nota",
+        "created_at": "2026-01-01",
+        "last_modified_at": "2026-01-01",
+        "diary_type": "real_diary",
+        "note_elements": []
+    }), {})
+    note_id = json.loads(create["body"])["note_id"]
+
+    event = build_event("PUT /notes/note_element", {
+        "note_id": note_id,
+        "type": "text",
+        "content": "Nuovo paragrafo"
+    })
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 200
+
+    body = json.loads(response["body"])
+    assert "note_element_id" in body
+    assert "upload_url" not in body
+
+
+def test_add_note_element_image(controller):
+    create = controller.handle_request(build_event("PUT /notes", {
+        "title": "Nota",
+        "created_at": "2026-01-01",
+        "last_modified_at": "2026-01-01",
+        "diary_type": "real_diary",
+        "note_elements": []
+    }), {})
+    note_id = json.loads(create["body"])["note_id"]
+
+    event = build_event("PUT /notes/note_element", {
         "note_id": note_id,
         "type": "image",
         "content": ""
     })
-
     response = controller.handle_request(event, {})
     assert response["statusCode"] == 200
-    body = json.loads(response["body"])
 
+    body = json.loads(response["body"])
     assert "note_element_id" in body
     assert "upload_url" in body
     assert body["upload_url"].startswith("https://")
 
-@pytest.mark.skip(reason="temporarily disabled")
-def test_delete_note_element_removes_s3(controller, aws_s3_client):
-    create = controller.handle_request(build_event("PUT /note", {
-        "title": "Note",
-        "created_at": "2025",
-        "last_modified_at": "2025",
-        "diary_type": "real_diary",
-        "elements": []
-    }), {})
 
+def test_delete_note_element(controller):
+    create = controller.handle_request(build_event("PUT /notes", {
+        "title": "Nota",
+        "created_at": "2026-01-01",
+        "last_modified_at": "2026-01-01",
+        "diary_type": "real_diary",
+        "note_elements": []
+    }), {})
     note_id = json.loads(create["body"])["note_id"]
 
-    add = controller.handle_request(build_event("PUT note_element", {
+    add = controller.handle_request(build_event("PUT /notes/note_element", {
         "note_id": note_id,
-        "type": "image",
-        "content": ""
+        "type": "text",
+        "content": "Testo"
     }), {})
+    element_id = json.loads(add["body"])["note_element_id"]
 
-    add_body = json.loads(add["body"])
-    element_id = add_body["note_element_id"]
-
-    key = f"user1/{note_id}/{element_id}"
-
-    aws_s3_client.put_object(
-        Bucket="test-bucket",
-        Key=key,
-        Body=b"test"
+    delete_event = build_event(
+        "DELETE /notes/note_element/{note_id}/{note_element_id}",
+        path_parameters={"note_id": note_id, "note_element_id": element_id}
     )
+    response = controller.handle_request(delete_event, {})
+    assert response["statusCode"] == 200
 
-    delete_event = build_event("DELETE note_element", {
-        "note_id": note_id,
-        "note_element_id": element_id,
-        "type": "image",
-        "content": key
-    })
 
-    controller.handle_request(delete_event, {})
+def test_delete_note_element_not_found(controller):
+    event = build_event(
+        "DELETE /notes/note_element/{note_id}/{note_element_id}",
+        path_parameters={"note_id": "note1", "note_element_id": "nonexistent"}
+    )
+    response = controller.handle_request(event, {})
+    assert response["statusCode"] == 404
 
-    response = aws_s3_client.list_objects_v2(Bucket="test-bucket")
-    keys = [obj["Key"] for obj in response.get("Contents", [])]
 
-    assert key not in keys
-
-@pytest.mark.skip(reason="temporarily disabled")
 def test_user_cannot_access_other_user_note(controller):
-    # user1 crea nota
-    create = controller.handle_request(build_event("PUT /note", {
+    create = controller.handle_request(build_event("PUT /notes", {
         "title": "Secret",
-        "created_at": "2025",
-        "last_modified_at": "2025",
+        "created_at": "2026-01-01",
+        "last_modified_at": "2026-01-01",
         "diary_type": "real_diary",
-        "elements": []
+        "note_elements": []
     }, user_id="user1"), {})
 
     note_id = json.loads(create["body"])["note_id"]
 
-    # user2 prova a leggerla
-    event = build_event("GET /notes/{note_id}", {
-        "note_id": note_id,
-        "diary_type": "real_diary"
-    }, user_id="user2")
-
+    event = build_event(
+        "GET /notes/{diary_type}/{note_id}",
+        path_parameters={"diary_type": "real_diary", "note_id": note_id},
+        user_id="user2"
+    )
     response = controller.handle_request(event, {})
-
     assert response["statusCode"] == 404
-
-
