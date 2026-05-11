@@ -1,0 +1,168 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ develop, main, task/modifica-pipeline-gh-pages ]
+  pull_request:
+    branches: [ develop, main, task/modifica-pipeline-gh-pages ]
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Test + Coverage + SonarCloud Backend
+  # ─────────────────────────────────────────
+  backend-test:
+    name: SonarCloud - Backend (Python)
+    runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: eu-south-1
+      AWS_REGION: eu-south-1
+      TABLE_CHATS: chats_mvp
+      TABLE_MESSAGES: chats_messages_mvp
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # necessario per SonarCloud
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: make install
+
+      - name: Run tests and generate coverage
+        working-directory: backend
+        run: make coverage # genera coverage.xml
+
+      - name: Upload coverage.xml as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
+
+      - name: SonarCloud Scan - Backend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
+        with:
+          projectBaseDir: backend
+
+  # ─────────────────────────────────────────
+  # JOB 2: Test Frontend
+  # ─────────────────────────────────────────
+  frontend-test:
+    name: SonarCloud - Frontend (Flutter)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Create .env from stub
+        working-directory: frontend
+        run: cp .env.stub .env
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Run tests and generate coverage
+        working-directory: frontend
+        run: flutter test --coverage test/
+
+      - name: Install Linux dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev xvfb libwebkit2gtk-4.1-dev libsecret-1-dev
+
+      - name: Run Integration Tests
+        working-directory: frontend
+        run: xvfb-run flutter test integration_test/main_test.dart -d linux
+
+      - name: SonarCloud Scan - Frontend
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+        with:
+          projectBaseDir: frontend
+
+  # ─────────────────────────────────────────
+  # JOB 3: Deploy (solo push su main)
+  # ─────────────────────────────────────────
+  deploy:
+    name: Deploy su AWS
+    needs: [ backend-test ] # parte solo se entrambi i job passano
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build
+        working-directory: backend
+        run: sam build
+
+      - name: Deploy
+        working-directory: backend
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+
+  # ─────────────────────────────────────────
+  # JOB 4: Deploy Frontend su GitHub Pages
+  # ─────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend su GH Pages
+    needs: [ frontend-test ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/task/modifica-pipeline-gh-pages')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+
+      - name: Create .env from Secrets
+        working-directory: frontend
+        run: |
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          echo "COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}" >> .env
+          echo "COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}" >> .env
+          echo "COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}" >> .env
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build Web
+        working-directory: frontend
+        run: flutter build web --release --base-href /project-MVP/
+
+      - name: Deploy to GH Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/build/web

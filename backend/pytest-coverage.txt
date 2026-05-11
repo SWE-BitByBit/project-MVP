@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/riccardomani/Documenti/università/SWE/project-MVP/backend
+plugins: pyfakefs-5.9.3, cov-7.1.0
+collected 4 items
+
+tests/unit/test_handler.py ....                                          [100%]
+
+- generated xml file: /home/riccardomani/Documenti/università/SWE/project-MVP/backend/pytest.xml -
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                          Stmts   Miss  Cover   Missing
+-----------------------------------------------------------
+src/hello_world/__init__.py       0      0   100%
+src/hello_world/app.py           17      0   100%
+-----------------------------------------------------------
+TOTAL                            17      0   100%
+Coverage XML written to file coverage.xml
+============================== 4 passed in 2.49s ===============================

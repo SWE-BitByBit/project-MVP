@@ -1,0 +1,16 @@
+[
+  {
+    "resource_id": "1",
+    "title": "Centro Antiviolenza Roma",
+    "content": "Contatti e indirizzi utili.",
+    "url": "https://example.com/centro-roma",
+    "type": "community"
+  },
+  {
+    "resource_id": "2",
+    "title": "Codice Rosso",
+    "content": "Sintesi della legge sul codice rosso.",
+    "url": null,
+    "type": "law"
+  }
+]

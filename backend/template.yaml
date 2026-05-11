@@ -1,0 +1,598 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  This is the template for the deploy of the lambda used for app: "L'app che
+  protegge e trasforma"
+
+Parameters:
+  CognitoIssuer:
+    Type: String
+    Default: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_Vf1MMfPoO"
+  CognitoAudience:
+    Type: String
+    Default: "5dlcoa478c3uve9bctpopae4kl"
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.12
+    LoggingConfig:
+      LogFormat: JSON
+
+Resources:
+  # --- API Gateway ---
+  AppHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: app-protegge-trasforma-api-mvp
+      Auth:
+        DefaultAuthorizer: MyJWTAuthorizer
+        Authorizers:
+          MyJWTAuthorizer:
+            JwtConfiguration:
+              Issuer: !Ref CognitoIssuer
+              Audience:
+                - !Ref CognitoAudience
+            IdentitySource: "$request.header.Authorization"
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+
+  # --- DIARY ---
+  DiaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/diary/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: lambda-diary-notes-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Environment:
+        Variables:
+          REGION: eu-south-1
+          NOTES_TABLE: !Ref DiaryNoteTable
+          NOTES_ELEMENTS_TABLE: !Ref DiaryNoteElementTable
+          S3_BUCKET_NOTES_NAME: !Ref NoteMediaBucket
+          TABLE_AUTH_NAME: !Ref DiaryAuthTable
+          PASSWORD_HASH_SECRET: 38ae6a9f-1c7f-4df8-bfba-53e685ab3729
+      Events:
+        PostDiaryLogin:
+          Type: HttpApi
+          Properties:
+            Path: /diary/auth/login
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostDiaryLogout:
+          Type: HttpApi
+          Properties:
+            Path: /diary/auth/logout
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostDiarySetPassword:
+          Type: HttpApi
+          Properties:
+            Path: /diary/auth/set_password
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetDiaryStatus:
+          Type: HttpApi
+          Properties:
+            Path: /diary/auth/status
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutDiaryNote:
+          Type: HttpApi
+          Properties:
+            Path: /notes
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetDiaryNotes:
+          Type: HttpApi
+          Properties:
+            Path: /notes/{diary_type}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetDiaryNote:
+          Type: HttpApi
+          Properties:
+            Path: /notes/{diary_type}/{note_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteDiaryNote:
+          Type: HttpApi
+          Properties:
+            Path: /notes/{diary_type}/{note_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutDiaryNoteElement:
+          Type: HttpApi
+          Properties:
+            Path: /notes/note_element
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteDiaryNoteElement:
+          Type: HttpApi
+          Properties:
+            Path: /notes/note_element/{note_id}/{note_element_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+
+  NoteMediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DiaryNoteTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: note_table_mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: note_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: note_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  DiaryNoteElementTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: note_elements_table_mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: note_id
+          KeyType: HASH
+        - AttributeName: note_element_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: note_id
+          AttributeType: S
+        - AttributeName: note_element_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  DiaryAuthTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: diary_auth_table_mvp
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  # --- TRUSTED CONTACTS ---
+  TrustedContactFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/trusted_contact/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: lambda-trusted-contact-microservice-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-trusted-con\
+        tact-mvp"
+      Environment:
+        Variables:
+          REGION: eu-south-1
+          DMS_TABLE: !Ref DeadManSwitchSettingsTable
+          TRUSTED_CONTACT_TABLE: !Ref TrustedContactsTable
+          SOURCE_EMAIL: swe.bitbybit@gmail.com
+      Events:
+        PostDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutHeartBeat:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings/heartbeat
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutDmsSettings:
+          Type: HttpApi
+          Properties:
+            Path: /dms_settings
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetTrustedContacts:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteTrustedContact:
+          Type: HttpApi
+          Properties:
+            Path: /trusted_contact/{contact_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PutAlert:
+          Type: HttpApi
+          Properties:
+            Path: /alert
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+
+  TrustedContactsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: trusted_contacts_mvp_v2
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: contact_id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: contact_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  DeadManSwitchSettingsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: dead_man_switch_settings_mvp_v2
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      SSESpecification:
+        SSEEnabled: true
+
+  # --- CHATBOT ---
+  ChatbotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/chatbot/
+      Handler: lambda_function.lambda_handler
+      FunctionName: lambda-chatbot-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-lambda-chatbot-mvp"
+      Environment:
+        Variables:
+          TABLE_CHATS: !Ref ChatsTable
+          TABLE_MESSAGES: !Ref ChatsMessagesTable
+          PYTHONPATH: "/var/task"
+      Layers:
+        - arn:aws:lambda:eu-south-1:903877991199:layer:chatbotLayer:5
+      Runtime: python3.12
+      Events:
+        GetChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        PostChats:
+          Type: HttpApi
+          Properties:
+            Path: /chats
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        GetChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        UpdateChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: put
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        DeleteChatDetails:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}
+            Method: delete
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+        ChatMessages:
+          Type: HttpApi
+          Properties:
+            Path: /chats/{chat_id}/messages
+            Method: post
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: MyJWTAuthorizer
+
+  ChatsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_mvp_v2
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: user_index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      SSESpecification:
+        SSEEnabled: true
+
+  ChatsMessagesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: chats_messages_mvp_v2
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: message_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+        - AttributeName: message_id
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+
+  # --- MATERIALS ---
+  GetMaterialsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/materials/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: fetch-materials-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetMaterials:
+          Type: HttpApi
+          Properties:
+            Path: /materials
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
+
+  MaterialsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-materials-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # --- SAFE PLACES ---
+  GetSafePlacesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/safe_places/
+      Handler: lambda_handler.lambda_handler
+      FunctionName: fetch-safe-places-mvp
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LambdaDynamo-http-notes-poc3"
+      Events:
+        GetSafePlaces:
+          Type: HttpApi
+          Properties:
+            Path: /safe-places
+            Method: get
+            ApiId: !Ref AppHttpApi
+            Auth:
+              Authorizer: NONE
+
+  SafePlacesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: app-protegge-trasforma-luoghi-sicuri-mvp
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+Outputs:
+  ApiUrl:
+    Description: "URL base dell'API da inserire nel file .env del frontend"
+    Value: !Sub "https://${AppHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  DiaryFunction:
+    Description: Diary notes lambda function ARN
+    Value: !GetAtt DiaryFunction.Arn
+
+  NoteMediaBucket:
+    Description: Bucket for storing note's images and audios
+    Value: !Ref NoteMediaBucket
+
+  DiaryNoteTable:
+    Description: Diary note DynamoDB Table ARN
+    Value: !Ref DiaryNoteTable
+
+  DiaryNoteElementTable:
+    Description: Diary note elements DynamoDB Table ARN
+    Value: !Ref DiaryNoteElementTable
+
+  DiaryAuthTable:
+    Description: Diary password DynamoDB Table ARN
+    Value: !Ref DiaryAuthTable
+
+  TrustedContactFunction:
+    Description: Trusted contacts lambda function ARN
+    Value: !GetAtt TrustedContactFunction.Arn
+
+  TrustedContactsTable:
+    Description: Trusted Contact DynamoDB Table Name
+    Value: !Ref TrustedContactsTable
+
+  DeadManSwitchSettingsTable:
+    Description: Dead Man switch DynamoDB Table Name
+    Value: !Ref DeadManSwitchSettingsTable
+
+  ChatbotFunction:
+    Description: Chatbot lambda function ARN
+    Value: !GetAtt ChatbotFunction.Arn
+
+  ChatsTable:
+    Description: Chats Table Name
+    Value: !Ref ChatsTable
+
+  ChatsMessagesTable:
+    Description: Chats Messages Table Name
+    Value: !Ref ChatsMessagesTable
+
+  DiaryNoteTableName:
+    Description: Diary Notes table name
+    Value: !Ref DiaryNoteTable
+
+  DiaryNoteElementTableName:
+    Description: Diary Note Elements table name
+    Value: !Ref DiaryNoteElementTable
+
+  DiaryAuthTableName:
+    Description: Diary Auth table name
+    Value: !Ref DiaryAuthTable
+
+  NoteMediaBucketName:
+    Description: Diary media bucket name
+    Value: !Ref NoteMediaBucket
