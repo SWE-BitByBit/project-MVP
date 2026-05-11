@@ -18,13 +18,16 @@ class SafePlaceRepository {
   /// la risposta in una lista di oggetti di dominio [SafePlace].
   Future<List<SafePlace>> getPlaces() async {
     try {
-      final List<Map<String, dynamic>> rawList = await _service.fetchSafePlaces();
+      final List<Map<String, dynamic>> rawList = await _service
+          .fetchSafePlaces();
 
       return rawList.map((jsonItem) {
         return SafePlaceDTO.fromJson(jsonItem);
       }).toList();
     } catch (e) {
-      throw Exception("Errore nel repository durante l'elaborazione dei luoghi sicuri: $e");
+      throw Exception(
+        "Errore nel repository durante l'elaborazione dei luoghi sicuri: $e",
+      );
     }
   }
 }

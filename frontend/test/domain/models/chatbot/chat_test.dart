@@ -60,7 +60,7 @@ void main() {
       final newMessage = ChatMessage(
         id: 'msg-1',
         content: 'Testo di prova',
-        type: MessageType.USER,
+        type: MessageType.user,
         timestamp: DateTime.now(),
       );
 
@@ -86,7 +86,7 @@ void main() {
       final messaggioPirata = ChatMessage(
         id: 'hacker-1',
         content: 'Messaggio iniettato',
-        type: MessageType.AI,
+        type: MessageType.ai,
         timestamp: DateTime.now(),
       );
 

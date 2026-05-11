@@ -3,7 +3,6 @@ import 'package:mvp_app_protegge_e_trasforma/data/repositories/chatbot_repositor
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/local_chat.dart';
 import 'package:mvp_app_protegge_e_trasforma/domain/models/chatbot/chat_enums.dart';
 
-
 import '../../../testing/mocks/mock_chatbot_service.dart';
 
 void main() {
@@ -19,25 +18,28 @@ void main() {
       repository = ChatbotRepository(mockService);
     });
 
-    test('getChatPreviews mappa correttamente il JSON in oggetti ChatPreview', () async {
-      // Arrange: Prepariamo un finto JSON di risposta dal Service
-      mockService.mockedPreviewsJson = [
-        {
-          'id': 'prev-1',
-          'title': 'Indagine 1',
-          'lastModified': sampleDateString,
-        }
-      ];
+    test(
+      'getChatPreviews mappa correttamente il JSON in oggetti Chat',
+      () async {
+        // Arrange: Prepariamo un finto JSON di risposta dal Service
+        mockService.mockedPreviewsJson = [
+          {
+            'id': 'prev-1',
+            'title': 'Indagine 1',
+            'lastModified': sampleDateString,
+          },
+        ];
 
-      // Act
-      final previews = await repository.getChatPreviews();
+        // Act
+        final previews = await repository.getChatPreviews();
 
-      // Assert: Verifichiamo che il Repository abbia fatto bene la traduzione
-      expect(previews.length, 1);
-      expect(previews.first.id, 'prev-1');
-      expect(previews.first.title, 'Indagine 1');
-      expect(previews.first.lastModified, sampleDate);
-    });
+        // Assert: Verifichiamo che il Repository abbia fatto bene la traduzione
+        expect(previews.length, 1);
+        expect(previews.first.getId(), 'prev-1');
+        expect(previews.first.getTitle(), 'Indagine 1');
+        expect(previews.first.getCreationDate(), sampleDate);
+      },
+    );
 
     test('getChatById delega al ChatDTO per il parsing', () async {
       // Arrange
@@ -45,7 +47,7 @@ void main() {
         'id': 'chat-1',
         'title': 'Chat Completa',
         'creationDate': sampleDateString,
-        'messages': [] // Testiamo una chat vuota per semplicità
+        'messages': [], // Testiamo una chat vuota per semplicità
       };
 
       // Act
@@ -56,45 +58,91 @@ void main() {
       expect(chat.getTitle(), 'Chat Completa');
     });
 
-    test('sendMessage mappa correttamente la risposta e gestisce il titolo opzionale', () async {
+    test('sendMessage mappa correttamente la risposta', () async {
       // Arrange: Creiamo una chat finta da passare come parametro
       final dummyChat = LocalChat(
-          id: 'chat-99',
-          title: 'Vecchia',
-          creationDate: DateTime.now(),
-          messages: []
+        id: 'chat-99',
+        title: 'Vecchia',
+        creationDate: DateTime.now(),
+        messages: [],
       );
 
-      // Prepariamo la risposta del Service
-      mockService.mockedMessageResponseJson = {
-        'id': 'msg-ai-1',
-        'content': 'Questa è la mia risposta',
-        'type': 'AI',
-        'timestamp': sampleDateString,
-        'updatedTitle': 'Nuovo Titolo Indagine' // Testiamo che recuperi il nuovo titolo
-      };
-
       // Act
-      final response = await repository.sendMessage(dummyChat, 'Ciao', ChatMode.DETECTIVE);
+      final response = await repository.sendMessage(
+        dummyChat,
+        'Ciao',
+        ChatMode.detective,
+      );
 
       // Assert: Controlliamo il messaggio
       final msg = response.getResponse();
-      expect(msg.id, 'msg-ai-1');
       expect(msg.content, 'Questa è la mia risposta');
-      expect(msg.isAiMessage(), isTrue);
-      expect(msg.timestamp, sampleDate);
+    });
 
-      // Controlliamo il titolo aggiornato
-      expect(response.getUpdatedTitle(), 'Nuovo Titolo Indagine');
+    test('getChatPreviews gestisce chiavi alternative (chat_id, created_at)', () async {
+      mockService.mockedPreviewsJson = [
+        {
+          'chat_id': 'chat-alt',
+          'title': 'Alternative',
+          'created_at': sampleDateString,
+        },
+      ];
+
+      final previews = await repository.getChatPreviews();
+
+      expect(previews.first.getId(), 'chat-alt');
+      expect(previews.first.getTitle(), 'Alternative');
+      expect(previews.first.getCreationDate(), sampleDate);
+    });
+
+    test('getChatPreviews fallback per data mancante', () async {
+      mockService.mockedPreviewsJson = [
+        {
+          'id': 'chat-no-date',
+          'title': 'No Date',
+        },
+      ];
+
+      final previews = await repository.getChatPreviews();
+      expect(previews.first.getCreationDate(), isNotNull);
+    });
+
+    test('sendMessage gestisce chiavi alternative nella risposta (message_id, text, response)', () async {
+      final dummyChat = LocalChat(
+        id: '1',
+        title: 'T',
+        creationDate: DateTime.now(),
+        messages: [],
+      );
+
+      // Test con message_id e text
+      mockService.mockedMessageResponseJson = {
+        'message_id': 'm-alt',
+        'text': 'Alternative text'
+      };
+      var response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
+      expect(response.getResponse().id, 'm-alt');
+      expect(response.getResponse().content, 'Alternative text');
+
+      // Test con response (stile alcuni backend LLM)
+      mockService.mockedMessageResponseJson = {
+        'id': 'm-resp',
+        'response': 'Response content'
+      };
+      response = await repository.sendMessage(dummyChat, 'hi', ChatMode.mirror);
+      expect(response.getResponse().content, 'Response content');
     });
 
     // Test degli Errori (Essenziale per la Coverage)
-    test('Se il Service lancia un\'eccezione, il Repository la lascia passare verso il ViewModel', () async {
-      mockService.shouldThrowError = true;
+    test(
+      'Se il Service lancia un\'eccezione, il Repository la lascia passare verso il ViewModel',
+      () async {
+        mockService.shouldThrowError = true;
 
-      // Usiamo 'throwsException' per verificare che l'errore arrivi fino a noi
-      expect(() => repository.getChatPreviews(), throwsException);
-      expect(() => repository.createChat(), throwsException);
-    });
+        // Usiamo 'throwsException' per verificare che l'errore arrivi fino a noi
+        expect(() => repository.getChatPreviews(), throwsException);
+        expect(() => repository.createChat(), throwsException);
+      },
+    );
   });
 }

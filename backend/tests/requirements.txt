@@ -5,3 +5,6 @@ requests
 coverage
 pytest-cov
 pysonar
+python-ulid
+rank_bm25
+typing_extensions

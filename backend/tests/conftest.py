@@ -1,7 +1,8 @@
 import sys
-import os
+from pathlib import Path
 
-# Aggiunge la directory 'src' al percorso di ricerca dei moduli Python.
-# Questo è necessario perché i moduli Lambda utilizzano import relativi al package
-# (es. 'from materials.xxx import ...') che devono essere risolti a partire da 'src/'.
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Aggiunge la cartella 'src' al PYTHONPATH
+src_path = str(Path(__file__).parent.parent / "src")
+sys.path.insert(0, src_path)
+print(f"✅ Added to PYTHONPATH: {src_path}")  # <-- aggiungi questa riga
+print(f"PYTHONPATH now contains: {src_path in sys.path}")  # <-- e questa
